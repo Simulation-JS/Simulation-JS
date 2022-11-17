@@ -13,14 +13,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JacksonO123/simulationjs.git"
+    "url": "git+https://github.com/Simulation-JS/Simulation-JS.git"
   },
   "author": "Jackson Otto",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/JacksonO123/simulationjs/issues"
+    "url": "https://github.com/Simulation-JS/Simulation-JS/issues"
   },
-  "homepage": "https://github.com/JacksonO123/simulationjs#readme",
+  "homepage": "https://github.com/Simulation-JS/Simulation-JS#readme",
   "directories": {
     "test": "test"
   },
