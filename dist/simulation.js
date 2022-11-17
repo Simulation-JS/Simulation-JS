@@ -1272,6 +1272,10 @@ export class Simulation {
       this.#render(c);
     }, 1000 / fps);
   }
+  /**
+   * @param {SimulationElement} element
+   * @param {String} id - optional
+   */
   add(element, id = null) {
     if (element instanceof SimulationElement) {
       element.setSimulationElement(this.canvas);
@@ -1292,6 +1296,9 @@ export class Simulation {
       delete this.idObjs[id];
     }
   }
+  /**
+   * @param {SimulationElement} element
+   */
   removeWithObject(element) {
     for (const el of this.scene) {
       if (compare(el, element)) {
@@ -1322,7 +1329,6 @@ export class Simulation {
   /**
    * @param {number} x
    * @param {number} y
-   * @returns
    */
   setSize(x, y) {
     if (!this.canvas) return;
@@ -1348,6 +1354,10 @@ export class Simulation {
     }
     this.width = this.canvas.width;
     this.height = this.canvas.height;
+  }
+  empty() {
+    this.scene = [];
+    this.idObjs = {};
   }
 }
 
