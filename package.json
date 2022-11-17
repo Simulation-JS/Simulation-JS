@@ -1,0 +1,33 @@
+{
+  "name": "simulationjs",
+  "version": "2.0.0",
+  "type": "module",
+  "description": "A simple graphics library for 2d graphics on html canvas",
+  "main": "./dist/simulation.js",
+  "scripts": {
+    "start": "vite",
+    "minify": "node ./dev/commands/minify.js"
+  },
+  "exports": {
+    ".": "./dist/simulation.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JacksonO123/simulationjs.git"
+  },
+  "author": "Jackson Otto",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JacksonO123/simulationjs/issues"
+  },
+  "homepage": "https://github.com/JacksonO123/simulationjs#readme",
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [
+    "simulation",
+    "canvas",
+    "graphics",
+    "2d"
+  ]
+}
