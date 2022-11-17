@@ -1,12 +1,11 @@
 {
   "name": "simulationjs",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "module",
   "description": "A simple graphics library for 2d graphics on html canvas",
   "main": "./dist/simulation.js",
   "scripts": {
-    "start": "vite",
-    "minify": "node ./dev/commands/minify.js"
+    "start": "vite"
   },
   "exports": {
     ".": "./dist/simulation.js"
