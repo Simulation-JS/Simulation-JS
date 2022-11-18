@@ -1,0 +1,5 @@
+/node_modules
+/test
+vite.config.js
+.prettierrc
+pnpm-lock.yaml

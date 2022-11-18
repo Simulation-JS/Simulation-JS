@@ -265,12 +265,7 @@ export class Color {
     return hex.length == 1 ? '0' + hex : hex;
   }
   toHex() {
-    return (
-      '#' +
-      this.#compToHex(this.r) +
-      this.#compToHex(this.g) +
-      this.#compToHex(this.b)
-    );
+    return '#' + this.#compToHex(this.r) + this.#compToHex(this.g) + this.#compToHex(this.b);
   }
 }
 
@@ -371,13 +366,7 @@ export class Line extends SimulationElement {
     this.thickness = thickness;
   }
   clone() {
-    return new Line(
-      this.start,
-      this.end,
-      this.thickness,
-      this.color,
-      this.rotation
-    );
+    return new Line(this.start, this.end, this.thickness, this.color, this.rotation);
   }
   /**
    * @param {Point} p
@@ -491,13 +480,7 @@ export class Line extends SimulationElement {
     return this.moveTo(this.start.add(v), t);
   }
   draw(c) {
-    this.vec.draw(
-      c,
-      new Point(this.start.x, this.start.y),
-      this.color.toHex(),
-      1,
-      this.thickness
-    );
+    this.vec.draw(c, new Point(this.start.x, this.start.y), this.color.toHex(), 1, this.thickness);
   }
 }
 
@@ -573,26 +556,18 @@ export class Circle extends SimulationElement {
    * @param {Function} callback2
    */
   #checkEvents() {
-    this.events.forEach(event => {
+    this.events.forEach((event) => {
       const name = event.name;
       switch (name) {
         case 'mouseover': {
-          if (
-            !this.hovering &&
-            currentMousePos &&
-            this.contains(currentMousePos)
-          ) {
+          if (!this.hovering && currentMousePos && this.contains(currentMousePos)) {
             this.hovering = true;
             event.callback(currentMouseEvent);
           }
           break;
         }
         case 'mouseleave': {
-          if (
-            this.hovering &&
-            currentMousePos &&
-            !this.contains(currentMousePos)
-          ) {
+          if (this.hovering && currentMousePos && !this.contains(currentMousePos)) {
             this.hovering = false;
             event.callback(currentMouseEvent);
           }
@@ -605,17 +580,13 @@ export class Circle extends SimulationElement {
   }
   on(event, callback1, callback2) {
     if (!validEvents.includes(event)) {
-      console.warn(
-        `Invalid event: ${event}. Event must be one of ${validEvents.join(
-          ', '
-        )}`
-      );
+      console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
       return;
     }
 
     // specific events
     if (event === 'mousemove') {
-      this.sim.addEventListener('mousemove', e => {
+      this.sim.addEventListener('mousemove', (e) => {
         const p = new Point(e.offsetX, e.offsetY);
         if (this.contains(p)) {
           callback1(e);
@@ -625,7 +596,7 @@ export class Circle extends SimulationElement {
       this.on('mouseover', callback1);
       this.on('mouseleave', callback2);
     } else if (event === 'click') {
-      this.sim.addEventListener('click', e => {
+      this.sim.addEventListener('click', (e) => {
         const p = new Point(e.clientX, e.clientY);
         if (this.contains(p)) {
           callback1(e);
@@ -656,7 +627,7 @@ export class Polygon extends SimulationElement {
     this.offsetPoint = offsetPoint;
     this.offsetX = this.offsetPoint.x;
     this.offsetY = this.offsetPoint.y;
-    this.points = points.map(p => {
+    this.points = points.map((p) => {
       return new Point(p.x + this.offsetX, p.y + this.offsetY);
     });
     this.rotation = r;
@@ -665,18 +636,12 @@ export class Polygon extends SimulationElement {
    * @param {Point[]} points
    */
   setPoints(points) {
-    this.points = points.map(p => {
+    this.points = points.map((p) => {
       return new Point(p.x + this.offsetX, p.y + this.offsetY);
     });
   }
   clone() {
-    return new Polygon(
-      this.pos,
-      this.rawPoints,
-      this.color,
-      this.rotation,
-      this.offsetPoint
-    );
+    return new Polygon(this.pos, this.rawPoints, this.color, this.rotation, this.offsetPoint);
   }
   /**
    * @param {number} deg
@@ -693,7 +658,7 @@ export class Polygon extends SimulationElement {
     this.#setRotation();
   }
   #setRotation() {
-    this.points = this.points.map(p => {
+    this.points = this.points.map((p) => {
       p.rotateTo(this.rotation);
       return p;
     });
@@ -727,14 +692,7 @@ export class Square extends SimulationElement {
    * @param {Number} offsetY
    * @param {Number} rotation - rotation in degrees
    */
-  constructor(
-    pos,
-    width,
-    height,
-    color,
-    offsetPoint = new Point(0, 0),
-    rotation = 0
-  ) {
+  constructor(pos, width, height, color, offsetPoint = new Point(0, 0), rotation = 0) {
     super(pos, color);
     this.width = width;
     this.height = height;
@@ -751,22 +709,10 @@ export class Square extends SimulationElement {
   updateOffsetPosition(p) {
     this.offsetX = p.x;
     this.offsetY = p.y;
-    this.topLeft = new Vector(
-      -this.width / 2 - this.offsetX,
-      -this.height / 2 - this.offsetY
-    );
-    this.topRight = new Vector(
-      this.width / 2 - this.offsetX,
-      -this.height / 2 - this.offsetY
-    );
-    this.bottomLeft = new Vector(
-      -this.width / 2 - this.offsetX,
-      this.height / 2 - this.offsetY
-    );
-    this.bottomRight = new Vector(
-      this.width / 2 - this.offsetX,
-      this.height / 2 - this.offsetY
-    );
+    this.topLeft = new Vector(-this.width / 2 - this.offsetX, -this.height / 2 - this.offsetY);
+    this.topRight = new Vector(this.width / 2 - this.offsetX, -this.height / 2 - this.offsetY);
+    this.bottomLeft = new Vector(-this.width / 2 - this.offsetX, this.height / 2 - this.offsetY);
+    this.bottomRight = new Vector(this.width / 2 - this.offsetX, this.height / 2 - this.offsetY);
     this.#setRotation();
   }
   /**
@@ -832,50 +778,24 @@ export class Square extends SimulationElement {
   draw(c) {
     c.beginPath();
     c.fillStyle = this.color.toHex();
-    c.moveTo(
-      this.pos.x + this.topLeft.x + this.offsetX,
-      this.pos.y + this.topLeft.y + this.offsetY
-    );
-    c.lineTo(
-      this.pos.x + this.topRight.x + this.offsetX,
-      this.pos.y + this.topRight.y + this.offsetY
-    );
-    c.lineTo(
-      this.pos.x + this.bottomRight.x + this.offsetX,
-      this.pos.y + this.bottomRight.y + this.offsetY
-    );
-    c.lineTo(
-      this.pos.x + this.bottomLeft.x + this.offsetX,
-      this.pos.y + this.bottomLeft.y + this.offsetY
-    );
+    c.moveTo(this.pos.x + this.topLeft.x + this.offsetX, this.pos.y + this.topLeft.y + this.offsetY);
+    c.lineTo(this.pos.x + this.topRight.x + this.offsetX, this.pos.y + this.topRight.y + this.offsetY);
+    c.lineTo(this.pos.x + this.bottomRight.x + this.offsetX, this.pos.y + this.bottomRight.y + this.offsetY);
+    c.lineTo(this.pos.x + this.bottomLeft.x + this.offsetX, this.pos.y + this.bottomLeft.y + this.offsetY);
     c.fill();
     c.closePath();
 
     if (this.showNodeVectors) {
-      this.topLeft.draw(
-        c,
-        new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY)
-      );
-      this.topRight.draw(
-        c,
-        new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY)
-      );
-      this.bottomLeft.draw(
-        c,
-        new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY)
-      );
-      this.bottomRight.draw(
-        c,
-        new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY)
-      );
+      this.topLeft.draw(c, new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY));
+      this.topRight.draw(c, new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY));
+      this.bottomLeft.draw(c, new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY));
+      this.bottomRight.draw(c, new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY));
     }
 
     if (this.showCollisionVectors) {
       const testVecs = [this.v1, this.v2, this.v3, this.v4, this.v5];
-      if (testVecs.some(el => el)) {
-        testVecs.forEach(vec =>
-          vec.draw(c, new Point(this.pos.x, this.pos.y), '#0000ff')
-        );
+      if (testVecs.some((el) => el)) {
+        testVecs.forEach((vec) => vec.draw(c, new Point(this.pos.x, this.pos.y), '#0000ff'));
       }
     }
 
@@ -894,10 +814,8 @@ export class Square extends SimulationElement {
 
     const topRightChange = (topRightMag * value - topRightMag) / (t * fps);
     const topLeftChange = (topLeftMag * value - topLeftMag) / (t * fps);
-    const bottomRightChange =
-      (bottomRightMag * value - bottomRightMag) / (t * fps);
-    const bottomLeftChange =
-      (bottomLeftMag * value - bottomLeftMag) / (t * fps);
+    const bottomRightChange = (bottomRightMag * value - bottomRightMag) / (t * fps);
+    const bottomLeftChange = (bottomLeftMag * value - bottomLeftMag) / (t * fps);
 
     return transitionValues(
       () => {
@@ -941,7 +859,7 @@ export class Square extends SimulationElement {
       topRightClone,
       topLeftClone,
       bottomLeftClone,
-      bottomRightClone,
+      bottomRightClone
     };
   }
   /**
@@ -951,7 +869,7 @@ export class Square extends SimulationElement {
     const startAndMag = this.#getInitialStartAndMag();
     const mags = Object.keys(startAndMag).reduce((prev, current, index) => {
       let obj = {
-        ...prev,
+        ...prev
       };
       if (component) {
         obj[current.replace('Clone', 'Mag')] = startAndMag[current][component];
@@ -962,7 +880,7 @@ export class Square extends SimulationElement {
     }, {});
     return {
       ...startAndMag,
-      ...mags,
+      ...mags
     };
   }
   /**
@@ -979,14 +897,12 @@ export class Square extends SimulationElement {
       topRightMag,
       topLeftMag,
       bottomRightMag,
-      bottomLeftMag,
+      bottomLeftMag
     } = this.#getProcessedStartAndMag('x');
     const topRightChange = (topRightMag * value - topRightMag) / (t * fps);
     const topLeftChange = (topLeftMag * value - topLeftMag) / (t * fps);
-    const bottomRightChange =
-      (bottomRightMag * value - bottomRightMag) / (t * fps);
-    const bottomLeftChange =
-      (bottomLeftMag * value - bottomLeftMag) / (t * fps);
+    const bottomRightChange = (bottomRightMag * value - bottomRightMag) / (t * fps);
+    const bottomLeftChange = (bottomLeftMag * value - bottomLeftMag) / (t * fps);
 
     return transitionValues(
       () => {
@@ -1040,14 +956,12 @@ export class Square extends SimulationElement {
       topRightMag,
       topLeftMag,
       bottomRightMag,
-      bottomLeftMag,
+      bottomLeftMag
     } = this.#getProcessedStartAndMag('y');
     const topRightChange = (topRightMag * value - topRightMag) / (t * fps);
     const topLeftChange = (topLeftMag * value - topLeftMag) / (t * fps);
-    const bottomRightChange =
-      (bottomRightMag * value - bottomRightMag) / (t * fps);
-    const bottomLeftChange =
-      (bottomLeftMag * value - bottomLeftMag) / (t * fps);
+    const bottomRightChange = (bottomRightMag * value - bottomRightMag) / (t * fps);
+    const bottomLeftChange = (bottomLeftMag * value - bottomLeftMag) / (t * fps);
 
     return transitionValues(
       () => {
@@ -1121,17 +1035,11 @@ export class Square extends SimulationElement {
     bottomLeftVector.rotateTo(-this.rotation);
     this.v3 = bottomLeftVector;
 
-    const bottomRightVector = new Vector(
-      this.bottomRight.x,
-      this.bottomRight.y
-    );
+    const bottomRightVector = new Vector(this.bottomRight.x, this.bottomRight.y);
     bottomRightVector.rotateTo(-this.rotation);
     this.v4 = bottomRightVector;
 
-    const cursorVector = new Vector(
-      p.x - this.pos.x - this.offsetX,
-      p.y - this.pos.y - this.offsetY
-    );
+    const cursorVector = new Vector(p.x - this.pos.x - this.offsetX, p.y - this.pos.y - this.offsetY);
     cursorVector.rotateTo(-this.rotation);
     this.v5 = cursorVector;
 
@@ -1150,26 +1058,18 @@ export class Square extends SimulationElement {
     this.width = this.topRight.x + this.topLeft.x;
   }
   #checkEvents() {
-    this.events.forEach(event => {
+    this.events.forEach((event) => {
       const name = event.name;
       switch (name) {
         case 'mouseover': {
-          if (
-            !this.hovering &&
-            currentMousePos &&
-            this.contains(currentMousePos)
-          ) {
+          if (!this.hovering && currentMousePos && this.contains(currentMousePos)) {
             this.hovering = true;
             event.callback(currentMouseEvent);
           }
           break;
         }
         case 'mouseleave': {
-          if (
-            this.hovering &&
-            currentMousePos &&
-            !this.contains(currentMousePos)
-          ) {
+          if (this.hovering && currentMousePos && !this.contains(currentMousePos)) {
             this.hovering = false;
             event.callback(currentMouseEvent);
           }
@@ -1187,24 +1087,20 @@ export class Square extends SimulationElement {
    */
   on(event, callback1, callback2) {
     if (!validEvents.includes(event)) {
-      console.warn(
-        `Invalid event: ${event}. Event must be one of ${validEvents.join(
-          ', '
-        )}`
-      );
+      console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
       return;
     }
 
     // specific events
     if (event === 'mousemove') {
-      this.sim.addEventListener('mousemove', e => {
+      this.sim.addEventListener('mousemove', (e) => {
         const p = new Point(e.clientX, e.clientY);
         if (this.contains(p)) {
           callback1(e);
         }
       });
     } else if (event === 'click') {
-      this.sim.addEventListener('click', e => {
+      this.sim.addEventListener('click', (e) => {
         const p = new Point(e.clientX, e.clientY);
         if (this.contains(p)) {
           callback1(e);
@@ -1219,14 +1115,7 @@ export class Square extends SimulationElement {
     }
   }
   clone() {
-    return new Square(
-      this.pos,
-      this.width,
-      this.height,
-      this.color,
-      this.offsetPoint,
-      rotation
-    );
+    return new Square(this.pos, this.width, this.height, this.color, this.offsetPoint, rotation);
   }
 }
 
@@ -1243,7 +1132,7 @@ export class Simulation {
       console.warn(`Canvas with id "${id}" not found`);
       return;
     }
-    this.canvas.addEventListener('mousemove', e => {
+    this.canvas.addEventListener('mousemove', (e) => {
       currentMousePos = new Point(e.offsetX, e.offsetY);
       currentMouseEvent = e;
     });
@@ -1255,22 +1144,20 @@ export class Simulation {
     this.#render(ctx);
   }
   #render(c) {
-    setTimeout(() => {
-      c.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    c.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-      c.beginPath();
-      c.fillStyle = this.bgColor;
-      c.fillRect(0, 0, this.canvas.width, this.canvas.height);
-      c.closePath();
+    c.beginPath();
+    c.fillStyle = this.bgColor;
+    c.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    c.closePath();
 
-      for (const element of this.scene) {
-        element.draw(c);
-      }
-      Object.values(this.idObjs).forEach(element => {
-        element.draw(c);
-      });
-      this.#render(c);
-    }, 1000 / fps);
+    for (const element of this.scene) {
+      element.draw(c);
+    }
+    Object.values(this.idObjs).forEach((element) => {
+      element.draw(c);
+    });
+    window.requestAnimationFrame(() => this.#render(c));
   }
   /**
    * @param {SimulationElement} element
@@ -1512,5 +1399,5 @@ export default {
   degToRad,
   radToDeg,
   transitionValues,
-  compare,
+  compare
 };
