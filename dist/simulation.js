@@ -186,7 +186,7 @@ export class SimulationElement {
     const changeB = (color.b - this.color.b) / (t * fps);
 
     const func = () => {
-      this.color = color;
+      this.color = color.clone();
     };
 
     return transitionValues(
@@ -259,6 +259,12 @@ export class Color {
     this.r = r;
     this.g = g;
     this.b = b;
+  }
+  /**
+   * @returns {Color}
+   */
+  clone() {
+    return new Color(this.r, this.g, this.b);
   }
   #compToHex(c) {
     const hex = Math.round(c).toString(16);

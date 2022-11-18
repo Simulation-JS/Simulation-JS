@@ -11,13 +11,7 @@ declare module 'simulationjs' {
     rotate: (deg: number) => void;
     rotateTo: (deg: number) => void;
     #setRotation: () => void;
-    draw: (
-      c: CanvasRenderingContext2D,
-      pos = new Point(0, 0),
-      color = '#000000',
-      s = 1,
-      t = 1
-    ) => void;
+    draw: (c: CanvasRenderingContext2D, pos = new Point(0, 0), color = '#000000', s = 1, t = 1) => void;
     normalize: () => void;
     multiply: (n: number) => void;
     multiplyX: (n: number) => void;
@@ -50,6 +44,7 @@ declare module 'simulationjs' {
     g: number;
     b: number;
     constructor(r: number, g: number, b: number);
+    clone: () => Color;
     #compToHex: (c: number) => string;
     toHex: () => string;
   }
@@ -113,13 +108,7 @@ declare module 'simulationjs' {
     offsetY: number;
     points: Point[];
     rotation: number;
-    constructor(
-      pos: Point,
-      points: Point[],
-      color: Color,
-      r = 0,
-      offsetPoint = new Point(0, 0)
-    );
+    constructor(pos: Point, points: Point[], color: Color, r = 0, offsetPoint = new Point(0, 0));
     setPoints: (points: Point[]) => void;
     clone: () => Polygon;
     rotate: (deg: number) => void;
