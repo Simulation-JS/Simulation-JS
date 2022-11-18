@@ -181,12 +181,13 @@ export class SimulationElement {
    */
   fill(color, t = 0) {
     const currentColor = new Color(this.color.r, this.color.g, this.color.b);
-    const changeR = (color.r - this.color.r) / (t * fps);
-    const changeG = (color.g - this.color.g) / (t * fps);
-    const changeB = (color.b - this.color.b) / (t * fps);
+    const colorClone = color.clone();
+    const changeR = (colorClone.r - this.color.r) / (t * fps);
+    const changeG = (colorClone.g - this.color.g) / (t * fps);
+    const changeB = (colorClone.b - this.color.b) / (t * fps);
 
     const func = () => {
-      this.color = color.clone();
+      this.color = colorClone;
     };
 
     return transitionValues(
