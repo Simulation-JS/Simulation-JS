@@ -1127,6 +1127,10 @@ export class Square extends SimulationElement {
 }
 
 export class Simulation {
+  /**
+   * @param {string} id - canvas id
+   * @param {number} frameRate
+   */
   constructor(id, frameRate = 60) {
     fps = frameRate;
     this.scene = [];
