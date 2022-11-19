@@ -8,7 +8,7 @@ export class Vector {
   /**
    * @param {number} x
    * @param {number} y
-   * @param {number} r
+   * @param {number} r - optional
    */
   constructor(x, y, r = 0) {
     this.x = x;
@@ -40,11 +40,11 @@ export class Vector {
   }
   /**
    *
-   * @param {any} c - context
-   * @param {Point} pos
-   * @param {string} color - hex color, not Color object
-   * @param {number} s - vector scale
-   * @param {number} t - stroke width
+   * @param {CanvasRenderingContext2D} c - context
+   * @param {Point} pos - optional
+   * @param {string} color - hex color, not Color object, optional
+   * @param {number} s - vector scale, optional
+   * @param {number} t - stroke width, optional
    */
   draw(c, pos = new Point(0, 0), color = '#000000', s = 1, t = 1) {
     c.beginPath();
@@ -154,9 +154,15 @@ export class Vector {
     this.multiply(value);
     this.mag = value;
   }
+  /**
+   * @returns {Vector}
+   */
   clone() {
     return new Vector(this.x, this.y, this.rotation);
   }
+  /**
+   * @returns {string}
+   */
   format() {
     return `(${this.x}, ${this.y})`;
   }
@@ -165,19 +171,23 @@ export class Vector {
 export class SimulationElement {
   /**
    * @param {Point} pos
-   * @param {Color} color
+   * @param {Color} color - optional
    */
   constructor(pos, color = new Color(0, 0, 0)) {
     this.pos = pos;
     this.color = color;
     this.sim = null;
   }
+  /**
+   * @param {HTMLCanvasElement} el
+   */
   setSimulationElement(el) {
     this.sim = el;
   }
   /**
    * @param {Color} color
-   * @param {Number} t - time in seconds
+   * @param {Number} t - optional
+   * @returns {Promise}
    */
   fill(color, t = 0) {
     const currentColor = new Color(this.color.r, this.color.g, this.color.b);
@@ -206,7 +216,8 @@ export class SimulationElement {
   }
   /**
    * @param {Point} p
-   * @param {Number} t - time in seconds
+   * @param {Number} t - optional
+   * @returns {Promise}
    */
   moveTo(p, t = 0) {
     const changeX = (p.x - this.pos.x) / (t * fps);
@@ -229,8 +240,8 @@ export class SimulationElement {
   }
   /**
    * @param {Vector} p
-   * @param {Number} t - time in seconds
-   *
+   * @param {Number} t - optional
+   * @returns {Promise}
    */
   move(p, t = 0) {
     const changeX = p.x / (t * fps);
@@ -256,6 +267,11 @@ export class SimulationElement {
 }
 
 export class Color {
+  /**
+   * @param {number} r
+   * @param {number} g
+   * @param {number} b
+   */
   constructor(r, g, b) {
     this.r = r;
     this.g = g;
@@ -271,6 +287,9 @@ export class Color {
     const hex = Math.round(c).toString(16);
     return hex.length == 1 ? '0' + hex : hex;
   }
+  /**
+   * @returns {string}
+   */
   toHex() {
     return '#' + this.#compToHex(this.r) + this.#compToHex(this.g) + this.#compToHex(this.b);
   }
@@ -284,11 +303,15 @@ export class Point extends Vector {
   constructor(x, y) {
     super(x, y);
   }
+  /**
+   * @returns {Point}
+   */
   clone() {
     return new Point(this.x, this.y);
   }
   /**
    * @param {Point} p
+   * @returns {Point}
    */
   add(p) {
     const newPoint = this.clone();
@@ -296,18 +319,30 @@ export class Point extends Vector {
     newPoint.y += p.y;
     return newPoint;
   }
+  /**
+   * @returns {string}
+   */
   format() {
     return super.format();
   }
 }
 
+// extend SimulationElement so it can be added to the
+// Simulation scene
 export class SceneCollection extends SimulationElement {
-  constructor(n = '') {
-    super(new Point(0, 0), new Color(0, 0, 0));
-    this.name = n;
+  /**
+   * @param {string} name - optional
+   */
+  constructor(name = '') {
+    super(new Point(0, 0));
+    this.name = name;
     this.scene = [];
     this.idObjs = {};
   }
+  /**
+   * @param {SimulationElement} element
+   * @param {string} id - optional
+   */
   add(element, id = null) {
     if (element instanceof SimulationElement) {
       if (this.sim != null) {
@@ -328,6 +363,9 @@ export class SceneCollection extends SimulationElement {
   removeWithId(id) {
     delete this.idObjs[id];
   }
+  /**
+   * @param {SimulationElement} element
+   */
   removeWithObject(element) {
     for (const el of this.scene) {
       if (el == element) {
@@ -342,12 +380,18 @@ export class SceneCollection extends SimulationElement {
       }
     }
   }
+  /**
+   * @param {HTMLCanvasElement} sim
+   */
   setSimulationElement(sim) {
     this.sim = sim;
     for (const element of this.scene) {
       element.setSimulationElement(sim);
     }
   }
+  /**
+   * @param {CanvasRenderingContext2D} c
+   */
   draw(c) {
     for (const element of this.scene) {
       element.draw(c);
@@ -356,6 +400,10 @@ export class SceneCollection extends SimulationElement {
       element.draw(c);
     }
   }
+  empty() {
+    this.scene = [];
+    this.idObjs = {};
+  }
 }
 
 export class Line extends SimulationElement {
@@ -363,6 +411,7 @@ export class Line extends SimulationElement {
    * @param {Point} p1
    * @param {Point} p2
    * @param {Color} color
+   * @param {number} r - optional
    */
   constructor(p1, p2, thickness, color, r = 0) {
     super(p1, color);
@@ -372,12 +421,16 @@ export class Line extends SimulationElement {
     this.#setVector();
     this.thickness = thickness;
   }
+  /**
+   * @returns {Line}
+   */
   clone() {
     return new Line(this.start, this.end, this.thickness, this.color, this.rotation);
   }
   /**
    * @param {Point} p
-   * @param {number} t
+   * @param {number} t - optional
+   * @returns {Promise}
    */
   setStart(p, t = 0) {
     const xChange = (p.x - this.start.x) / (t * fps);
@@ -399,7 +452,8 @@ export class Line extends SimulationElement {
   }
   /**
    * @param {Point} p
-   * @param {number} t
+   * @param {number} t - optional
+   * @returns {Promise}
    */
   setEnd(p, t = 0) {
     const xChange = (p.x - this.end.x) / (t * fps);
@@ -428,7 +482,8 @@ export class Line extends SimulationElement {
   }
   /**
    * @param {number} deg
-   * @param {number} t
+   * @param {number} t - optional
+   * @returns {Promise}
    */
   rotate(deg, t = 0) {
     const rotationChange = deg / (t * fps);
@@ -451,7 +506,8 @@ export class Line extends SimulationElement {
   }
   /**
    * @param {number} deg
-   * @param {number} t
+   * @param {number} t - optional
+   * @returns {Promise}
    */
   rotateTo(deg, t = 0) {
     const rotationChange = (deg - this.rotation) / (t * fps);
@@ -474,18 +530,23 @@ export class Line extends SimulationElement {
   }
   /**
    * @param {Point} p
-   * @param {number} t
+   * @param {number} t - optional
+   * @returns {Promise}
    */
   moveTo(p, t = 0) {
     return this.setStart(p, t);
   }
   /**
    * @param {Vector} v
-   * @param {number} t
+   * @param {number} t - optional
+   * @returns {Promise}
    */
   move(v, t = 0) {
     return this.moveTo(this.start.add(v), t);
   }
+  /**
+   * @param {CanvasRenderingContext2D} c
+   */
   draw(c) {
     this.vec.draw(c, new Point(this.start.x, this.start.y), this.color.toHex(), 1, this.thickness);
   }
@@ -503,9 +564,15 @@ export class Circle extends SimulationElement {
     this.hovering = false;
     this.events = [];
   }
+  /**
+   * @returns {Circle}
+   */
   clone() {
     return new Circle(this.pos, this.radius, this.color);
   }
+  /**
+   * @param {CanvasRenderingContext2D} c
+   */
   draw(c) {
     c.beginPath();
     c.fillStyle = this.color.toHex();
@@ -516,7 +583,7 @@ export class Circle extends SimulationElement {
   }
   /**
    * @param {number} value
-   * @param {number} t
+   * @param {number} t - optional
    * @returns {Promise}
    */
   setRadius(value, t = 0) {
@@ -537,7 +604,7 @@ export class Circle extends SimulationElement {
   }
   /**
    * @param {number} value
-   * @param {number} t
+   * @param {number} t - optional
    * @returns {Promise}
    */
   scale(value, t = 0) {
@@ -557,11 +624,6 @@ export class Circle extends SimulationElement {
       t
     );
   }
-  /**
-   * @param {string} event
-   * @param {Function} callback
-   * @param {Function} callback2
-   */
   #checkEvents() {
     this.events.forEach((event) => {
       const name = event.name;
@@ -585,6 +647,11 @@ export class Circle extends SimulationElement {
       }
     });
   }
+  /**
+   * @param {string} event
+   * @param {Function} callback
+   * @param {Function} callback2
+   */
   on(event, callback1, callback2) {
     if (!validEvents.includes(event)) {
       console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
@@ -627,6 +694,8 @@ export class Polygon extends SimulationElement {
   /***
    * @param {Color} color
    * @param {Point[]} points
+   * @param {number} r - optional
+   * @param {Point} offsetPoint - optional
    */
   constructor(pos, points, color, r = 0, offsetPoint = new Point(0, 0)) {
     super(pos, color);
@@ -647,6 +716,9 @@ export class Polygon extends SimulationElement {
       return new Point(p.x + this.offsetX, p.y + this.offsetY);
     });
   }
+  /**
+   * @returns {Polygon}
+   */
   clone() {
     return new Polygon(this.pos, this.rawPoints, this.color, this.rotation, this.offsetPoint);
   }
@@ -670,6 +742,9 @@ export class Polygon extends SimulationElement {
       return p;
     });
   }
+  /**
+   * @param {CanvasRenderingContext2D} c
+   */
   draw(c) {
     c.beginPath();
     c.fillStyle = this.color.toHex();
@@ -683,6 +758,10 @@ export class Polygon extends SimulationElement {
 }
 
 export class Event {
+  /**
+   * @param {string} name
+   * @param {Function} callback
+   */
   constructor(name, callback) {
     this.name = name;
     this.callback = callback;
@@ -692,12 +771,11 @@ export class Event {
 export class Square extends SimulationElement {
   /**
    * @param {Point} pos
-   * @param {Number} width
-   * @param {Number} height
+   * @param {number} width
+   * @param {number} height
    * @param {Color} color
-   * @param {Number} offsetX
-   * @param {Number} offsetY
-   * @param {Number} rotation - rotation in degrees
+   * @param {Point} offsetPoint - optional
+   * @param {number} rotation - optional
    */
   constructor(pos, width, height, color, offsetPoint = new Point(0, 0), rotation = 0) {
     super(pos, color);
@@ -728,6 +806,9 @@ export class Square extends SimulationElement {
   setNodeVectors(show) {
     this.showNodeVectors = show;
   }
+  /**
+   * @param {boolean} show
+   */
   setCollisionVectors(show) {
     this.showCollisionVectors = show;
   }
@@ -739,7 +820,8 @@ export class Square extends SimulationElement {
   }
   /**
    * @param {number} deg
-   * @param {number} t
+   * @param {number} t - optional
+   * @returns {Promise}
    */
   rotate(deg, t = 0) {
     const startRotation = this.rotation;
@@ -762,7 +844,8 @@ export class Square extends SimulationElement {
   }
   /**
    * @param {number} deg
-   * @param {number} t
+   * @param {number} t - optional
+   * @returns {Promise}
    */
   rotateTo(deg, t = 0) {
     const rotationChange = (deg - this.rotation) / (t * fps);
@@ -782,6 +865,9 @@ export class Square extends SimulationElement {
       t
     );
   }
+  /**
+   * @param {CanvasRenderingContext2D} c
+   */
   draw(c) {
     c.beginPath();
     c.fillStyle = this.color.toHex();
@@ -810,7 +896,7 @@ export class Square extends SimulationElement {
   }
   /**
    * @param {number} value
-   * @param {number} t
+   * @param {number} t - optional
    * @returns {Promise}
    */
   scale(value, t = 0) {
@@ -892,7 +978,7 @@ export class Square extends SimulationElement {
   }
   /**
    * @param {value} value
-   * @param {value} t
+   * @param {value} t - optional
    * @returns {Promise}
    */
   scaleWidth(value, t = 0) {
@@ -951,7 +1037,7 @@ export class Square extends SimulationElement {
   /**
    *
    * @param {number} value
-   * @param {number} t
+   * @param {number} t - optional
    * @returns {Promise}
    */
   scaleHeight(value, t = 0) {
@@ -1009,7 +1095,7 @@ export class Square extends SimulationElement {
   }
   /**
    * @param {number} value
-   * @param {number} t
+   * @param {number} t - optional
    * @returns {Promise}
    */
   setWidth(value, t = 0) {
@@ -1018,7 +1104,7 @@ export class Square extends SimulationElement {
   }
   /**
    * @param {number} value
-   * @param {number} t
+   * @param {number} t - optional
    * @returns {Promise}
    */
   setHeight(value, t = 0) {
@@ -1027,7 +1113,7 @@ export class Square extends SimulationElement {
   }
   /**
    * @param {Point} p
-   * @returns {Promise}
+   * @returns {boolean}
    */
   contains(p) {
     const topLeftVector = new Vector(this.topLeft.x, this.topLeft.y);
@@ -1129,7 +1215,7 @@ export class Square extends SimulationElement {
 export class Simulation {
   /**
    * @param {string} id - canvas id
-   * @param {number} frameRate
+   * @param {number} frameRate - optional
    */
   constructor(id, frameRate = 60) {
     fps = frameRate;
