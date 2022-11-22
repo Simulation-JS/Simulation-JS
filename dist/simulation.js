@@ -746,7 +746,7 @@ export class Polygon extends SimulationElement {
     this.offsetX = this.offsetPoint.x;
     this.offsetY = this.offsetPoint.y;
     this.points = points.map((p) => {
-      return new Point(p.x + this.offsetX, p.y + this.offsetY);
+      return new Vector(p.x + this.offsetX, p.y + this.offsetY);
     });
     this.rotation = r;
     this.#setRotation();
@@ -756,7 +756,7 @@ export class Polygon extends SimulationElement {
    */
   setPoints(points) {
     this.points = points.map((p) => {
-      return new Point(p.x + this.offsetX, p.y + this.offsetY);
+      return new Vector(p.x + this.offsetX, p.y + this.offsetY);
     });
   }
   /**
@@ -932,7 +932,7 @@ export class Square extends SimulationElement {
     if (this.showCollisionVectors) {
       const testVecs = [this.v1, this.v2, this.v3, this.v4, this.v5];
       if (testVecs.some((el) => el)) {
-        testVecs.forEach((vec) => vec.draw(c, new Point(this.pos.x, this.pos.y), '#0000ff'));
+        testVecs.forEach((vec) => vec.draw(c, new Color(0, 0, 255)));
       }
     }
 
@@ -1160,23 +1160,30 @@ export class Square extends SimulationElement {
    * @returns {boolean}
    */
   contains(p) {
-    const topLeftVector = new Vector(this.topLeft.x, this.topLeft.y);
+    const vecPos = new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY);
+
+    const topLeftVector = new Vector(this.topLeft.x, this.topLeft.y, 0, vecPos);
     topLeftVector.rotateTo(-this.rotation);
     this.v1 = topLeftVector;
 
-    const topRightVector = new Vector(this.topRight.x, this.topRight.y);
+    const topRightVector = new Vector(this.topRight.x, this.topRight.y, 0, vecPos);
     topRightVector.rotateTo(-this.rotation);
     this.v2 = topRightVector;
 
-    const bottomLeftVector = new Vector(this.bottomLeft.x, this.bottomLeft.y);
+    const bottomLeftVector = new Vector(this.bottomLeft.x, this.bottomLeft.y, 0, vecPos);
     bottomLeftVector.rotateTo(-this.rotation);
     this.v3 = bottomLeftVector;
 
-    const bottomRightVector = new Vector(this.bottomRight.x, this.bottomRight.y);
+    const bottomRightVector = new Vector(this.bottomRight.x, this.bottomRight.y, 0, vecPos);
     bottomRightVector.rotateTo(-this.rotation);
     this.v4 = bottomRightVector;
 
-    const cursorVector = new Vector(p.x - this.pos.x - this.offsetX, p.y - this.pos.y - this.offsetY);
+    const cursorVector = new Vector(
+      p.x - this.pos.x - this.offsetX,
+      p.y - this.pos.y - this.offsetY,
+      0,
+      vecPos
+    );
     cursorVector.rotateTo(-this.rotation);
     this.v5 = cursorVector;
 
