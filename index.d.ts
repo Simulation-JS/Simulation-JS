@@ -7,10 +7,10 @@ declare module 'simulationjs' {
     startX: number;
     startY: number;
     rotation: number;
-    constructor(x: number, y: number, r: number, pos: Point);
+    constructor(x: number, y: number, r?: number, pos?: Point);
     rotate: (deg: number) => Vector;
     rotateTo: (deg: number) => Vector;
-    draw: (c: CanvasRenderingContext2D, color: Color) => void;
+    draw: (c: CanvasRenderingContext2D, color?: Color) => void;
     normalize: () => Vector;
     multiply: (n: number) => Vector;
     multiplyX: (n: number) => Vector;
@@ -30,11 +30,11 @@ declare module 'simulationjs' {
     pos: Point;
     color: Color;
     sim: HTMLCanvasElement | null;
-    constructor(pos: Point, color: Color);
+    constructor(pos: Point, color?: Color);
     setSimulationElement: (el: HTMLCanvasElement) => void;
-    fill: (color: Color, t: number) => Promise;
-    moveTo: (p: Point, t: number) => Promise;
-    move: (p: Point, t: number) => Promise;
+    fill: (color: Color, t?: number) => Promise;
+    moveTo: (p: Point, t?: number) => Promise;
+    move: (p: Point, t?: number) => Promise;
   }
 
   declare class Color {
@@ -43,7 +43,6 @@ declare module 'simulationjs' {
     b: number;
     constructor(r: number, g: number, b: number);
     clone: () => Color;
-    #compToHex: (c: number) => string;
     toHex: () => string;
   }
 
@@ -61,8 +60,8 @@ declare module 'simulationjs' {
     idObjs: {
       [key: string]: SimulationElement;
     };
-    constructor(n = '');
-    add: (element: SimulationElement, id: string | null) => void;
+    constructor(n?: string);
+    add: (element: SimulationElement, id?: string) => void;
     removeWithId: (id: string) => void;
     removeWithObject: (element: SimulationElement) => void;
     setSimulationElement: (sim: HTMLCanvasElement) => void;
@@ -74,14 +73,14 @@ declare module 'simulationjs' {
     end: Point;
     rotation: number;
     thickness: number;
-    constructor(p1: Point, p2: Point, color: Color, r: number);
+    constructor(p1: Point, p2: Point, color?: Color, r?: number);
     clone: () => Line;
-    setStart: (p: Point, t = 0) => Promise;
-    setEnd: (p: Point, t = 0) => Promise;
-    rotate: (deg: number, t = 0) => Promise;
-    rotateTo: (deg: number, t = 0) => Promise;
-    moveTo: (p: Point, t = 0) => Promise;
-    move: (v: Vector, t = 0) => Promise;
+    setStart: (p: Point, t?: number) => Promise;
+    setEnd: (p: Point, t?: number) => Promise;
+    rotate: (deg: number, t?: number) => Promise;
+    rotateTo: (deg: number, t?: number) => Promise;
+    moveTo: (p: Point, t?: number) => Promise;
+    move: (v: Vector, t?: number) => Promise;
     draw: (c: CanvasRenderingContext2D) => void;
   }
 
@@ -89,12 +88,11 @@ declare module 'simulationjs' {
     radius: number;
     hovering: boolean;
     events: string[];
-    constructor(pos: Point, radius: number, color: Color);
+    constructor(pos: Point, radius: number, color?: Color);
     clone: () => Circle;
     draw: (c: CanvasRenderingContext2D) => void;
-    setRadius: (value: number, t = 0) => Promise;
-    scale: (value: number, t = 0) => Promise;
-    #checkEvents: () => void;
+    setRadius: (value: number, t?: number) => Promise;
+    scale: (value: number, t?: number) => Promise;
     on: (event: string, callback1: Function, callback2: Function) => void;
     contains: (p: Point) => void;
   }
@@ -106,12 +104,11 @@ declare module 'simulationjs' {
     offsetY: number;
     points: Vector[];
     rotation: number;
-    constructor(pos: Point, points: Point[], color: Color, r = 0, offsetPoint = new Point(0, 0));
+    constructor(pos: Point, points: Point[], color: Color, r?: number, offsetPoint?: Point);
     setPoints: (points: Point[]) => void;
     clone: () => Polygon;
     rotate: (deg: number) => void;
     rotateTo: (deg: number) => void;
-    #setRotation: () => void;
     draw: (c: CanvasRenderingContext2D) => void;
   }
 
@@ -134,31 +131,21 @@ declare module 'simulationjs' {
       width: number,
       height: number,
       color: Color,
-      offsetPoint = new Point(0, 0),
-      rotation = 0
+      offsetPoint?: Point,
+      rotation?: number
     );
     updateOffsetPosition: (p: Point) => void;
     setNodeVectors: (show: boolean) => void;
     setCollisionVectors: (show: boolean) => void;
-    #setRotation: () => void;
-    rotate: (deg: number, t = 0) => Promise;
-    rotateTo: (deg: number, t = 0) => Promise;
+    rotate: (deg: number, t?: number) => Promise;
+    rotateTo: (deg: number, t?: number) => Promise;
     draw: (c: CanvasRenderingContext2D) => void;
-    scale: (value: number, t = 0) => Promise;
-    #getInitialStartAndMag: () => {
-      topRightClone: Vector;
-      topLeftClone: Vector;
-      bottomLeftClone: Vector;
-      bottomRightClone: Vector;
-    };
-    #getProcessedStartAndMag: (component: string) => any;
-    scaleWidth: (value: number, t = 0) => Promise;
-    scaleHeight: (value: number, t = 0) => Promise;
-    setWidth: (value: number, t = 0) => Promise;
-    setHeight: (value: number, t = 0) => Promise;
+    scale: (value: number, t?: number) => Promise;
+    scaleWidth: (value: number, t?: number) => Promise;
+    scaleHeight: (value: number, t?: number) => Promise;
+    setWidth: (value: number, t?: number) => Promise;
+    setHeight: (value: number, t?: number) => Promise;
     contains: (p: Point) => boolean;
-    #updateDimentions: () => void;
-    #checkEvents: () => void;
     on: (event: string, callback1: Function, callback2: Function) => void;
     clone: () => Square;
   }
@@ -171,16 +158,14 @@ declare module 'simulationjs' {
     fitting: boolean;
     bgColor: string;
     canvas: HTMLCanvasElement;
-    constructor(id: string, frameRate = 60);
-    #render: (c: CanvasRenderingContext2D) => void;
-    add: (element: SimulationElement, id = null) => void;
+    constructor(id: string, frameRate?: number);
+    add: (element: SimulationElement, id?: string) => void;
     removeWithId: (id: string) => void;
     removeWithObject: (element: SimulationElement) => void;
     on: (event: string, callback: Function) => void;
     fitElement: () => void;
     setSize: (x: number, y: number) => void;
     setBgColor: (color: Color) => void;
-    #resizeCanvas: (c: CanvasRenderingContext2D) => void;
   }
 
   declare function abs(num: number): number;

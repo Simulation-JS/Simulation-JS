@@ -150,7 +150,7 @@ export class Vector extends SimulationElement {
    * @param {number} x
    * @param {number} y
    * @param {number} r - optional
-   * @param {Point} pos
+   * @param {Point} pos - optional
    */
   constructor(x, y, r = 0, pos = new Point(0, 0)) {
     super(pos);
@@ -161,7 +161,9 @@ export class Vector extends SimulationElement {
     this.startX = x;
     this.startY = y;
     this.rotation = r;
+    console.log(this.rotation);
     this.pos = pos;
+    this.#setRotation();
   }
   /**
    * @param {number} deg
@@ -193,7 +195,7 @@ export class Vector extends SimulationElement {
   /**
    *
    * @param {CanvasRenderingContext2D} c - context
-   * @param {string} color - hex color, not Color object, optional
+   * @param {Color} color - optional
    */
   draw(c, color = new Color(0, 0, 0)) {
     c.beginPath();
@@ -598,9 +600,9 @@ export class Circle extends SimulationElement {
   /**
    * @param {Point} pos
    * @param {number} radius
-   * @param {Color} color
+   * @param {Color} color - optional
    */
-  constructor(pos, radius, color) {
+  constructor(pos, radius, color = new Color(0, 0, 0)) {
     super(pos, color);
     this.radius = radius;
     this.hovering = false;
