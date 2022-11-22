@@ -4,170 +4,6 @@ let currentMousePos;
 let currentMouseEvent;
 const validEvents = ['mousemove', 'click', 'hover', 'mouseover', 'mouseleave'];
 
-export class Vector {
-  /**
-   * @param {number} x
-   * @param {number} y
-   * @param {number} r - optional
-   */
-  constructor(x, y, r = 0) {
-    this.x = x;
-    this.y = y;
-    this.mag = pythag(x, y);
-    this.startAngle = radToDeg(atan2(y, x));
-    this.startX = x;
-    this.startY = y;
-    this.rotation = r;
-  }
-  /**
-   * @param {number} deg
-   */
-  rotate(deg) {
-    this.rotation += deg;
-    this.#setRotation();
-  }
-  /**
-   * @param {number} deg
-   */
-  rotateTo(deg) {
-    this.rotation = deg;
-    this.#setRotation();
-  }
-  #setRotation() {
-    const deg = this.rotation * (Math.PI / 180);
-    this.x = this.startX * Math.cos(deg) - this.startY * Math.sin(deg);
-    this.y = this.startX * Math.sin(deg) + this.startY * Math.cos(deg);
-  }
-  /**
-   *
-   * @param {CanvasRenderingContext2D} c - context
-   * @param {Point} pos - optional
-   * @param {string} color - hex color, not Color object, optional
-   * @param {number} s - vector scale, optional
-   * @param {number} t - stroke width, optional
-   */
-  draw(c, pos = new Point(0, 0), color = '#000000', s = 1, t = 1) {
-    c.beginPath();
-    c.strokeStyle = color;
-    c.lineWidth = t;
-    c.moveTo(pos.x, pos.y);
-    c.lineTo(pos.x + this.x * s, pos.y + this.y * s);
-    c.stroke();
-    c.closePath();
-  }
-  normalize() {
-    if (this.mag != 0) {
-      this.x /= this.mag;
-      this.startX /= this.mag;
-      this.y /= this.mag;
-      this.startY /= this.mag;
-      this.mag = 1;
-    }
-  }
-  /**
-   * @param {number} n
-   */
-  multiply(n) {
-    this.x *= n;
-    this.startX *= n;
-    this.y *= n;
-    this.startY *= n;
-    this.mag *= n;
-  }
-  /**
-   * @param {number} n
-   */
-  multiplyX(n) {
-    this.x *= n;
-    this.startX *= n;
-    this.#updateMag();
-  }
-  /**
-   * @param {number} n
-   */
-  multiplyY(n) {
-    this.y *= n;
-    this.startY *= n;
-    this.#updateMag();
-  }
-  /**
-   * @param {number} n
-   */
-  divide(n) {
-    this.x /= n;
-    this.startX /= n;
-    this.y /= n;
-    this.startY /= n;
-    this.mag /= n;
-  }
-  /**
-   * @param {number} value
-   */
-  appendMag(value) {
-    if (this.mag != 0) {
-      const newMag = this.mag + value;
-      this.normalize();
-      this.multiply(newMag);
-      this.mag = newMag;
-    }
-  }
-  /**
-   * @param {number} value
-   */
-  appendX(value) {
-    this.x += value;
-    this.startX += value;
-    this.#updateMag();
-  }
-  /**
-   * @param {number} value
-   */
-  appendY(value) {
-    this.y += value;
-    this.startY += value;
-    this.#updateMag();
-  }
-  /**
-   * @param {number} value
-   */
-  setX(value) {
-    this.x = value;
-    this.startX = value;
-    this.#updateMag();
-  }
-  /**
-   * @param {number} value
-   */
-  setY(value) {
-    this.y = value;
-    this.startY = value;
-    this.#updateMag();
-  }
-  #updateMag() {
-    this.mag = pythag(this.x, this.y);
-  }
-  /**
-   * @param {number} value
-   */
-  setMag(value) {
-    this.normalize();
-    this.multiply(value);
-    this.mag = value;
-  }
-  /**
-   * @returns {Vector}
-   */
-  clone() {
-    return new Vector(this.x, this.y, this.rotation);
-  }
-  /**
-   * @returns {string}
-   */
-  format() {
-    return `(${this.x}, ${this.y})`;
-  }
-}
-
 export class SimulationElement {
   /**
    * @param {Point} pos
@@ -266,6 +102,244 @@ export class SimulationElement {
   }
 }
 
+export class Point extends SimulationElement {
+  /**
+   * @param {number} x
+   * @param {number} y
+   */
+  constructor(x, y) {
+    super({ x, y });
+    this.x = x;
+    this.y = y;
+  }
+  /**
+   * @returns {Point}
+   */
+  clone() {
+    return new Point(this.x, this.y);
+  }
+  /**
+   * @param {Point} p
+   * @returns {Point}
+   */
+  add(p) {
+    this.x += p.x;
+    this.y += p.y;
+    return this;
+  }
+  /**
+   * @returns {string}
+   */
+  format() {
+    return super.format();
+  }
+  /**
+   * @param {CanvasRenderingContext2D} c
+   */
+  draw(c) {
+    c.beginPath();
+    c.arc(this.x, this.y, 4, 0, Math.PI * 2, false);
+    c.fillStyle = '#000000';
+    c.fill();
+    c.closePath();
+  }
+}
+
+export class Vector extends SimulationElement {
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {number} r - optional
+   * @param {Point} pos
+   */
+  constructor(x, y, r = 0, pos = new Point(0, 0)) {
+    super(pos);
+    this.x = x;
+    this.y = y;
+    this.mag = pythag(x, y);
+    this.startAngle = radToDeg(atan2(y, x));
+    this.startX = x;
+    this.startY = y;
+    this.rotation = r;
+    this.pos = pos;
+  }
+  /**
+   * @param {number} deg
+   * @returns {Vector}
+   */
+  rotate(deg) {
+    this.rotation += deg;
+    this.#setRotation();
+    return this;
+  }
+  /**
+   * @param {number} deg
+   * @returns {Vector}
+   */
+  rotateTo(deg) {
+    this.rotation = deg;
+    this.#setRotation();
+    return this;
+  }
+  /**
+   * @returns {Vector}
+   */
+  #setRotation() {
+    const deg = this.rotation * (Math.PI / 180);
+    this.x = this.startX * Math.cos(deg) - this.startY * Math.sin(deg);
+    this.y = this.startX * Math.sin(deg) + this.startY * Math.cos(deg);
+    return this;
+  }
+  /**
+   *
+   * @param {CanvasRenderingContext2D} c - context
+   * @param {string} color - hex color, not Color object, optional
+   */
+  draw(c, color = new Color(0, 0, 0)) {
+    c.beginPath();
+    c.strokeStyle = color.toHex();
+    c.moveTo(this.pos.x, this.pos.y);
+    c.lineTo(this.pos.x + this.x, this.pos.y + this.y);
+    c.stroke();
+    c.closePath();
+  }
+  /**
+   * @returns {Vector}
+   */
+  normalize() {
+    if (this.mag != 0) {
+      this.x /= this.mag;
+      this.startX /= this.mag;
+      this.y /= this.mag;
+      this.startY /= this.mag;
+      this.mag = 1;
+    }
+    return this;
+  }
+  /**
+   * @param {number} n
+   * @returns {Vector}
+   */
+  multiply(n) {
+    this.x *= n;
+    this.startX *= n;
+    this.y *= n;
+    this.startY *= n;
+    this.mag *= n;
+    return this;
+  }
+  /**
+   * @param {number} n
+   * @returns {Vector}
+   */
+  multiplyX(n) {
+    this.x *= n;
+    this.startX *= n;
+    this.#updateMag();
+    return this;
+  }
+  /**
+   * @param {number} n
+   * @returns {Vector}
+   */
+  multiplyY(n) {
+    this.y *= n;
+    this.startY *= n;
+    this.#updateMag();
+    return this;
+  }
+  /**
+   * @param {number} n
+   * @returns {Vector}
+   */
+  divide(n) {
+    this.x /= n;
+    this.startX /= n;
+    this.y /= n;
+    this.startY /= n;
+    this.mag /= n;
+    return this;
+  }
+  /**
+   * @param {number} value
+   * @returns {Vector}
+   */
+  appendMag(value) {
+    if (this.mag != 0) {
+      const newMag = this.mag + value;
+      this.normalize();
+      this.multiply(newMag);
+      this.mag = newMag;
+    }
+    return this;
+  }
+  /**
+   * @param {number} value
+   * @returns {Vector}
+   */
+  appendX(value) {
+    this.x += value;
+    this.startX += value;
+    this.#updateMag();
+    return this;
+  }
+  /**
+   * @param {number} value
+   * @returns {Vector}
+   */
+  appendY(value) {
+    this.y += value;
+    this.startY += value;
+    this.#updateMag();
+    return this;
+  }
+  /**
+   * @param {number} value
+   * @returns {Vector}
+   */
+  setX(value) {
+    this.x = value;
+    this.startX = value;
+    this.#updateMag();
+    return this;
+  }
+  /**
+   * @param {number} value
+   * @returns {Vector}
+   */
+  setY(value) {
+    this.y = value;
+    this.startY = value;
+    this.#updateMag();
+    return this;
+  }
+  #updateMag() {
+    this.mag = pythag(this.x, this.y);
+  }
+  /**
+   * @param {number} value
+   * @returns {Vector}
+   */
+  setMag(value) {
+    this.normalize();
+    this.multiply(value);
+    this.mag = value;
+    return this;
+  }
+  /**
+   * @returns {Vector}
+   */
+  clone() {
+    return new Vector(this.x, this.y, this.rotation);
+  }
+  /**
+   * @returns {string}
+   */
+  format() {
+    return `(${this.x}, ${this.y})`;
+  }
+}
+
 export class Color {
   /**
    * @param {number} r
@@ -292,38 +366,6 @@ export class Color {
    */
   toHex() {
     return '#' + this.#compToHex(this.r) + this.#compToHex(this.g) + this.#compToHex(this.b);
-  }
-}
-
-export class Point extends Vector {
-  /**
-   * @param {number} x
-   * @param {number} y
-   */
-  constructor(x, y) {
-    super(x, y);
-  }
-  /**
-   * @returns {Point}
-   */
-  clone() {
-    return new Point(this.x, this.y);
-  }
-  /**
-   * @param {Point} p
-   * @returns {Point}
-   */
-  add(p) {
-    const newPoint = this.clone();
-    newPoint.x += p.x;
-    newPoint.y += p.y;
-    return newPoint;
-  }
-  /**
-   * @returns {string}
-   */
-  format() {
-    return super.format();
   }
 }
 
@@ -410,22 +452,21 @@ export class Line extends SimulationElement {
   /**
    * @param {Point} p1
    * @param {Point} p2
-   * @param {Color} color
+   * @param {Color} color - optional
    * @param {number} r - optional
    */
-  constructor(p1, p2, thickness, color, r = 0) {
+  constructor(p1, p2, color = new Color(0, 0, 0), r = 0) {
     super(p1, color);
     this.start = p1;
     this.end = p2;
     this.rotation = r;
     this.#setVector();
-    this.thickness = thickness;
   }
   /**
    * @returns {Line}
    */
   clone() {
-    return new Line(this.start, this.end, this.thickness, this.color, this.rotation);
+    return new Line(this.start, this.end, this.color, this.rotation);
   }
   /**
    * @param {Point} p
@@ -477,7 +518,7 @@ export class Line extends SimulationElement {
     );
   }
   #setVector() {
-    this.vec = new Vector(this.end.x - this.start.x, this.end.y - this.start.y);
+    this.vec = new Vector(this.end.x - this.start.x, this.end.y - this.start.y, 0, this.start);
     this.vec.rotateTo(this.rotation);
   }
   /**
@@ -542,13 +583,14 @@ export class Line extends SimulationElement {
    * @returns {Promise}
    */
   move(v, t = 0) {
-    return this.moveTo(this.start.add(v), t);
+    const newPos = this.start.clone().add(v);
+    return this.moveTo(newPos, t);
   }
   /**
    * @param {CanvasRenderingContext2D} c
    */
   draw(c) {
-    this.vec.draw(c, new Point(this.start.x, this.start.y), this.color.toHex(), 1, this.thickness);
+    this.vec.draw(c, this.color);
   }
 }
 
@@ -795,10 +837,11 @@ export class Square extends SimulationElement {
   updateOffsetPosition(p) {
     this.offsetX = p.x;
     this.offsetY = p.y;
-    this.topLeft = new Vector(-this.width / 2 - this.offsetX, -this.height / 2 - this.offsetY);
-    this.topRight = new Vector(this.width / 2 - this.offsetX, -this.height / 2 - this.offsetY);
-    this.bottomLeft = new Vector(-this.width / 2 - this.offsetX, this.height / 2 - this.offsetY);
-    this.bottomRight = new Vector(this.width / 2 - this.offsetX, this.height / 2 - this.offsetY);
+    const vecPos = new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY);
+    this.topLeft = new Vector(-this.width / 2 - this.offsetX, -this.height / 2 - this.offsetY, 0, vecPos);
+    this.topRight = new Vector(this.width / 2 - this.offsetX, -this.height / 2 - this.offsetY, 0, vecPos);
+    this.bottomLeft = new Vector(-this.width / 2 - this.offsetX, this.height / 2 - this.offsetY, 0, vecPos);
+    this.bottomRight = new Vector(this.width / 2 - this.offsetX, this.height / 2 - this.offsetY, 0, vecPos);
     this.#setRotation();
   }
   /**
@@ -880,10 +923,10 @@ export class Square extends SimulationElement {
     c.closePath();
 
     if (this.showNodeVectors) {
-      this.topLeft.draw(c, new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY));
-      this.topRight.draw(c, new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY));
-      this.bottomLeft.draw(c, new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY));
-      this.bottomRight.draw(c, new Point(this.pos.x + this.offsetX, this.pos.y + this.offsetY));
+      this.topLeft.draw(c);
+      this.topRight.draw(c);
+      this.bottomLeft.draw(c);
+      this.bottomRight.draw(c);
     }
 
     if (this.showCollisionVectors) {
