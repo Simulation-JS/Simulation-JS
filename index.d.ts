@@ -1,5 +1,5 @@
 declare module 'simulationjs' {
-  declare class Vector {
+  declare class Vector extends SimulationElement {
     x: number;
     y: number;
     mag: number;
@@ -7,23 +7,21 @@ declare module 'simulationjs' {
     startX: number;
     startY: number;
     rotation: number;
-    constructor(x: number, y: number, r = 0);
-    rotate: (deg: number) => void;
-    rotateTo: (deg: number) => void;
-    #setRotation: () => void;
-    draw: (c: CanvasRenderingContext2D, pos = new Point(0, 0), color = '#000000', s = 1, t = 1) => void;
-    normalize: () => void;
-    multiply: (n: number) => void;
-    multiplyX: (n: number) => void;
-    multiplyY: (n: number) => void;
-    divide: (n: number) => void;
-    appendMag: (value: number) => void;
-    appendX: (value: number) => void;
-    appendY: (value: number) => void;
-    setX: (value: number) => void;
-    setY: (value: number) => void;
-    #updateMag: () => void;
-    setMag: (value: number) => void;
+    constructor(x: number, y: number, r: number, pos: Point);
+    rotate: (deg: number) => Vector;
+    rotateTo: (deg: number) => Vector;
+    draw: (c: CanvasRenderingContext2D, color: Color) => void;
+    normalize: () => Vector;
+    multiply: (n: number) => Vector;
+    multiplyX: (n: number) => Vector;
+    multiplyY: (n: number) => Vector;
+    divide: (n: number) => Vector;
+    appendMag: (value: number) => Vector;
+    appendX: (value: number) => Vector;
+    appendY: (value: number) => Vector;
+    setX: (value: number) => Vector;
+    setY: (value: number) => Vector;
+    setMag: (value: number) => Vector;
     clone: () => Vector;
     format: () => string;
   }
@@ -32,11 +30,11 @@ declare module 'simulationjs' {
     pos: Point;
     color: Color;
     sim: HTMLCanvasElement | null;
-    constructor(pos: Point, color = new Color(0, 0, 0));
+    constructor(pos: Point, color: Color);
     setSimulationElement: (el: HTMLCanvasElement) => void;
-    fill: (color: Color, t = 0) => Promise;
-    moveTo: (p: Point, t = 0) => Promise;
-    move: (p: Point, t = 0) => Promise;
+    fill: (color: Color, t: number) => Promise;
+    moveTo: (p: Point, t: number) => Promise;
+    move: (p: Point, t: number) => Promise;
   }
 
   declare class Color {
@@ -49,11 +47,12 @@ declare module 'simulationjs' {
     toHex: () => string;
   }
 
-  declare class Point extends Vector {
+  declare class Point extends SimulationElement {
     constructor(x: number, y: number);
     clone: () => Point;
     add: (p: Point) => Point;
     format: () => string;
+    draw: (c: CanvasRenderingContext2D) => void;
   }
 
   declare class SceneCollection extends SimulationElement {
@@ -63,7 +62,7 @@ declare module 'simulationjs' {
       [key: string]: SimulationElement;
     };
     constructor(n = '');
-    add: (element: SimulationElement, id: string | null = null) => void;
+    add: (element: SimulationElement, id: string | null) => void;
     removeWithId: (id: string) => void;
     removeWithObject: (element: SimulationElement) => void;
     setSimulationElement: (sim: HTMLCanvasElement) => void;
@@ -75,16 +74,15 @@ declare module 'simulationjs' {
     end: Point;
     rotation: number;
     thickness: number;
-    constructor(p1: Point, p2: Point, thickness: number, color: Color, r = 0);
+    constructor(p1: Point, p2: Point, color: Color, r: number);
     clone: () => Line;
     setStart: (p: Point, t = 0) => Promise;
     setEnd: (p: Point, t = 0) => Promise;
-    #setVector: () => void;
     rotate: (deg: number, t = 0) => Promise;
     rotateTo: (deg: number, t = 0) => Promise;
     moveTo: (p: Point, t = 0) => Promise;
     move: (v: Vector, t = 0) => Promise;
-    draw: (c: CanvasRenderingContext2D) => Promise;
+    draw: (c: CanvasRenderingContext2D) => void;
   }
 
   declare class Circle extends SimulationElement {
@@ -106,7 +104,7 @@ declare module 'simulationjs' {
     offsetPoint: Point;
     offsetX: number;
     offsetY: number;
-    points: Point[];
+    points: Vector[];
     rotation: number;
     constructor(pos: Point, points: Point[], color: Color, r = 0, offsetPoint = new Point(0, 0));
     setPoints: (points: Point[]) => void;
