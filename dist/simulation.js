@@ -707,6 +707,7 @@ export class Polygon extends SimulationElement {
       return new Point(p.x + this.offsetX, p.y + this.offsetY);
     });
     this.rotation = r;
+    this.#setRotation();
   }
   /**
    * @param {Point[]} points
