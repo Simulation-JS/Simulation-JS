@@ -1,5 +1,5 @@
 declare module 'simulationjs' {
-  declare class Vector extends SimulationElement {
+  declare class Vector {
     x: number;
     y: number;
     mag: number;
@@ -7,10 +7,10 @@ declare module 'simulationjs' {
     startX: number;
     startY: number;
     rotation: number;
-    constructor(x: number, y: number, r?: number, pos?: Point);
+    constructor(x: number, y: number, r?: number);
     rotate: (deg: number) => Vector;
     rotateTo: (deg: number) => Vector;
-    draw: (c: CanvasRenderingContext2D, color?: Color) => void;
+    draw: (c: CanvasRenderingContext2D, pos?: Point, color?: Color) => void;
     normalize: () => Vector;
     multiply: (n: number) => Vector;
     multiplyX: (n: number) => Vector;
@@ -46,12 +46,11 @@ declare module 'simulationjs' {
     toHex: () => string;
   }
 
-  declare class Point extends SimulationElement {
+  declare class Point extends Vector {
     constructor(x: number, y: number);
     clone: () => Point;
     add: (p: Point) => Point;
     format: () => string;
-    draw: (c: CanvasRenderingContext2D) => void;
   }
 
   declare class SceneCollection extends SimulationElement {
@@ -102,7 +101,7 @@ declare module 'simulationjs' {
     offsetPoint: Point;
     offsetX: number;
     offsetY: number;
-    points: Vector[];
+    points: Point[];
     rotation: number;
     constructor(pos: Point, points: Point[], color: Color, r?: number, offsetPoint?: Point);
     setPoints: (points: Point[]) => void;
