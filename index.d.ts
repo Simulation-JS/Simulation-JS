@@ -50,7 +50,6 @@ declare module 'simulationjs' {
   declare class Point extends Vector {
     constructor(x: number, y: number);
     clone: () => Point;
-    format: () => string;
   }
 
   declare class SceneCollection extends SimulationElement {

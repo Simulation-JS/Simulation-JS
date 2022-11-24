@@ -347,21 +347,6 @@ export class Point extends Vector {
   clone() {
     return new Point(this.x, this.y);
   }
-  /**
-   * @param {Point} p
-   * @returns {Point}
-   */
-  add(p) {
-    this.x += p.x;
-    this.y += p.y;
-    return this;
-  }
-  /**
-   * @returns {string}
-   */
-  format() {
-    return super.format();
-  }
 }
 
 // extend SimulationElement so it can be added to the
