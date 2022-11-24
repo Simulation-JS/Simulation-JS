@@ -83,6 +83,18 @@ export class Vector {
     return this;
   }
   /**
+   * @param {Vector} v
+   * @returns {Vector}
+   */
+  add(v) {
+    this.x += v.x;
+    this.startX += v.x;
+    this.y += v.x;
+    this.startY += v.x;
+    this.#updateMag();
+    return this;
+  }
+  /**
    * @param {number} n
    * @returns {Vector}
    */

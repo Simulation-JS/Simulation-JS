@@ -13,6 +13,7 @@ declare module 'simulationjs' {
     draw: (c: CanvasRenderingContext2D, pos?: Point, color?: Color) => void;
     normalize: () => Vector;
     multiply: (n: number) => Vector;
+    add: (p: Point) => Point;
     multiplyX: (n: number) => Vector;
     multiplyY: (n: number) => Vector;
     divide: (n: number) => Vector;
@@ -49,7 +50,6 @@ declare module 'simulationjs' {
   declare class Point extends Vector {
     constructor(x: number, y: number);
     clone: () => Point;
-    add: (p: Point) => Point;
     format: () => string;
   }
 
