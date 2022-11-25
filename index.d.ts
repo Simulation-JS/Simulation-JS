@@ -10,7 +10,7 @@ declare module 'simulationjs' {
     constructor(x: number, y: number, r?: number);
     rotate: (deg: number) => Vector;
     rotateTo: (deg: number) => Vector;
-    draw: (c: CanvasRenderingContext2D, pos?: Point, color?: Color) => void;
+    draw: (c: CanvasRenderingContext2D, pos?: Point, color?: Color, thickness?: number) => void;
     normalize: () => Vector;
     multiply: (n: number) => Vector;
     add: (p: Point) => Point;
@@ -71,7 +71,7 @@ declare module 'simulationjs' {
     end: Point;
     rotation: number;
     thickness: number;
-    constructor(p1: Point, p2: Point, color?: Color, r?: number);
+    constructor(p1: Point, p2: Point, color?: Color, thickness?: number, r?: number);
     clone: () => Line;
     setStart: (p: Point, t?: number) => Promise;
     setEnd: (p: Point, t?: number) => Promise;

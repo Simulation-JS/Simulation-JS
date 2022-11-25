@@ -48,10 +48,12 @@ export class Vector {
    * @param {CanvasRenderingContext2D} c
    * @param {Point} pos - optional
    * @param {Color} color - optional
+   * @param {number} thickness - optional
    */
-  draw(c, pos = new Point(0, 0), color = new Color(0, 0, 0)) {
+  draw(c, pos = new Point(0, 0), color = new Color(0, 0, 0), thickness = 1) {
     c.beginPath();
     c.strokeStyle = color.toHex();
+    c.lineWidth = thickness;
     c.moveTo(pos.x, pos.y);
     c.lineTo(pos.x + this.x, pos.y + this.y);
     c.stroke();
@@ -433,13 +435,15 @@ export class Line extends SimulationElement {
    * @param {Point} p1
    * @param {Point} p2
    * @param {Color} color - optional
+   * @param {number} thickness - optional
    * @param {number} r - optional
    */
-  constructor(p1, p2, color = new Color(0, 0, 0), r = 0) {
+  constructor(p1, p2, color = new Color(0, 0, 0), thickness = 1, r = 0) {
     super(p1, color);
     this.start = p1;
     this.end = p2;
     this.rotation = r;
+    this.thickness = thickness;
     this.#setVector();
   }
   /**
@@ -569,7 +573,7 @@ export class Line extends SimulationElement {
    * @param {CanvasRenderingContext2D} c
    */
   draw(c) {
-    this.vec.draw(c, new Point(this.start.x, this.start.y), this.color);
+    this.vec.draw(c, new Point(this.start.x, this.start.y), this.color, this.thickness);
   }
 }
 
