@@ -63,6 +63,7 @@ declare module 'simulationjs' {
     removeWithId: (id: string) => void;
     removeWithObject: (element: SimulationElement) => void;
     setSimulationElement: (sim: HTMLCanvasElement) => void;
+    empty: () => void;
     draw: (c: CanvasRenderingContext2D) => void;
   }
 
