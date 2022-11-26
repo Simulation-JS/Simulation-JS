@@ -164,6 +164,7 @@ declare module 'simulationjs' {
     on: (event: string, callback: Function) => void;
     fitElement: () => void;
     setSize: (x: number, y: number) => void;
+    empty: () => void;
     setBgColor: (color: Color) => void;
   }
 
