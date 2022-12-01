@@ -39,6 +39,7 @@ export class Vector {
     return this;
   }
   #setRotation() {
+    this.rotation = minimizeRotation(this.rotation);
     const deg = this.rotation * (Math.PI / 180);
     this.x = this.startX * Math.cos(deg) - this.startY * Math.sin(deg);
     this.y = this.startX * Math.sin(deg) + this.startY * Math.cos(deg);
@@ -525,6 +526,7 @@ export class Line extends SimulationElement {
       },
       () => {
         this.rotation = start + deg;
+        this.rotation = minimizeRotation(this.rotation);
       },
       t
     );
@@ -548,6 +550,7 @@ export class Line extends SimulationElement {
       },
       () => {
         this.rotation = deg;
+        this.rotation = minimizeRotation(this.rotation);
         this.vec.rotateTo(deg);
       },
       t
@@ -763,6 +766,7 @@ export class Polygon extends SimulationElement {
     this.#setRotation();
   }
   #setRotation() {
+    this.rotation = minimizeRotation(this.rotation);
     this.points = this.points.map((p) => {
       p.rotateTo(this.rotation);
       return p;
@@ -855,6 +859,7 @@ export class Square extends SimulationElement {
 
     const func = () => {
       this.rotation = startRotation + deg;
+      this.rotation = minimizeRotation(this.rotation);
       this.#setRotation();
     };
 
@@ -878,6 +883,7 @@ export class Square extends SimulationElement {
 
     const func = () => {
       this.rotation = deg;
+      this.rotation = minimizeRotation(this.rotation);
       this.#setRotation();
     };
 
@@ -1420,6 +1426,11 @@ export function degToRad(deg) {
  */
 export function radToDeg(rad) {
   return (rad * 180) / Math.PI;
+}
+
+function minimizeRotation(rotation) {
+  while (rotation > 360) rotation -= 360;
+  return rotation;
 }
 
 /**
