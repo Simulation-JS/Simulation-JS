@@ -1,6 +1,6 @@
 {
   "name": "simulationjs",
-  "version": "2.4.2",
+  "version": "2.4.3",
   "type": "module",
   "description": "A simple graphics library for 2d graphics on html canvas",
   "main": "./dist/simulation.js",
