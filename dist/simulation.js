@@ -1210,7 +1210,7 @@ export class Square extends SimulationElement {
    * @param {Function} callback
    * @param {Function} callback2
    */
-  on(event, callback1, callback2) {
+  on(event, callback1, callback2 = () => {}) {
     if (!validEvents.includes(event)) {
       console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
       return;

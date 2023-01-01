@@ -145,7 +145,7 @@ declare module 'simulationjs' {
     setWidth: (value: number, t?: number) => Promise;
     setHeight: (value: number, t?: number) => Promise;
     contains: (p: Point) => boolean;
-    on: (event: string, callback1: Function, callback2: Function) => void;
+    on: (event: string, callback1: Function, callback2?: Function) => void;
     clone: () => Square;
   }
 
