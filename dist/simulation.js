@@ -949,7 +949,7 @@ export class Square extends SimulationElement {
         this.bottomRight.multiply(value);
         this.bottomLeft.multiply(value);
 
-        this.#updateDimentions();
+        this.#updateDimensions();
       },
       () => {
         this.topRight.appendMag(topRightChange);
@@ -970,7 +970,7 @@ export class Square extends SimulationElement {
         this.bottomLeft.normalize();
         this.bottomLeft.multiply(bottomLeftMag * value);
 
-        this.#updateDimentions();
+        this.#updateDimensions();
       },
       t
     );
@@ -1036,7 +1036,7 @@ export class Square extends SimulationElement {
         this.bottomRight.multiplyX(value);
         this.bottomLeft.multiplyX(value);
 
-        this.#updateDimentions();
+        this.#updateDimensions();
       },
       () => {
         this.topRight.appendX(topRightChange);
@@ -1061,7 +1061,7 @@ export class Square extends SimulationElement {
         bottomLeftClone.multiplyX(bottomLeftMag * value);
         this.bottomLeft = bottomLeftClone.clone();
 
-        this.#updateDimentions();
+        this.#updateDimensions();
       },
       t
     );
@@ -1095,7 +1095,7 @@ export class Square extends SimulationElement {
         this.bottomRight.multiplyY(value);
         this.bottomLeft.multiplyY(value);
 
-        this.#updateDimentions();
+        this.#updateDimensions();
       },
       () => {
         this.topRight.appendY(topRightChange);
@@ -1120,7 +1120,7 @@ export class Square extends SimulationElement {
         bottomLeftClone.multiplyY(bottomLeftMag * value);
         this.bottomLeft = bottomLeftClone.clone();
 
-        this.#updateDimentions();
+        this.#updateDimensions();
       },
       t
     );
@@ -1178,7 +1178,7 @@ export class Square extends SimulationElement {
     }
     return false;
   }
-  #updateDimentions() {
+  #updateDimensions() {
     this.height = this.topRight.y + this.bottomRight.y;
     this.width = this.topRight.x + this.topLeft.x;
   }

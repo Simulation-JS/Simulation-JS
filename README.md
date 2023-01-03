@@ -1,6 +1,6 @@
 # Simulation.js
 
-Simulation.js is a simple JavaScript library for making graphics in html canvas.
+Simulation.js is an easy to use JavaScript library for making graphics in html canvas.
 
 ## Documentation
 
