@@ -1244,6 +1244,31 @@ export class Square extends SimulationElement {
   }
 }
 
+export class Arc extends SimulationElement {
+  /**
+   * @param {Point} pos
+   * @param {number} radius
+   * @param {number} startAngle
+   * @param {number} endAngle
+   * @param {Circle} color
+   * @param {boolean} counterClockwise - optional
+   */
+  constructor(pos, radius, startAngle, endAngle, color, counterClockwise = false) {
+    super(pos, color);
+    this.radius = radius;
+    this.startAngle = startAngle;
+    this.endAngle = endAngle;
+    this.counterClockwise = counterClockwise;
+  }
+  draw(c) {
+    c.beginPath();
+    c.strokeStyle = this.color.toHex();
+    c.arc(this.pos.x, this.pos.y, this.radius, this.startAngle, this.endAngle, this.counterClockwise);
+    c.stroke();
+    c.closePath();
+  }
+}
+
 export class Simulation {
   /**
    * @param {string} id - canvas id

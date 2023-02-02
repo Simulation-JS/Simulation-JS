@@ -111,6 +111,22 @@ declare module 'simulationjs' {
     draw: (c: CanvasRenderingContext2D) => void;
   }
 
+  declare class Arc extends SimulationElement {
+    radius: number;
+    startAngle: number;
+    endAngle: number;
+    counterClockwise: boolean;
+    constructor(
+      pos: Point,
+      radius: number,
+      startAngle: number,
+      endAngle: number,
+      color: Color,
+      counterClockwise: boolean
+    );
+    draw: (c: CanvasRenderingContext2D) => void;
+  }
+
   declare class Event {
     name: string;
     callback: string;
