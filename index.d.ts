@@ -93,7 +93,7 @@ declare module 'simulationjs' {
     setRadius: (value: number, t?: number) => Promise;
     scale: (value: number, t?: number) => Promise;
     on: (event: string, callback1: Function, callback2: Function) => void;
-    contains: (p: Point) => void;
+    contains: (p: Point) => boolean;
   }
 
   declare class Polygon extends SimulationElement {
