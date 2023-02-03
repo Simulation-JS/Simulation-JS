@@ -184,6 +184,7 @@ declare module 'simulationjs' {
     fitting: boolean;
     bgColor: string;
     canvas: HTMLCanvasElement;
+    ratio: number;
     constructor(id: string, frameRate?: number);
     add: (element: SimulationElement, id?: string) => void;
     removeWithId: (id: string) => void;
