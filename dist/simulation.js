@@ -1574,7 +1574,6 @@ export class Simulation {
   #resizeCanvas(c) {
     const ratio = getPixelRatio(c);
     this.ratio = ratio;
-    console.log(ratio);
     if (!this.canvas) return;
     if (this.fitting) {
       const width = c.parentElement.clientWidth;
