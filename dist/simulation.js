@@ -1250,23 +1250,206 @@ export class Arc extends SimulationElement {
    * @param {number} radius
    * @param {number} startAngle
    * @param {number} endAngle
-   * @param {Circle} color
+   * @param {number} thickness - optional
+   * @param {Circle} color - optional
+   * @param {number} rotation - optional
    * @param {boolean} counterClockwise - optional
    */
-  constructor(pos, radius, startAngle, endAngle, color, counterClockwise = false) {
+  constructor(
+    pos,
+    radius,
+    startAngle,
+    endAngle,
+    thickness = 1,
+    color,
+    rotation = 0,
+    counterClockwise = false
+  ) {
     super(pos, color);
     this.radius = radius;
     this.startAngle = startAngle;
     this.endAngle = endAngle;
     this.counterClockwise = counterClockwise;
+    this.thickness = thickness;
+    this.rotation = rotation;
+  }
+  /**
+   * @param {number} scale
+   * @param {number} t - optional
+   * @returns {Promise}
+   */
+  scaleRadius(scale, t = 0) {
+    const initialRadius = this.radius;
+    const scaleChange = (this.radius * scale - this.radius) / (t * fps);
+
+    return transitionValues(
+      () => {
+        this.radius *= scale;
+      },
+      () => {
+        this.radius += scaleChange;
+      },
+      () => {
+        this.radius = initialRadius * scale;
+      },
+      t
+    );
+  }
+  /**
+   * @param {number} radius
+   * @param {number} t - optional
+   * @returns {Promise}
+   */
+  setRadius(value, t = 0) {
+    const radChange = (value - this.radius) / (t * fps);
+
+    return transitionValues(
+      () => {
+        this.radius = value;
+      },
+      () => {
+        this.radius += radChange;
+      },
+      () => {
+        this.radius = value;
+      },
+      t
+    );
+  }
+  /**
+   * @param {number} val
+   * @param {number} t - optional
+   * @returns {Promise}
+   */
+  setThickness(val, t = 0) {
+    const thicknessChange = (val - this.thickness) / (t * fps);
+
+    return transitionValues(
+      () => {
+        this.thickness = val;
+      },
+      () => {
+        this.thickness += thicknessChange;
+      },
+      () => {
+        this.thickness = val;
+      },
+      t
+    );
+  }
+  /**
+   * @param {number} angle
+   * @param {number} t - optional
+   * @returns {Promise}
+   */
+  setStartAngle(angle, t = 0) {
+    const angleChange = (angle - this.startAngle) / (t * fps);
+
+    return transitionValues(
+      () => {
+        this.startAngle = angle;
+      },
+      () => {
+        this.startAngle += angleChange;
+      },
+      () => {
+        this.startAngle = angle;
+      },
+      t
+    );
+  }
+  /**
+   * @param {number} angle
+   * @param {number} t - optional
+   * @returns {Promise}
+   */
+  setEndAngle(angle, t = 0) {
+    const angleChange = (angle - this.endAngle) / (t * fps);
+
+    return transitionValues(
+      () => {
+        this.endAngle = angle;
+      },
+      () => {
+        this.endAngle += angleChange;
+      },
+      () => {
+        this.endAngle = angle;
+      },
+      t
+    );
+  }
+  /**
+   * @param {number} amount
+   * @param {number} t - optional
+   * @returns {Promise}
+   */
+  rotate(amount, t = 0) {
+    const initialRotation = this.rotation;
+    const rotationChange = (this.rotation + amount - this.rotation) / (t * fps);
+
+    return transitionValues(
+      () => {
+        this.rotation += scale;
+      },
+      () => {
+        this.rotation += rotationChange;
+      },
+      () => {
+        this.rotation = initialRotation + amount;
+      },
+      t
+    );
+  }
+  /**
+   * @param {number} deg
+   * @param {number} t - optional
+   * @returns {Promise}
+   */
+  rotateTo(deg, t = 0) {
+    const rotationChange = (deg - this.rotation) / (t * fps);
+
+    return transitionValues(
+      () => {
+        this.rotation = deg;
+      },
+      () => {
+        this.rotation += rotationChange;
+      },
+      () => {
+        this.rotation = deg;
+      },
+      t
+    );
   }
   draw(c) {
     c.beginPath();
     c.strokeStyle = this.color.toHex();
-    c.arc(this.pos.x, this.pos.y, this.radius, this.startAngle, this.endAngle, this.counterClockwise);
+    c.lineWidth = this.thickness;
+    c.arc(
+      this.pos.x,
+      this.pos.y,
+      this.radius,
+      degToRad(this.startAngle + this.rotation),
+      degToRad(this.endAngle + this.rotation),
+      this.counterClockwise
+    );
     c.stroke();
     c.closePath();
   }
+}
+
+function getPixelRatio(c) {
+  const dpr = window.devicePixelRatio || 1;
+  const bsr =
+    c.webkitBackingStorePixelRatio ||
+    c.mozBackingStorePixelRatio ||
+    c.msBackingStorePixelRatio ||
+    c.oBackingStorePixelRatio ||
+    c.backingStorePixelRatio ||
+    1;
+
+  return dpr / bsr;
 }
 
 export class Simulation {
@@ -1290,10 +1473,12 @@ export class Simulation {
       currentMousePos = new Point(e.offsetX, e.offsetY);
       currentMouseEvent = e;
     });
+
     window.addEventListener('resize', () => this.#resizeCanvas(this.canvas));
     this.#resizeCanvas(this.canvas);
 
     const ctx = this.canvas.getContext('2d');
+    ctx.scale(2, 2);
 
     this.#render(ctx);
   }
@@ -1388,13 +1573,18 @@ export class Simulation {
     }
   }
   #resizeCanvas(c) {
+    const ratio = getPixelRatio(c);
     if (!this.canvas) return;
-    if (this.fitting) {
-      c.width = c.parentElement.clientWidth;
-      c.height = c.parentElement.clientHeight;
-    }
     this.width = this.canvas.width;
     this.height = this.canvas.height;
+    if (this.fitting) {
+      const width = c.parentElement.clientWidth;
+      const height = c.parentElement.clientHeight;
+      this.canvas.width = width * ratio;
+      this.canvas.height = height * ratio;
+      this.canvas.style.width = width + 'px';
+      this.canvas.style.height = height + 'px';
+    }
   }
   empty() {
     this.scene = [];

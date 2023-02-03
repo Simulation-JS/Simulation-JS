@@ -116,14 +116,25 @@ declare module 'simulationjs' {
     startAngle: number;
     endAngle: number;
     counterClockwise: boolean;
+    thickness: number;
+    rotation: number;
     constructor(
       pos: Point,
       radius: number,
       startAngle: number,
       endAngle: number,
+      thickness: number,
       color: Color,
+      rotation: number,
       counterClockwise: boolean
     );
+    scaleRadius: (scale: number, t?: number) => Promise;
+    setRadius: (scale: number, t?: number) => Promise;
+    setThickness: (scale: number, t?: number) => Promise;
+    setStartAngle: (scale: number, t?: number) => Promise;
+    setEndAngle: (scale: number, t?: number) => Promise;
+    rotate: (scale: number, t?: number) => Promise;
+    rotateTo: (scale: number, t?: number) => Promise;
     draw: (c: CanvasRenderingContext2D) => void;
   }
 
