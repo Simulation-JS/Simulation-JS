@@ -1478,7 +1478,6 @@ export class Simulation {
     this.#resizeCanvas(this.canvas);
 
     const ctx = this.canvas.getContext('2d');
-    ctx.scale(2, 2);
 
     this.#render(ctx);
   }
@@ -1575,8 +1574,6 @@ export class Simulation {
   #resizeCanvas(c) {
     const ratio = getPixelRatio(c);
     if (!this.canvas) return;
-    this.width = this.canvas.width;
-    this.height = this.canvas.height;
     if (this.fitting) {
       const width = c.parentElement.clientWidth;
       const height = c.parentElement.clientHeight;
@@ -1585,6 +1582,8 @@ export class Simulation {
       this.canvas.style.width = width + 'px';
       this.canvas.style.height = height + 'px';
     }
+    this.width = this.canvas.width;
+    this.height = this.canvas.height;
   }
   empty() {
     this.scene = [];
