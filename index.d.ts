@@ -123,10 +123,10 @@ declare module 'simulationjs' {
       radius: number,
       startAngle: number,
       endAngle: number,
-      thickness: number,
-      color: Color,
-      rotation: number,
-      counterClockwise: boolean
+      thickness?: number,
+      color?: Color,
+      rotation?: number,
+      counterClockwise?: boolean
     );
     scaleRadius: (scale: number, t?: number) => Promise;
     setRadius: (scale: number, t?: number) => Promise;
