@@ -451,7 +451,7 @@ export class Line extends SimulationElement {
    * @returns {Line}
    */
   clone() {
-    return new Line(this.start, this.end, this.thickness, this.color, this.rotation);
+    return new Line(this.start.clone(), this.end.clone(), this.thickness, this.color.clone(), this.rotation);
   }
   /**
    * @param {Point} p
@@ -596,7 +596,7 @@ export class Circle extends SimulationElement {
    * @returns {Circle}
    */
   clone() {
-    return new Circle(this.pos, this.radius, this.color);
+    return new Circle(this.pos.clone(), this.radius, this.color.clone());
   }
   /**
    * @param {CanvasRenderingContext2D} c
@@ -719,9 +719,10 @@ export class Circle extends SimulationElement {
 }
 
 export class Polygon extends SimulationElement {
-  /***
-   * @param {Color} color
+  /**
+   * @param {Point} pos
    * @param {Point[]} points
+   * @param {Color} color
    * @param {number} r - optional
    * @param {Point} offsetPoint - optional
    */
@@ -749,7 +750,13 @@ export class Polygon extends SimulationElement {
    * @returns {Polygon}
    */
   clone() {
-    return new Polygon(this.pos, this.rawPoints, this.color, this.rotation, this.offsetPoint);
+    return new Polygon(
+      this.pos.clone(),
+      [...this.rawPoints],
+      this.color.clone(),
+      this.rotation,
+      this.offsetPoint.clone()
+    );
   }
   /**
    * @param {number} deg
@@ -1240,7 +1247,14 @@ export class Square extends SimulationElement {
     }
   }
   clone() {
-    return new Square(this.pos, this.width, this.height, this.color, this.offsetPoint, rotation);
+    return new Square(
+      this.pos.clone(),
+      this.width,
+      this.height,
+      this.color.clone(),
+      this.offsetPoint.clone(),
+      rotation
+    );
   }
 }
 
@@ -1420,6 +1434,21 @@ export class Arc extends SimulationElement {
         this.rotation = deg;
       },
       t
+    );
+  }
+  /**
+   * @returns {Arc}
+   */
+  clone() {
+    return new Arc(
+      this.pos.clone(),
+      this.radius,
+      this.startAngle,
+      this.endAngle,
+      this.thickness,
+      this.color.clone(),
+      this.rotation,
+      this.counterClockwise
     );
   }
   draw(c) {
@@ -1692,14 +1721,14 @@ export function compare(val1, val2) {
   }
   if (typeof val1 !== typeof val2) return false;
 
-  if (Array.isArray(val1)) {
-    for (let i = 0; i < val1.length; i++) {
+  if (Array.isArray(val1) && Array.isArray(val2)) {
+    for (let i = 0; i < Math.max(val1.length, val2.length); i++) {
       if (!compare(val1[i], val2[i])) return false;
     }
     return true;
-  }
+  } else if (Array.isArray(val1) || Array.isArray(val2)) return false;
 
-  if (typeof val1 === 'object') {
+  if (typeof val1 === 'object' && typeof val2 === 'object') {
     const compareForKeys = (keys, obj1, obj2) => {
       for (let i = 0; i < keys.length; i++) {
         if (typeof obj1[keys[i]] !== typeof obj2[keys[i]]) {

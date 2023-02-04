@@ -135,6 +135,7 @@ declare module 'simulationjs' {
     setEndAngle: (scale: number, t?: number) => Promise;
     rotate: (scale: number, t?: number) => Promise;
     rotateTo: (scale: number, t?: number) => Promise;
+    clone: () => Arc;
     draw: (c: CanvasRenderingContext2D) => void;
   }
 
