@@ -58,7 +58,7 @@ export declare class SceneCollection extends SimulationElement {
         [key: string]: SimulationElement;
     };
     constructor(name?: string);
-    add(element: SimulationElement, id?: null): void;
+    add(element: SimulationElement, id?: string | null): void;
     removeWithId(id: string): void;
     removeWithObject(element: SimulationElement): void;
     setSimulationElement(sim: HTMLCanvasElement): void;
@@ -183,7 +183,7 @@ export declare class Simulation {
     height: number;
     constructor(id: string, frameRate?: number);
     private render;
-    add(element: SimulationElement, id?: null): void;
+    add(element: SimulationElement, id?: string | null): void;
     removeWithId(id: string): void;
     removeWithObject(element: SimulationElement): void;
     on(event: string, callback: <T>(e: T) => void): void;
