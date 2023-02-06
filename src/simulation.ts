@@ -1226,7 +1226,7 @@ export class Simulation {
   scene: SimulationElement[];
   idObjs: { [key: string]: SimulationElement };
   fitting: boolean;
-  private bgColor: string;
+  private bgColor: Color;
   canvas: HTMLCanvasElement | null;
   ratio: number = 1;
   width: number = 0;
@@ -1236,7 +1236,7 @@ export class Simulation {
     this.scene = [];
     this.idObjs = {};
     this.fitting = false;
-    this.bgColor = '#ffffff';
+    this.bgColor = new Color(255, 255, 255);
 
     this.canvas = document.getElementById(id) as HTMLCanvasElement | null;
     if (!this.canvas) {
@@ -1263,7 +1263,7 @@ export class Simulation {
     c.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     c.beginPath();
-    c.fillStyle = this.bgColor;
+    c.fillStyle = this.bgColor.toHex();
     c.fillRect(0, 0, this.canvas.width, this.canvas.height);
     c.closePath();
 
@@ -1318,7 +1318,7 @@ export class Simulation {
     this.fitting = false;
   }
   setBgColor(color: Color) {
-    this.bgColor = color.toHex();
+    this.bgColor = color.clone();
   }
   #resizeCanvas(c: HTMLCanvasElement | null) {
     if (!c) return;

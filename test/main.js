@@ -2,6 +2,7 @@ import { Simulation, Square, Color, Point, Vector } from '../dist/simulation';
 
 const canvas = new Simulation('canvas', 60);
 canvas.fitElement();
+canvas.setBgColor(new Color(0, 0, 0));
 
 const square = new Square(new Point(100, 100), 50, 50, new Color(255, 0, 0));
 canvas.add(square);

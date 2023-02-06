@@ -1003,7 +1003,7 @@ export class Simulation {
         this.scene = [];
         this.idObjs = {};
         this.fitting = false;
-        this.bgColor = '#ffffff';
+        this.bgColor = new Color(255, 255, 255);
         this.canvas = document.getElementById(id);
         if (!this.canvas) {
             console.warn(`Canvas with id "${id}" not found`);
@@ -1026,7 +1026,7 @@ export class Simulation {
             return;
         c.clearRect(0, 0, this.canvas.width, this.canvas.height);
         c.beginPath();
-        c.fillStyle = this.bgColor;
+        c.fillStyle = this.bgColor.toHex();
         c.fillRect(0, 0, this.canvas.width, this.canvas.height);
         c.closePath();
         for (const element of this.scene) {
@@ -1085,7 +1085,7 @@ export class Simulation {
         this.fitting = false;
     }
     setBgColor(color) {
-        this.bgColor = color.toHex();
+        this.bgColor = color.clone();
     }
     #resizeCanvas(c) {
         if (!c)
