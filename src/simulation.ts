@@ -265,7 +265,7 @@ export class SceneCollection extends SimulationElement {
     this.scene = [];
     this.idObjs = {};
   }
-  add(element: SimulationElement, id = null) {
+  add(element: SimulationElement, id: string | null = null) {
     if (this.sim != null) {
       element.setSimulationElement(this.sim);
     }
@@ -1233,7 +1233,7 @@ export class Simulation {
     });
     window.requestAnimationFrame(() => this.render(c));
   }
-  add(element: SimulationElement, id = null) {
+  add(element: SimulationElement, id: string | null = null) {
     if (!this.canvas) return;
     element.setSimulationElement(this.canvas);
     if (id !== null) {
