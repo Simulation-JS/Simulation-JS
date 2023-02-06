@@ -1290,8 +1290,8 @@ export class Simulation {
         this.canvas.style.height = height + 'px';
       }
     }
-    this.width = this.canvas.width / this.ratio;
-    this.height = this.canvas.height / this.ratio;
+    this.width = this.canvas.width;
+    this.height = this.canvas.height;
   }
   empty() {
     this.scene = [];
