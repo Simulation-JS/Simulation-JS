@@ -181,7 +181,6 @@ export declare class Simulation {
     fitting: boolean;
     private bgColor;
     canvas: HTMLCanvasElement | null;
-    ratio: number;
     width: number;
     height: number;
     constructor(id: string);

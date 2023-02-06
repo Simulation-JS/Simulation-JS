@@ -1219,7 +1219,6 @@ export class Simulation {
   fitting: boolean;
   private bgColor: Color;
   canvas: HTMLCanvasElement | null;
-  ratio: number = 1;
   width: number = 0;
   height: number = 0;
   constructor(id: string) {
@@ -1243,8 +1242,6 @@ export class Simulation {
 
     const ctx = this.canvas.getContext('2d');
     if (!ctx) return;
-
-    this.ratio = window.devicePixelRatio;
 
     this.render(ctx);
   }
@@ -1317,14 +1314,14 @@ export class Simulation {
       if (c.parentElement) {
         const width = c.parentElement.clientWidth;
         const height = c.parentElement.clientHeight;
-        this.canvas.width = width * this.ratio;
-        this.canvas.height = height * this.ratio;
+        this.canvas.width = width * window.devicePixelRatio;
+        this.canvas.height = height * window.devicePixelRatio;
         this.canvas.style.width = width + 'px';
         this.canvas.style.height = height + 'px';
       }
     }
-    this.width = this.canvas.width;
-    this.height = this.canvas.height;
+    this.width = this.canvas.width / window.devicePixelRatio;
+    this.height = this.canvas.height / window.devicePixelRatio;
   }
   empty() {
     this.scene = [];
