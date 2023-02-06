@@ -44,9 +44,8 @@ export class Vector {
     c.beginPath();
     c.strokeStyle = color.toHex();
     c.lineWidth = thickness;
-    const r = window.devicePixelRatio;
-    c.moveTo(pos.x * r, pos.y * r);
-    c.lineTo(pos.x * r + this.x * r, pos.y * r + this.y * r);
+    c.moveTo(pos.x, pos.y);
+    c.lineTo(pos.x + this.x, pos.y + this.y);
     c.stroke();
     c.closePath();
   }
@@ -740,51 +739,36 @@ export class Square extends SimulationElement {
   draw(c: CanvasRenderingContext2D) {
     c.beginPath();
     c.fillStyle = this.color.toHex();
-    const r = window.devicePixelRatio;
     c.moveTo(
-      this.pos.x * r + this.topLeft.x * r + this.offsetPoint.x * r,
-      this.pos.y * r + this.topLeft.y * r + this.offsetPoint.y * r
+      this.pos.x + this.topLeft.x + this.offsetPoint.x,
+      this.pos.y + this.topLeft.y + this.offsetPoint.y
     );
     c.lineTo(
-      this.pos.x * r + this.topRight.x * r + this.offsetPoint.x * r,
-      this.pos.y * r + this.topRight.y * r + this.offsetPoint.y * r
+      this.pos.x + this.topRight.x + this.offsetPoint.x,
+      this.pos.y + this.topRight.y + this.offsetPoint.y
     );
     c.lineTo(
-      this.pos.x * r + this.bottomRight.x * r + this.offsetPoint.x * r,
-      this.pos.y * r + this.bottomRight.y * r + this.offsetPoint.y * r
+      this.pos.x + this.bottomRight.x + this.offsetPoint.x,
+      this.pos.y + this.bottomRight.y + this.offsetPoint.y
     );
     c.lineTo(
-      this.pos.x * r + this.bottomLeft.x * r + this.offsetPoint.x * r,
-      this.pos.y * r + this.bottomLeft.y * r + this.offsetPoint.y * r
+      this.pos.x + this.bottomLeft.x + this.offsetPoint.x,
+      this.pos.y + this.bottomLeft.y + this.offsetPoint.y
     );
     c.fill();
     c.closePath();
 
     if (this.showNodeVectors) {
-      this.topLeft.draw(
-        c,
-        new Point(this.pos.x * r + this.offsetPoint.x * r, this.pos.y * r + this.offsetPoint.y * r)
-      );
-      this.topRight.draw(
-        c,
-        new Point(this.pos.x * r + this.offsetPoint.x * r, this.pos.y * r + this.offsetPoint.y * r)
-      );
-      this.bottomLeft.draw(
-        c,
-        new Point(this.pos.x * r + this.offsetPoint.x * r, this.pos.y * r + this.offsetPoint.y * r)
-      );
-      this.bottomRight.draw(
-        c,
-        new Point(this.pos.x * r + this.offsetPoint.x * r, this.pos.y * r + this.offsetPoint.y * r)
-      );
+      this.topLeft.draw(c, new Point(this.pos.x + this.offsetPoint.x, this.pos.y + this.offsetPoint.y));
+      this.topRight.draw(c, new Point(this.pos.x + this.offsetPoint.x, this.pos.y + this.offsetPoint.y));
+      this.bottomLeft.draw(c, new Point(this.pos.x + this.offsetPoint.x, this.pos.y + this.offsetPoint.y));
+      this.bottomRight.draw(c, new Point(this.pos.x + this.offsetPoint.x, this.pos.y + this.offsetPoint.y));
     }
 
     if (this.showCollisionVectors) {
       const testVecs = [this.v1, this.v2, this.v3, this.v4, this.v5];
       if (testVecs.some((el) => el)) {
-        testVecs.forEach((vec) =>
-          vec.draw(c, new Point(this.pos.x * r, this.pos.y * r), new Color(0, 0, 255))
-        );
+        testVecs.forEach((vec) => vec.draw(c, new Point(this.pos.x, this.pos.y), new Color(0, 0, 255)));
       }
     }
 
