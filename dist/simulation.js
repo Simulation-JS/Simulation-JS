@@ -971,7 +971,6 @@ export class Simulation {
     width = 0;
     height = 0;
     constructor(id, frameRate = 60) {
-        console.log('starting');
         fps = frameRate;
         this.scene = [];
         this.idObjs = {};
