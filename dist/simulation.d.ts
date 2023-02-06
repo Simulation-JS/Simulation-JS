@@ -1,3 +1,6 @@
+declare const validEvents: readonly ["mousemove", "click", "hover", "mouseover", "mouseleave"];
+declare type ValidEvents = typeof validEvents[number];
+declare type LerpFunc = (n: number) => number;
 export declare class Vector {
     x: number;
     y: number;
@@ -34,9 +37,9 @@ export declare class SimulationElement {
     constructor(pos: Point, color?: Color);
     draw(_: CanvasRenderingContext2D): void;
     setSimulationElement(el: HTMLCanvasElement): void;
-    fill(color: Color, t?: number): Promise<void>;
-    moveTo(p: Vector, t?: number): Promise<void>;
-    move(p: Vector, t?: number): Promise<void>;
+    fill(color: Color, t?: number, f?: LerpFunc): Promise<void>;
+    moveTo(p: Vector, t?: number, f?: LerpFunc): Promise<void>;
+    move(p: Vector, t?: number, f?: LerpFunc): Promise<void>;
 }
 export declare class Color {
     r: number;
@@ -73,11 +76,11 @@ export declare class Line extends SimulationElement {
     vec: Vector;
     constructor(p1: Point, p2: Point, color?: Color, thickness?: number, r?: number);
     clone(): Line;
-    setStart(p: Point, t?: number): Promise<void>;
-    setEnd(p: Point, t?: number): Promise<void>;
+    setStart(p: Point, t?: number, f?: LerpFunc): Promise<void>;
+    setEnd(p: Point, t?: number, f?: LerpFunc): Promise<void>;
     private setVector;
-    rotate(deg: number, t?: number): Promise<void>;
-    rotateTo(deg: number, t?: number): Promise<void>;
+    rotate(deg: number, t?: number, f?: LerpFunc): Promise<void>;
+    rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     moveTo(p: Point, t?: number): Promise<void>;
     move(v: Vector, t?: number): Promise<void>;
     draw(c: CanvasRenderingContext2D): void;
@@ -89,10 +92,10 @@ export declare class Circle extends SimulationElement {
     constructor(pos: Point, radius: number, color: Color);
     clone(): Circle;
     draw(c: CanvasRenderingContext2D): void;
-    setRadius(value: number, t?: number): Promise<void>;
-    scale(value: number, t?: number): Promise<void>;
+    setRadius(value: number, t?: number, f?: LerpFunc): Promise<void>;
+    scale(value: number, t?: number, f?: LerpFunc): Promise<void>;
     private checkEvents;
-    on(event: string, callback1: (event: MouseEvent) => void, callback2?: (event: MouseEvent) => void): void;
+    on(event: ValidEvents, callback1: (event: MouseEvent) => void, callback2?: (event: MouseEvent) => void): void;
     contains(p: Point): boolean;
 }
 export declare class Polygon extends SimulationElement {
@@ -138,18 +141,18 @@ export declare class Square extends SimulationElement {
     setNodeVectors(show: boolean): void;
     setCollisionVectors(show: boolean): void;
     setRotation(): void;
-    rotate(deg: number, t?: number): Promise<void>;
-    rotateTo(deg: number, t?: number): Promise<void>;
+    rotate(deg: number, t?: number, f?: LerpFunc): Promise<void>;
+    rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     draw(c: CanvasRenderingContext2D): void;
-    scale(value: number, t?: number): Promise<void>;
-    scaleWidth(value: number, t?: number): Promise<void>;
-    scaleHeight(value: number, t?: number): Promise<void>;
+    scale(value: number, t?: number, f?: LerpFunc): Promise<void>;
+    scaleWidth(value: number, t?: number, f?: LerpFunc): Promise<void>;
+    scaleHeight(value: number, t?: number, f?: LerpFunc): Promise<void>;
     setWidth(value: number, t?: number): Promise<void>;
     setHeight(value: number, t?: number): Promise<void>;
     contains(p: Point): boolean;
     private updateDimensions;
     private checkEvents;
-    on(event: string, callback1: (event: MouseEvent) => void, callback2?: (event: MouseEvent) => void): void;
+    on(event: ValidEvents, callback1: (event: MouseEvent) => void, callback2?: (event: MouseEvent) => void): void;
     clone(): Square;
 }
 export declare class Arc extends SimulationElement {
@@ -160,13 +163,13 @@ export declare class Arc extends SimulationElement {
     thickness: number;
     rotation: number;
     constructor(pos: Point, radius: number, startAngle: number, endAngle: number, thickness?: number, color?: Color, rotation?: number, counterClockwise?: boolean);
-    scaleRadius(scale: number, t?: number): Promise<void>;
-    setRadius(value: number, t?: number): Promise<void>;
-    setThickness(val: number, t?: number): Promise<void>;
-    setStartAngle(angle: number, t?: number): Promise<void>;
-    setEndAngle(angle: number, t?: number): Promise<void>;
-    rotate(amount: number, t?: number): Promise<void>;
-    rotateTo(deg: number, t?: number): Promise<void>;
+    scaleRadius(scale: number, t?: number, f?: LerpFunc): Promise<void>;
+    setRadius(value: number, t?: number, f?: LerpFunc): Promise<void>;
+    setThickness(val: number, t?: number, f?: LerpFunc): Promise<void>;
+    setStartAngle(angle: number, t?: number, f?: LerpFunc): Promise<void>;
+    setEndAngle(angle: number, t?: number, f?: LerpFunc): Promise<void>;
+    rotate(amount: number, t?: number, f?: LerpFunc): Promise<void>;
+    rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     clone(): Arc;
     draw(c: CanvasRenderingContext2D): void;
 }
@@ -181,7 +184,7 @@ export declare class Simulation {
     ratio: number;
     width: number;
     height: number;
-    constructor(id: string, frameRate?: number);
+    constructor(id: string);
     private render;
     add(element: SimulationElement, id?: string | null): void;
     removeWithId(id: string): void;
@@ -199,6 +202,9 @@ export declare function distance(p1: Point, p2: Point): number;
 export declare function atan2(x: number, y: number): number;
 export declare function degToRad(deg: number): number;
 export declare function radToDeg(rad: number): number;
+export declare function lerp(a: number, b: number, t: number): number;
+export declare function smoothStep(t: number): number;
+export declare function linearStep(n: number): number;
 /**
  * @param callback1 - called when t is 0
  * @param callback2 - called every frame until the animation is finished
@@ -206,7 +212,7 @@ export declare function radToDeg(rad: number): number;
  * @param t - animation time (seconds)
  * @returns {Promise<void>}
  */
-export declare function transitionValues(callback1: () => void, callback2: () => void, callback3: () => void, t: number): Promise<void>;
+export declare function transitionValues(callback1: () => void, callback2: (percent: number) => void, callback3: () => void, t: number, func?: (n: number) => number): Promise<void>;
 export declare function compare(val1: any, val2: any): boolean;
 declare const _default: {
     Vector: typeof Vector;
