@@ -5,3 +5,4 @@ vite.config.js
 .prettierrc
 pnpm-lock.yaml
 todo.txt
+tsconfig.json
