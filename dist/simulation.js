@@ -967,6 +967,7 @@ export class Simulation {
     fitting;
     bgColor;
     canvas;
+    ratio = 1;
     width = 0;
     height = 0;
     constructor(id) {
@@ -988,6 +989,7 @@ export class Simulation {
         const ctx = this.canvas.getContext('2d');
         if (!ctx)
             return;
+        this.ratio = window.devicePixelRatio;
         this.render(ctx);
     }
     render(c) {
@@ -1065,14 +1067,14 @@ export class Simulation {
             if (c.parentElement) {
                 const width = c.parentElement.clientWidth;
                 const height = c.parentElement.clientHeight;
-                this.canvas.width = width * window.devicePixelRatio;
-                this.canvas.height = height * window.devicePixelRatio;
+                this.canvas.width = width * this.ratio;
+                this.canvas.height = height * this.ratio;
                 this.canvas.style.width = width + 'px';
                 this.canvas.style.height = height + 'px';
             }
         }
-        this.width = this.canvas.width / window.devicePixelRatio;
-        this.height = this.canvas.height / window.devicePixelRatio;
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
     }
     empty() {
         this.scene = [];
