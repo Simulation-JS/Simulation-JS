@@ -1260,7 +1260,7 @@ export class Simulation {
       }
     }
   }
-  on(event: string, callback: <T>(e: T) => void) {
+  on(event: string, callback: (e: any) => void) {
     if (!this.canvas) return;
     this.canvas.addEventListener(event, callback);
   }

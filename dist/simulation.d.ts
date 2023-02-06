@@ -186,7 +186,7 @@ export declare class Simulation {
     add(element: SimulationElement, id?: string | null): void;
     removeWithId(id: string): void;
     removeWithObject(element: SimulationElement): void;
-    on(event: string, callback: <T>(e: T) => void): void;
+    on(event: string, callback: (e: any) => void): void;
     fitElement(): void;
     setSize(x: number, y: number): void;
     setBgColor(color: Color): void;
