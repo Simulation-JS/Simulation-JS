@@ -428,12 +428,7 @@ export class Line extends SimulationElement {
     return this.moveTo(this.start.add(v), t);
   }
   draw(c: CanvasRenderingContext2D) {
-    this.vec.draw(
-      c,
-      new Point(this.start.x * window.devicePixelRatio, this.start.y * window.devicePixelRatio),
-      this.color,
-      this.thickness
-    );
+    this.vec.draw(c, new Point(this.start.x, this.start.y), this.color, this.thickness);
   }
 }
 
@@ -453,14 +448,7 @@ export class Circle extends SimulationElement {
   draw(c: CanvasRenderingContext2D) {
     c.beginPath();
     c.fillStyle = this.color.toHex();
-    c.arc(
-      this.pos.x * window.devicePixelRatio,
-      this.pos.y * window.devicePixelRatio,
-      this.radius,
-      0,
-      Math.PI * 2,
-      false
-    );
+    c.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2, false);
     c.fill();
     c.closePath();
     this.checkEvents();
@@ -611,10 +599,9 @@ export class Polygon extends SimulationElement {
   draw(c: CanvasRenderingContext2D) {
     c.beginPath();
     c.fillStyle = this.color.toHex();
-    const r = window.devicePixelRatio;
-    c.moveTo(this.points[0].x * r + this.pos.x * r, this.points[0].y * r + this.pos.y * r);
+    c.moveTo(this.points[0].x + this.pos.x, this.points[0].y + this.pos.y);
     for (let i = 1; i < this.points.length; i++) {
-      c.lineTo(this.points[i].x * r + this.pos.x * r, this.points[i].y * r + this.pos.y * r);
+      c.lineTo(this.points[i].x + this.pos.x, this.points[i].y + this.pos.y);
     }
     c.fill();
     c.closePath();
@@ -1219,7 +1206,6 @@ export class Simulation {
   fitting: boolean;
   private bgColor: Color;
   canvas: HTMLCanvasElement | null;
-  ratio: number = 1;
   width: number = 0;
   height: number = 0;
   constructor(id: string) {
@@ -1243,8 +1229,6 @@ export class Simulation {
 
     const ctx = this.canvas.getContext('2d');
     if (!ctx) return;
-
-    this.ratio = window.devicePixelRatio;
 
     this.render(ctx);
   }
@@ -1317,8 +1301,8 @@ export class Simulation {
       if (c.parentElement) {
         const width = c.parentElement.clientWidth;
         const height = c.parentElement.clientHeight;
-        this.canvas.width = width * this.ratio;
-        this.canvas.height = height * this.ratio;
+        this.canvas.width = width * window.devicePixelRatio;
+        this.canvas.height = height * window.devicePixelRatio;
         this.canvas.style.width = width + 'px';
         this.canvas.style.height = height + 'px';
       }
