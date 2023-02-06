@@ -1,5 +1,4 @@
 export declare class Vector {
-    #private;
     x: number;
     y: number;
     mag: number;
@@ -10,6 +9,7 @@ export declare class Vector {
     constructor(x: number, y: number, r?: number);
     rotate(deg: number): this;
     rotateTo(deg: number): this;
+    private setRotation;
     draw(c: CanvasRenderingContext2D, pos?: Point, color?: Color, thickness?: number): void;
     normalize(): this;
     multiply(n: number): this;
@@ -22,6 +22,7 @@ export declare class Vector {
     appendY(value: number): this;
     setX(value: number): this;
     setY(value: number): this;
+    private updateMag;
     setMag(value: number): this;
     clone(): Vector;
     format(): string;
@@ -38,18 +39,12 @@ export declare class SimulationElement {
     move(p: Vector, t?: number): Promise<void>;
 }
 export declare class Color {
-    #private;
     r: number;
     g: number;
     b: number;
     constructor(r: number, g: number, b: number);
-    /**
-     * @returns {Color}
-     */
     clone(): Color;
-    /**
-     * @returns {string}
-     */
+    private compToHex;
     toHex(): string;
 }
 export declare class Point extends Vector {
@@ -71,7 +66,6 @@ export declare class SceneCollection extends SimulationElement {
     empty(): void;
 }
 export declare class Line extends SimulationElement {
-    #private;
     start: Point;
     end: Point;
     rotation: number;
@@ -81,6 +75,7 @@ export declare class Line extends SimulationElement {
     clone(): Line;
     setStart(p: Point, t?: number): Promise<void>;
     setEnd(p: Point, t?: number): Promise<void>;
+    private setVector;
     rotate(deg: number, t?: number): Promise<void>;
     rotateTo(deg: number, t?: number): Promise<void>;
     moveTo(p: Point, t?: number): Promise<void>;
@@ -88,7 +83,6 @@ export declare class Line extends SimulationElement {
     draw(c: CanvasRenderingContext2D): void;
 }
 export declare class Circle extends SimulationElement {
-    #private;
     radius: number;
     hovering: boolean;
     events: Event[];
@@ -97,11 +91,11 @@ export declare class Circle extends SimulationElement {
     draw(c: CanvasRenderingContext2D): void;
     setRadius(value: number, t?: number): Promise<void>;
     scale(value: number, t?: number): Promise<void>;
+    private checkEvents;
     on(event: string, callback1: (event: MouseEvent) => void, callback2?: (event: MouseEvent) => void): void;
     contains(p: Point): boolean;
 }
 export declare class Polygon extends SimulationElement {
-    #private;
     rawPoints: Point[];
     offsetPoint: Point;
     offsetX: number;
@@ -113,6 +107,7 @@ export declare class Polygon extends SimulationElement {
     clone(): Polygon;
     rotate(deg: number): void;
     rotateTo(deg: number): void;
+    private setRotation;
     draw(c: CanvasRenderingContext2D): void;
 }
 export declare class Event {
@@ -121,7 +116,6 @@ export declare class Event {
     constructor(name: string, callback: (event: MouseEvent) => void);
 }
 export declare class Square extends SimulationElement {
-    #private;
     width: number;
     height: number;
     rotation: number;
@@ -143,6 +137,7 @@ export declare class Square extends SimulationElement {
     updateOffsetPosition(p: Point): void;
     setNodeVectors(show: boolean): void;
     setCollisionVectors(show: boolean): void;
+    setRotation(): void;
     rotate(deg: number, t?: number): Promise<void>;
     rotateTo(deg: number, t?: number): Promise<void>;
     draw(c: CanvasRenderingContext2D): void;
@@ -152,6 +147,8 @@ export declare class Square extends SimulationElement {
     setWidth(value: number, t?: number): Promise<void>;
     setHeight(value: number, t?: number): Promise<void>;
     contains(p: Point): boolean;
+    private updateDimensions;
+    private checkEvents;
     on(event: string, callback1: (event: MouseEvent) => void, callback2?: (event: MouseEvent) => void): void;
     clone(): Square;
 }
@@ -174,7 +171,6 @@ export declare class Arc extends SimulationElement {
     draw(c: CanvasRenderingContext2D): void;
 }
 export declare class Simulation {
-    #private;
     scene: SimulationElement[];
     idObjs: {
         [key: string]: SimulationElement;
@@ -186,6 +182,7 @@ export declare class Simulation {
     width: number;
     height: number;
     constructor(id: string, frameRate?: number);
+    private render;
     add(element: SimulationElement, id?: null): void;
     removeWithId(id: string): void;
     removeWithObject(element: SimulationElement): void;
@@ -193,6 +190,7 @@ export declare class Simulation {
     fitElement(): void;
     setSize(x: number, y: number): void;
     setBgColor(color: Color): void;
+    private resizeCanvas;
     empty(): void;
 }
 export declare function abs(num: number): number;

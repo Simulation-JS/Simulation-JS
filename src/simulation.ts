@@ -20,19 +20,19 @@ export class Vector {
     this.startX = x;
     this.startY = y;
     this.rotation = r;
-    this.#setRotation();
+    this.setRotation();
   }
   rotate(deg: number) {
     this.rotation += deg;
-    this.#setRotation();
+    this.setRotation();
     return this;
   }
   rotateTo(deg: number) {
     this.rotation = deg;
-    this.#setRotation();
+    this.setRotation();
     return this;
   }
-  #setRotation() {
+  private setRotation() {
     this.rotation = minimizeRotation(this.rotation);
     const deg = this.rotation * (Math.PI / 180);
     this.x = this.startX * Math.cos(deg) - this.startY * Math.sin(deg);
@@ -70,19 +70,19 @@ export class Vector {
     this.startX += v.x;
     this.y += v.x;
     this.startY += v.x;
-    this.#updateMag();
+    this.updateMag();
     return this;
   }
   multiplyX(n: number) {
     this.x *= n;
     this.startX *= n;
-    this.#updateMag();
+    this.updateMag();
     return this;
   }
   multiplyY(n: number) {
     this.y *= n;
     this.startY *= n;
-    this.#updateMag();
+    this.updateMag();
     return this;
   }
   divide(n: number) {
@@ -105,28 +105,28 @@ export class Vector {
   appendX(value: number) {
     this.x += value;
     this.startX += value;
-    this.#updateMag();
+    this.updateMag();
     return this;
   }
   appendY(value: number) {
     this.y += value;
     this.startY += value;
-    this.#updateMag();
+    this.updateMag();
     return this;
   }
   setX(value: number) {
     this.x = value;
     this.startX = value;
-    this.#updateMag();
+    this.updateMag();
     return this;
   }
   setY(value: number) {
     this.y = value;
     this.startY = value;
-    this.#updateMag();
+    this.updateMag();
     return this;
   }
-  #updateMag() {
+  private updateMag() {
     this.mag = pythag(this.x, this.y);
   }
   setMag(value: number) {
@@ -232,21 +232,15 @@ export class Color {
     this.g = g;
     this.b = b;
   }
-  /**
-   * @returns {Color}
-   */
   clone() {
     return new Color(this.r, this.g, this.b);
   }
-  #compToHex(c: number) {
+  private compToHex(c: number) {
     const hex = Math.round(c).toString(16);
     return hex.length == 1 ? '0' + hex : hex;
   }
-  /**
-   * @returns {string}
-   */
   toHex() {
-    return '#' + this.#compToHex(this.r) + this.#compToHex(this.g) + this.#compToHex(this.b);
+    return '#' + this.compToHex(this.r) + this.compToHex(this.g) + this.compToHex(this.b);
   }
 }
 
@@ -331,7 +325,7 @@ export class Line extends SimulationElement {
     this.rotation = r;
     this.thickness = thickness;
     this.vec = new Vector(0, 0);
-    this.#setVector();
+    this.setVector();
   }
   clone() {
     return new Line(this.start.clone(), this.end.clone(), this.color.clone(), this.thickness, this.rotation);
@@ -361,21 +355,21 @@ export class Line extends SimulationElement {
     return transitionValues(
       () => {
         this.end = p;
-        this.#setVector();
+        this.setVector();
       },
       () => {
         this.end.x += xChange;
         this.end.y += yChange;
-        this.#setVector();
+        this.setVector();
       },
       () => {
         this.end = p;
-        this.#setVector();
+        this.setVector();
       },
       t
     );
   }
-  #setVector() {
+  private setVector() {
     this.vec = new Vector(this.end.x - this.start.x, this.end.y - this.start.y);
     this.vec.rotateTo(this.rotation);
   }
@@ -449,7 +443,7 @@ export class Circle extends SimulationElement {
     c.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2, false);
     c.fill();
     c.closePath();
-    this.#checkEvents();
+    this.checkEvents();
   }
   setRadius(value: number, t = 0) {
     const radiusChange = (value - this.radius) / (t * fps);
@@ -484,7 +478,7 @@ export class Circle extends SimulationElement {
       t
     );
   }
-  #checkEvents() {
+  private checkEvents() {
     this.events.forEach((event) => {
       const name = event.name;
       switch (name) {
@@ -561,7 +555,7 @@ export class Polygon extends SimulationElement {
       return new Point(p.x + this.offsetX, p.y + this.offsetY);
     });
     this.rotation = r;
-    this.#setRotation();
+    this.setRotation();
   }
   setPoints(points: Point[]) {
     this.points = points.map((p) => {
@@ -579,13 +573,13 @@ export class Polygon extends SimulationElement {
   }
   rotate(deg: number) {
     this.rotation += deg;
-    this.#setRotation();
+    this.setRotation();
   }
   rotateTo(deg: number) {
     this.rotation = deg;
-    this.#setRotation();
+    this.setRotation();
   }
-  #setRotation() {
+  private setRotation() {
     this.rotation = minimizeRotation(this.rotation);
     this.points = this.points.map((p) => {
       p.rotateTo(this.rotation);
@@ -665,7 +659,7 @@ export class Square extends SimulationElement {
     this.topRight = new Vector(this.width / 2 - this.offsetPoint.x, -this.height / 2 - this.offsetPoint.y);
     this.bottomLeft = new Vector(-this.width / 2 - this.offsetPoint.x, this.height / 2 - this.offsetPoint.y);
     this.bottomRight = new Vector(this.width / 2 - this.offsetPoint.x, this.height / 2 - this.offsetPoint.y);
-    this.#setRotation();
+    this.setRotation();
   }
   setNodeVectors(show: boolean) {
     this.showNodeVectors = show;
@@ -673,7 +667,7 @@ export class Square extends SimulationElement {
   setCollisionVectors(show: boolean) {
     this.showCollisionVectors = show;
   }
-  #setRotation() {
+  setRotation() {
     this.topLeft.rotateTo(this.rotation);
     this.topRight.rotateTo(this.rotation);
     this.bottomLeft.rotateTo(this.rotation);
@@ -686,14 +680,14 @@ export class Square extends SimulationElement {
     const func = () => {
       this.rotation = startRotation + deg;
       this.rotation = minimizeRotation(this.rotation);
-      this.#setRotation();
+      this.setRotation();
     };
 
     return transitionValues(
       func,
       () => {
         this.rotation += rotationChange;
-        this.#setRotation();
+        this.setRotation();
       },
       func,
       t
@@ -705,14 +699,14 @@ export class Square extends SimulationElement {
     const func = () => {
       this.rotation = deg;
       this.rotation = minimizeRotation(this.rotation);
-      this.#setRotation();
+      this.setRotation();
     };
 
     return transitionValues(
       func,
       () => {
         this.rotation += rotationChange;
-        this.#setRotation();
+        this.setRotation();
       },
       func,
       t
@@ -754,7 +748,7 @@ export class Square extends SimulationElement {
       }
     }
 
-    this.#checkEvents();
+    this.checkEvents();
   }
   scale(value: number, t = 0) {
     const topRightMag = this.topRight.mag;
@@ -774,7 +768,7 @@ export class Square extends SimulationElement {
         this.bottomRight.multiply(value);
         this.bottomLeft.multiply(value);
 
-        this.#updateDimensions();
+        this.updateDimensions();
       },
       () => {
         this.topRight.appendMag(topRightChange);
@@ -795,56 +789,21 @@ export class Square extends SimulationElement {
         this.bottomLeft.normalize();
         this.bottomLeft.multiply(bottomLeftMag * value);
 
-        this.#updateDimensions();
+        this.updateDimensions();
       },
       t
     );
   }
-  #getInitialStartAndMag() {
+  scaleWidth(value: number, t = 0) {
     const topRightClone = this.topRight.clone();
     const topLeftClone = this.topLeft.clone();
-    const bottomLeftClone = this.bottomLeft.clone();
     const bottomRightClone = this.bottomRight.clone();
-    return {
-      topRightClone,
-      topLeftClone,
-      bottomLeftClone,
-      bottomRightClone
-    };
-  }
-  #getProcessedStartAndMag(component: string) {
-    const startAndMag = this.#getInitialStartAndMag();
-    const mags = Object.keys(startAndMag).reduce((prev, current) => {
-      // -- todo
-      let obj: any = {
-        ...prev
-      };
-      if (component) {
-        // @ts-ignore
-        obj[current.replace('Clone', 'Mag')] = startAndMag[current][component];
-      } else {
-        // @ts-ignore
-        obj[current.replace('Clone', 'Mag')] = current.mag;
-      }
-      return obj;
-    }, {});
-    return {
-      ...startAndMag,
-      ...mags
-    };
-  }
-  scaleWidth(value: number, t = 0) {
-    // -- todo
-    let {
-      topRightClone,
-      topLeftClone,
-      bottomRightClone,
-      bottomLeftClone,
-      topRightMag,
-      topLeftMag,
-      bottomRightMag,
-      bottomLeftMag
-    }: any = this.#getProcessedStartAndMag('x');
+    const bottomLeftClone = this.bottomLeft.clone();
+    const topRightMag = topRightClone.mag;
+    const topLeftMag = topLeftClone.mag;
+    const bottomRightMag = bottomRightClone.mag;
+    const bottomLeftMag = bottomLeftClone.mag;
+
     const topRightChange = (topRightMag * value - topRightMag) / (t * fps);
     const topLeftChange = (topLeftMag * value - topLeftMag) / (t * fps);
     const bottomRightChange = (bottomRightMag * value - bottomRightMag) / (t * fps);
@@ -857,7 +816,7 @@ export class Square extends SimulationElement {
         this.bottomRight.multiplyX(value);
         this.bottomLeft.multiplyX(value);
 
-        this.#updateDimensions();
+        this.updateDimensions();
       },
       () => {
         this.topRight.appendX(topRightChange);
@@ -882,23 +841,21 @@ export class Square extends SimulationElement {
         bottomLeftClone.multiplyX(bottomLeftMag * value);
         this.bottomLeft = bottomLeftClone.clone();
 
-        this.#updateDimensions();
+        this.updateDimensions();
       },
       t
     );
   }
   scaleHeight(value: number, t = 0) {
-    // -- todo
-    let {
-      topRightClone,
-      topLeftClone,
-      bottomLeftClone,
-      bottomRightClone,
-      topRightMag,
-      topLeftMag,
-      bottomRightMag,
-      bottomLeftMag
-    }: any = this.#getProcessedStartAndMag('y');
+    const topRightClone = this.topRight.clone();
+    const topLeftClone = this.topLeft.clone();
+    const bottomRightClone = this.bottomRight.clone();
+    const bottomLeftClone = this.bottomLeft.clone();
+    const topRightMag = topRightClone.mag;
+    const topLeftMag = topLeftClone.mag;
+    const bottomRightMag = bottomRightClone.mag;
+    const bottomLeftMag = bottomLeftClone.mag;
+
     const topRightChange = (topRightMag * value - topRightMag) / (t * fps);
     const topLeftChange = (topLeftMag * value - topLeftMag) / (t * fps);
     const bottomRightChange = (bottomRightMag * value - bottomRightMag) / (t * fps);
@@ -911,7 +868,7 @@ export class Square extends SimulationElement {
         this.bottomRight.multiplyY(value);
         this.bottomLeft.multiplyY(value);
 
-        this.#updateDimensions();
+        this.updateDimensions();
       },
       () => {
         this.topRight.appendY(topRightChange);
@@ -936,7 +893,7 @@ export class Square extends SimulationElement {
         bottomLeftClone.multiplyY(bottomLeftMag * value);
         this.bottomLeft = bottomLeftClone.clone();
 
-        this.#updateDimensions();
+        this.updateDimensions();
       },
       t
     );
@@ -983,11 +940,11 @@ export class Square extends SimulationElement {
     }
     return false;
   }
-  #updateDimensions() {
+  private updateDimensions() {
     this.height = this.topRight.y + this.bottomRight.y;
     this.width = this.topRight.x + this.topLeft.x;
   }
-  #checkEvents() {
+  private checkEvents() {
     this.events.forEach((event) => {
       const name = event.name;
       switch (name) {
@@ -1232,6 +1189,7 @@ export class Simulation {
   width: number = 0;
   height: number = 0;
   constructor(id: string, frameRate = 60) {
+    console.log('starting');
     fps = frameRate;
     this.scene = [];
     this.idObjs = {};
@@ -1240,7 +1198,7 @@ export class Simulation {
 
     this.canvas = document.getElementById(id) as HTMLCanvasElement | null;
     if (!this.canvas) {
-      console.warn(`Canvas with id "${id}" not found`);
+      console.error(`Canvas with id "${id}" not found`);
       return;
     }
     this.canvas.addEventListener('mousemove', (e) => {
@@ -1248,17 +1206,17 @@ export class Simulation {
       currentMouseEvent = e;
     });
 
-    window.addEventListener('resize', () => this.#resizeCanvas(this.canvas));
-    this.#resizeCanvas(this.canvas);
+    window.addEventListener('resize', () => this.resizeCanvas(this.canvas));
+    this.resizeCanvas(this.canvas);
 
     const ctx = this.canvas.getContext('2d');
     if (!ctx) return;
 
     this.ratio = window.devicePixelRatio;
 
-    this.#render(ctx);
+    this.render(ctx);
   }
-  #render(c: CanvasRenderingContext2D) {
+  private render(c: CanvasRenderingContext2D) {
     if (!this.canvas) return;
     c.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -1273,7 +1231,7 @@ export class Simulation {
     Object.values(this.idObjs).forEach((element) => {
       element.draw(c);
     });
-    window.requestAnimationFrame(() => this.#render(c));
+    window.requestAnimationFrame(() => this.render(c));
   }
   add(element: SimulationElement, id = null) {
     if (!this.canvas) return;
@@ -1309,7 +1267,7 @@ export class Simulation {
   fitElement() {
     if (!this.canvas) return;
     this.fitting = true;
-    this.#resizeCanvas(this.canvas);
+    this.resizeCanvas(this.canvas);
   }
   setSize(x: number, y: number) {
     if (!this.canvas) return;
@@ -1320,7 +1278,7 @@ export class Simulation {
   setBgColor(color: Color) {
     this.bgColor = color.clone();
   }
-  #resizeCanvas(c: HTMLCanvasElement | null) {
+  private resizeCanvas(c: HTMLCanvasElement | null) {
     if (!c) return;
     if (!this.canvas) return;
     if (this.fitting) {
