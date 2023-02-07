@@ -183,6 +183,7 @@ export declare class Simulation {
     canvas: HTMLCanvasElement | null;
     width: number;
     height: number;
+    ratio: number;
     constructor(id: string);
     private render;
     add(element: SimulationElement, id?: string | null): void;

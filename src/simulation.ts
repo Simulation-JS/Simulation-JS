@@ -1208,11 +1208,14 @@ export class Simulation {
   canvas: HTMLCanvasElement | null;
   width: number = 0;
   height: number = 0;
+  ratio: number;
   constructor(id: string) {
     this.scene = [];
     this.idObjs = {};
     this.fitting = false;
     this.bgColor = new Color(255, 255, 255);
+
+    this.ratio = window.devicePixelRatio;
 
     this.canvas = document.getElementById(id) as HTMLCanvasElement | null;
     if (!this.canvas) {
@@ -1301,8 +1304,8 @@ export class Simulation {
       if (c.parentElement) {
         const width = c.parentElement.clientWidth;
         const height = c.parentElement.clientHeight;
-        this.canvas.width = width * window.devicePixelRatio;
-        this.canvas.height = height * window.devicePixelRatio;
+        this.canvas.width = width * this.ratio;
+        this.canvas.height = height * this.ratio;
         this.canvas.style.width = width + 'px';
         this.canvas.style.height = height + 'px';
       }
