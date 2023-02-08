@@ -63,6 +63,14 @@ export class Vector {
         this.mag *= n;
         return this;
     }
+    sub(v) {
+        this.x -= v.x;
+        this.startX -= v.x;
+        this.y -= v.y;
+        this.startY -= v.y;
+        this.updateMag();
+        return this;
+    }
     add(v) {
         this.x += v.x;
         this.startX += v.x;

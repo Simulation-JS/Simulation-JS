@@ -16,6 +16,7 @@ export declare class Vector {
     draw(c: CanvasRenderingContext2D, pos?: Point, color?: Color, thickness?: number): void;
     normalize(): this;
     multiply(n: number): this;
+    sub(v: Vector): this;
     add(v: Vector): this;
     multiplyX(n: number): this;
     multiplyY(n: number): this;
