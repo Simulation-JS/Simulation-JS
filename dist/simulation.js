@@ -152,10 +152,12 @@ export class SimulationElement {
     pos;
     color;
     sim;
-    constructor(pos, color = new Color(0, 0, 0)) {
+    type;
+    constructor(pos, color = new Color(0, 0, 0), type = null) {
         this.pos = pos;
         this.color = color;
         this.sim = null;
+        this.type = type;
     }
     draw(_) { }
     setSimulationElement(el) {
@@ -302,7 +304,7 @@ export class Line extends SimulationElement {
     thickness;
     vec;
     constructor(p1, p2, color = new Color(0, 0, 0), thickness = 1, r = 0) {
-        super(p1, color);
+        super(p1, color, 'line');
         this.start = p1;
         this.end = p2;
         this.rotation = r;
@@ -386,7 +388,7 @@ export class Circle extends SimulationElement {
     hovering;
     events;
     constructor(pos, radius, color) {
-        super(pos, color);
+        super(pos, color, 'circle');
         this.radius = radius;
         this.hovering = false;
         this.events = [];
@@ -495,7 +497,7 @@ export class Polygon extends SimulationElement {
     points;
     rotation;
     constructor(pos, points, color, r = 0, offsetPoint = new Point(0, 0)) {
-        super(pos, color);
+        super(pos, color, 'polygon');
         this.rawPoints = points;
         this.offsetPoint = offsetPoint;
         this.offsetX = this.offsetPoint.x;
@@ -567,7 +569,7 @@ export class Square extends SimulationElement {
     v4;
     v5;
     constructor(pos, width, height, color, offsetPoint = new Point(0, 0), rotation = 0) {
-        super(pos, color);
+        super(pos, color, 'square');
         this.width = width;
         this.height = height;
         this.rotation = rotation;
@@ -874,7 +876,7 @@ export class Arc extends SimulationElement {
     thickness;
     rotation;
     constructor(pos, radius, startAngle, endAngle, thickness = 1, color = new Color(0, 0, 0), rotation = 0, counterClockwise = false) {
-        super(pos, color);
+        super(pos, color, 'arc');
         this.radius = radius;
         this.startAngle = startAngle;
         this.endAngle = endAngle;

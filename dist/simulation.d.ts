@@ -1,6 +1,7 @@
 declare const validEvents: readonly ["mousemove", "click", "hover", "mouseover", "mouseleave"];
 declare type ValidEvents = typeof validEvents[number];
 declare type LerpFunc = (n: number) => number;
+declare type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
 export declare class Vector {
     x: number;
     y: number;
@@ -35,7 +36,8 @@ export declare class SimulationElement {
     pos: Point;
     color: Color;
     sim: HTMLCanvasElement | null;
-    constructor(pos: Point, color?: Color);
+    type: SimulationElementType | null;
+    constructor(pos: Point, color?: Color, type?: SimulationElementType | null);
     draw(_: CanvasRenderingContext2D): void;
     setSimulationElement(el: HTMLCanvasElement): void;
     fill(color: Color, t?: number, f?: LerpFunc): Promise<void>;
