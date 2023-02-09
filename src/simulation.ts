@@ -5,6 +5,7 @@ const validEvents = ['mousemove', 'click', 'hover', 'mouseover', 'mouseleave'] a
 type ValidEvents = typeof validEvents[number];
 
 type LerpFunc = (n: number) => number;
+type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
 
 export class Vector {
   x: number;
@@ -157,10 +158,12 @@ export class SimulationElement {
   pos: Point;
   color: Color;
   sim: HTMLCanvasElement | null;
-  constructor(pos: Point, color = new Color(0, 0, 0)) {
+  type: SimulationElementType | null;
+  constructor(pos: Point, color = new Color(0, 0, 0), type: SimulationElementType | null = null) {
     this.pos = pos;
     this.color = color;
     this.sim = null;
+    this.type = type;
   }
   draw(_: CanvasRenderingContext2D) {}
   setSimulationElement(el: HTMLCanvasElement) {
@@ -332,7 +335,7 @@ export class Line extends SimulationElement {
   thickness: number;
   vec: Vector;
   constructor(p1: Point, p2: Point, color = new Color(0, 0, 0), thickness = 1, r = 0) {
-    super(p1, color);
+    super(p1, color, 'line');
     this.start = p1;
     this.end = p2;
     this.rotation = r;
@@ -445,7 +448,7 @@ export class Circle extends SimulationElement {
   hovering: boolean;
   events: Event[];
   constructor(pos: Point, radius: number, color: Color) {
-    super(pos, color);
+    super(pos, color, 'circle');
     this.radius = radius;
     this.hovering = false;
     this.events = [];
@@ -564,7 +567,7 @@ export class Polygon extends SimulationElement {
   points: Point[];
   rotation: number;
   constructor(pos: Point, points: Point[], color: Color, r = 0, offsetPoint = new Point(0, 0)) {
-    super(pos, color);
+    super(pos, color, 'polygon');
     this.rawPoints = points;
     this.offsetPoint = offsetPoint;
     this.offsetX = this.offsetPoint.x;
@@ -651,7 +654,7 @@ export class Square extends SimulationElement {
     offsetPoint = new Point(0, 0),
     rotation = 0
   ) {
-    super(pos, color);
+    super(pos, color, 'square');
     this.width = width;
     this.height = height;
     this.rotation = rotation;
@@ -1050,7 +1053,7 @@ export class Arc extends SimulationElement {
     rotation = 0,
     counterClockwise = false
   ) {
-    super(pos, color);
+    super(pos, color, 'arc');
     this.radius = radius;
     this.startAngle = startAngle;
     this.endAngle = endAngle;
