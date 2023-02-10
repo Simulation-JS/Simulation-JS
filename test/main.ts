@@ -1,11 +1,17 @@
-import { frameLoop } from '../src/simulation';
+import { Simulation, Square, Point, Color } from '../src/simulation';
 
-const loop = frameLoop((a: number) => {
-  console.log(String.fromCharCode(a));
-  if (a > 100) {
-    return false;
-  }
-  return [a + 1];
+const canvas = new Simulation('canvas');
+canvas.fitElement();
+
+const square = new Square(new Point(200, 200), 50, 50, new Color(255, 0, 0));
+canvas.add(square);
+
+canvas.on('mousemove', (e: MouseEvent) => {
+  const p = new Point(e.offsetX * canvas.ratio, e.offsetY * canvas.ratio);
+  square.updateOffsetPosition(p.sub(square.pos));
 });
 
-loop(0);
+(async function main() {
+  await square.rotate(360, 4);
+  main();
+})();

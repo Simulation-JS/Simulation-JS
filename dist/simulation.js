@@ -14,7 +14,7 @@ export class Vector {
         this.x = x;
         this.y = y;
         this.mag = pythag(x, y);
-        this.startAngle = radToDeg(atan2(y, x));
+        this.startAngle = radToDeg(Math.atan2(y, x));
         this.startX = x;
         this.startY = y;
         this.rotation = r;
@@ -1088,17 +1088,11 @@ export class Simulation {
         this.idObjs = {};
     }
 }
-export function abs(num) {
-    return Math.abs(num);
-}
 export function pythag(x, y) {
     return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
 }
 export function distance(p1, p2) {
     return pythag(p1.x - p2.x, p1.y - p2.y);
-}
-export function atan2(x, y) {
-    return Math.atan2(y, x);
 }
 export function degToRad(deg) {
     return (deg * Math.PI) / 180;
@@ -1221,10 +1215,8 @@ export default {
     Polygon,
     Square,
     Simulation,
-    abs,
     pythag,
     distance,
-    atan2,
     degToRad,
     radToDeg,
     transitionValues,

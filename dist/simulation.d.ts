@@ -199,10 +199,8 @@ export declare class Simulation {
     private resizeCanvas;
     empty(): void;
 }
-export declare function abs(num: number): number;
 export declare function pythag(x: number, y: number): number;
 export declare function distance(p1: Point, p2: Point): number;
-export declare function atan2(x: number, y: number): number;
 export declare function degToRad(deg: number): number;
 export declare function radToDeg(rad: number): number;
 export declare function lerp(a: number, b: number, t: number): number;
@@ -229,10 +227,8 @@ declare const _default: {
     Polygon: typeof Polygon;
     Square: typeof Square;
     Simulation: typeof Simulation;
-    abs: typeof abs;
     pythag: typeof pythag;
     distance: typeof distance;
-    atan2: typeof atan2;
     degToRad: typeof degToRad;
     radToDeg: typeof radToDeg;
     transitionValues: typeof transitionValues;
