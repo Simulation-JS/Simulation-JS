@@ -1197,6 +1197,17 @@ export function compare(val1, val2) {
     }
     return val1 === val2;
 }
+export function frameLoop(cb) {
+    function start(...args) {
+        let res = cb(...args) || args;
+        if (!Array.isArray(res))
+            res = args;
+        requestAnimationFrame(() => start(...res));
+    }
+    return (...p) => {
+        start(...p);
+    };
+}
 export default {
     Vector,
     SimulationElement,

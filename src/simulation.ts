@@ -1456,6 +1456,17 @@ export function compare(val1: any, val2: any) {
   return val1 === val2;
 }
 
+export function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Parameters<T>) => void {
+  function start(...args: Parameters<T>) {
+    let res = cb(...args) || args;
+    if (!Array.isArray(res)) res = args;
+    requestAnimationFrame(() => start(...res));
+  }
+  return (...p: Parameters<T>) => {
+    start(...p);
+  };
+}
+
 export default {
   Vector,
   SimulationElement,
