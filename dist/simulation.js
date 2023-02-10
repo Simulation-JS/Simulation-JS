@@ -1199,7 +1199,9 @@ export function compare(val1, val2) {
 }
 export function frameLoop(cb) {
     function start(...args) {
-        let res = cb(...args) || args;
+        let res = cb(...args);
+        if (res === false)
+            return;
         if (!Array.isArray(res))
             res = args;
         requestAnimationFrame(() => start(...res));

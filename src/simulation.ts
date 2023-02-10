@@ -1458,7 +1458,8 @@ export function compare(val1: any, val2: any) {
 
 export function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Parameters<T>) => void {
   function start(...args: Parameters<T>) {
-    let res = cb(...args) || args;
+    let res = cb(...args);
+    if (res === false) return;
     if (!Array.isArray(res)) res = args;
     requestAnimationFrame(() => start(...res));
   }
