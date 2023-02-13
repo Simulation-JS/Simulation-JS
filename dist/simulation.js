@@ -70,8 +70,8 @@ export class Vector {
     add(v) {
         this.x += v.x;
         this.startX += v.x;
-        this.y += v.x;
-        this.startY += v.x;
+        this.y += v.y;
+        this.startY += v.y;
         this.updateMag();
         return this;
     }
