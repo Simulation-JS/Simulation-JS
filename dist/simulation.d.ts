@@ -1,5 +1,3 @@
-declare const validEvents: readonly ["mousemove", "click", "hover", "mouseover", "mouseleave"];
-declare type ValidEvents = typeof validEvents[number];
 declare type LerpFunc = (n: number) => number;
 declare type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
 export declare class Vector {
@@ -37,7 +35,9 @@ export declare class SimulationElement {
     color: Color;
     sim: HTMLCanvasElement | null;
     type: SimulationElementType | null;
+    running: boolean;
     constructor(pos: Point, color?: Color, type?: SimulationElementType | null);
+    end(): void;
     draw(_: CanvasRenderingContext2D): void;
     setSimulationElement(el: HTMLCanvasElement): void;
     fill(color: Color, t?: number, f?: LerpFunc): Promise<void>;
@@ -64,6 +64,7 @@ export declare class SceneCollection extends SimulationElement {
         [key: string]: SimulationElement;
     };
     constructor(name?: string);
+    end(): void;
     add(element: SimulationElement, id?: string | null): void;
     removeWithId(id: string): void;
     removeWithObject(element: SimulationElement): void;
@@ -72,8 +73,8 @@ export declare class SceneCollection extends SimulationElement {
     empty(): void;
 }
 export declare class Line extends SimulationElement {
-    start: Point;
-    end: Point;
+    startPoint: Point;
+    endPoint: Point;
     rotation: number;
     thickness: number;
     vec: Vector;
@@ -90,36 +91,26 @@ export declare class Line extends SimulationElement {
 }
 export declare class Circle extends SimulationElement {
     radius: number;
-    hovering: boolean;
-    events: Event[];
     constructor(pos: Point, radius: number, color: Color);
     clone(): Circle;
     draw(c: CanvasRenderingContext2D): void;
     setRadius(value: number, t?: number, f?: LerpFunc): Promise<void>;
     scale(value: number, t?: number, f?: LerpFunc): Promise<void>;
-    private checkEvents;
-    on(event: ValidEvents, callback1: (event: MouseEvent) => void, callback2?: (event: MouseEvent) => void): void;
     contains(p: Point): boolean;
 }
 export declare class Polygon extends SimulationElement {
-    rawPoints: Point[];
     offsetPoint: Point;
     offsetX: number;
     offsetY: number;
     points: Point[];
     rotation: number;
     constructor(pos: Point, points: Point[], color: Color, r?: number, offsetPoint?: Point);
-    setPoints(points: Point[]): void;
+    setPoints(points: Point[], t?: number, f?: LerpFunc): Promise<void>;
     clone(): Polygon;
-    rotate(deg: number): void;
-    rotateTo(deg: number): void;
-    private setRotation;
+    rotate(deg: number, t?: number, f?: LerpFunc): Promise<void>;
+    rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
+    private setPointRotation;
     draw(c: CanvasRenderingContext2D): void;
-}
-export declare class Event {
-    name: string;
-    callback: (event: MouseEvent) => void;
-    constructor(name: string, callback: (event: MouseEvent) => void);
 }
 export declare class Square extends SimulationElement {
     width: number;
@@ -154,8 +145,6 @@ export declare class Square extends SimulationElement {
     setHeight(value: number, t?: number): Promise<void>;
     contains(p: Point): boolean;
     private updateDimensions;
-    private checkEvents;
-    on(event: ValidEvents, callback1: (event: MouseEvent) => void, callback2?: (event: MouseEvent) => void): void;
     clone(): Square;
 }
 export declare class Arc extends SimulationElement {
@@ -176,6 +165,11 @@ export declare class Arc extends SimulationElement {
     clone(): Arc;
     draw(c: CanvasRenderingContext2D): void;
 }
+declare class Event {
+    event: string;
+    callback: Function;
+    constructor(event: string, callback: Function);
+}
 export declare class Simulation {
     scene: SimulationElement[];
     idObjs: {
@@ -187,12 +181,17 @@ export declare class Simulation {
     width: number;
     height: number;
     ratio: number;
+    private running;
+    private _prevReq;
+    events: Event[];
     constructor(id: string);
     private render;
+    end(): void;
     add(element: SimulationElement, id?: string | null): void;
     removeWithId(id: string): void;
     removeWithObject(element: SimulationElement): void;
-    on(event: string, callback: (e: any) => void): void;
+    on<K extends keyof HTMLElementEventMap>(event: K, callback: Function): void;
+    removeListener<K extends keyof HTMLElementEventMap>(event: K, callback: Function): void;
     fitElement(): void;
     setSize(x: number, y: number): void;
     setBgColor(color: Color): void;
@@ -213,7 +212,7 @@ export declare function linearStep(n: number): number;
  * @param t - animation time (seconds)
  * @returns {Promise<void>}
  */
-export declare function transitionValues(callback1: () => void, callback2: (percent: number) => void, callback3: () => void, t: number, func?: (n: number) => number): Promise<void>;
+export declare function transitionValues(callback1: () => void, callback2: (percent: number) => boolean | void, callback3: () => void, t: number, func?: (n: number) => number): Promise<void>;
 export declare function compare(val1: any, val2: any): boolean;
 export declare function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Parameters<T>) => void;
 declare const _default: {
