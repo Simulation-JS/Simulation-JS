@@ -1,17 +1,24 @@
-import { Simulation, Square, Point, Color } from '../src/simulation';
+import { Simulation, Point, Color, Polygon } from '../src/simulation';
 
 const canvas = new Simulation('canvas');
 canvas.fitElement();
 
-const square = new Square(new Point(200, 200), 50, 50, new Color(255, 0, 0));
-canvas.add(square);
+const poly = new Polygon(
+  new Point(200, 200),
+  [new Point(0, 0), new Point(-50, 50), new Point(50, 50)],
+  new Color(0, 255, 100)
+);
+canvas.add(poly);
 
-canvas.on('mousemove', (e: MouseEvent) => {
-  const p = new Point(e.offsetX * canvas.ratio, e.offsetY * canvas.ratio);
-  square.updateOffsetPosition(p.sub(square.pos));
-});
-
-(async function main() {
-  await square.rotate(360, 4);
-  main();
+(async () => {
+  await poly.setPoints([...poly.points.map((p) => p.clone()), new Point(50, 0)], 1);
+  await poly.setPoints(
+    [new Point(-100, -100), new Point(100, -100), new Point(-100, 100), new Point(100, 100)],
+    1
+  );
+  await poly.setPoints(
+    [new Point(-100, -100), new Point(100, -100), new Point(100, 100), new Point(-100, 100)],
+    1
+  );
+  poly.rotate(90, 1);
 })();

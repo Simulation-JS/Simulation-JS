@@ -16,5 +16,5 @@
     "noUnusedParameters": true,
     "skipLibCheck": true
   },
-  "exclude": ["test"]
+  "exclude": ["test", "node_modules"]
 }

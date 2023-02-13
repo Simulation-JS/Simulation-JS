@@ -1,9 +1,3 @@
-// global vars
-let currentMousePos: Point;
-let currentMouseEvent: MouseEvent;
-const validEvents = ['mousemove', 'click', 'hover', 'mouseover', 'mouseleave'] as const;
-type ValidEvents = typeof validEvents[number];
-
 type LerpFunc = (n: number) => number;
 type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
 
@@ -159,11 +153,16 @@ export class SimulationElement {
   color: Color;
   sim: HTMLCanvasElement | null;
   type: SimulationElementType | null;
+  running: boolean;
   constructor(pos: Point, color = new Color(0, 0, 0), type: SimulationElementType | null = null) {
     this.pos = pos;
     this.color = color;
     this.sim = null;
     this.type = type;
+    this.running = true;
+  }
+  end() {
+    this.running = false;
   }
   draw(_: CanvasRenderingContext2D) {}
   setSimulationElement(el: HTMLCanvasElement) {
@@ -189,6 +188,7 @@ export class SimulationElement {
         this.color.r = currentColor.r;
         this.color.g = currentColor.g;
         this.color.b = currentColor.b;
+        return this.running;
       },
       func,
       t,
@@ -206,6 +206,7 @@ export class SimulationElement {
       (p) => {
         this.pos.x += changeX * p;
         this.pos.y += changeY * p;
+        return this.running;
       },
       () => {
         this.pos.x = p.x;
@@ -228,6 +229,7 @@ export class SimulationElement {
       (p) => {
         this.pos.x += changeX * p;
         this.pos.y += changeY * p;
+        return this.running;
       },
       () => {
         this.pos.x = startPos.x + p.x;
@@ -281,6 +283,15 @@ export class SceneCollection extends SimulationElement {
     this.scene = [];
     this.idObjs = {};
   }
+  end() {
+    super.end();
+    for (let i = 0; i < this.scene.length; i++) {
+      this.scene[i].end();
+    }
+    Object.keys(this.idObjs).forEach((key) => {
+      this.idObjs[key].end();
+    });
+  }
   add(element: SimulationElement, id: string | null = null) {
     if (this.sim != null) {
       element.setSimulationElement(this.sim);
@@ -329,58 +340,66 @@ export class SceneCollection extends SimulationElement {
 }
 
 export class Line extends SimulationElement {
-  start: Point;
-  end: Point;
+  startPoint: Point;
+  endPoint: Point;
   rotation: number;
   thickness: number;
   vec: Vector;
   constructor(p1: Point, p2: Point, color = new Color(0, 0, 0), thickness = 1, r = 0) {
     super(p1, color, 'line');
-    this.start = p1;
-    this.end = p2;
+    this.startPoint = p1;
+    this.endPoint = p2;
     this.rotation = r;
     this.thickness = thickness;
     this.vec = new Vector(0, 0);
     this.setVector();
   }
   clone() {
-    return new Line(this.start.clone(), this.end.clone(), this.color.clone(), this.thickness, this.rotation);
+    return new Line(
+      this.startPoint.clone(),
+      this.endPoint.clone(),
+      this.color.clone(),
+      this.thickness,
+      this.rotation
+    );
   }
   setStart(p: Point, t = 0, f?: LerpFunc) {
-    const xChange = p.x - this.start.x;
-    const yChange = p.y - this.start.y;
+    const xChange = p.x - this.startPoint.x;
+    const yChange = p.y - this.startPoint.y;
 
     return transitionValues(
       () => {
-        this.start = p;
+        this.startPoint = p;
       },
       (p) => {
-        this.start.x += xChange * p;
-        this.start.y += yChange * p;
+        this.startPoint.x += xChange * p;
+        this.startPoint.y += yChange * p;
+        return this.running;
       },
       () => {
-        this.start = p;
+        this.startPoint = p;
       },
       t,
       f
     );
   }
   setEnd(p: Point, t = 0, f?: LerpFunc) {
-    const xChange = p.x - this.end.x;
-    const yChange = p.y - this.end.y;
+    const xChange = p.x - this.endPoint.x;
+    const yChange = p.y - this.endPoint.y;
 
     return transitionValues(
       () => {
-        this.end = p;
+        this.endPoint = p;
         this.setVector();
       },
       (p) => {
-        this.end.x += xChange * p;
-        this.end.y += yChange * p;
+        this.endPoint.x += xChange * p;
+        this.endPoint.y += yChange * p;
         this.setVector();
+        return this.running;
       },
       () => {
-        this.end = p;
+        this.endPoint = p;
         this.setVector();
       },
       t,
@@ -388,7 +407,7 @@ export class Line extends SimulationElement {
     );
   }
   private setVector() {
-    this.vec = new Vector(this.end.x - this.start.x, this.end.y - this.start.y);
+    this.vec = new Vector(this.endPoint.x - this.startPoint.x, this.endPoint.y - this.startPoint.y);
     this.vec.rotateTo(this.rotation);
   }
   rotate(deg: number, t = 0, f?: LerpFunc) {
@@ -402,6 +421,7 @@ export class Line extends SimulationElement {
       (p) => {
         this.rotation += deg * p;
         this.vec.rotate(deg * p);
+        return this.running;
       },
       () => {
         this.rotation = start + deg;
@@ -422,6 +442,7 @@ export class Line extends SimulationElement {
       (p) => {
         this.rotation += rotationChange * p;
         this.vec.rotateTo(this.rotation);
+        return this.running;
       },
       () => {
         this.rotation = deg;
@@ -436,22 +457,18 @@ export class Line extends SimulationElement {
     return this.setStart(p, t);
   }
   move(v: Vector, t = 0) {
-    return this.moveTo(this.start.add(v), t);
+    return this.moveTo(this.startPoint.add(v), t);
   }
   draw(c: CanvasRenderingContext2D) {
-    this.vec.draw(c, new Point(this.start.x, this.start.y), this.color, this.thickness);
+    this.vec.draw(c, new Point(this.startPoint.x, this.startPoint.y), this.color, this.thickness);
   }
 }
 
 export class Circle extends SimulationElement {
   radius: number;
-  hovering: boolean;
-  events: Event[];
   constructor(pos: Point, radius: number, color: Color) {
     super(pos, color, 'circle');
     this.radius = radius;
-    this.hovering = false;
-    this.events = [];
   }
   clone() {
     return new Circle(this.pos.clone(), this.radius, this.color.clone());
@@ -462,7 +479,6 @@ export class Circle extends SimulationElement {
     c.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2, false);
     c.fill();
     c.closePath();
-    this.checkEvents();
   }
   setRadius(value: number, t = 0, f?: LerpFunc) {
     const radiusChange = value - this.radius;
@@ -473,6 +489,7 @@ export class Circle extends SimulationElement {
       },
       (p) => {
         this.radius += radiusChange * p;
+        return this.running;
       },
       () => {
         this.radius = value;
@@ -491,6 +508,7 @@ export class Circle extends SimulationElement {
       },
       (p) => {
         this.radius += radiusChange * p;
+        return this.running;
       },
       () => {
         this.radius = finalValue;
@@ -499,68 +517,12 @@ export class Circle extends SimulationElement {
       f
     );
   }
-  private checkEvents() {
-    this.events.forEach((event) => {
-      const name = event.name;
-      switch (name) {
-        case 'mouseover': {
-          if (!this.hovering && currentMousePos && this.contains(currentMousePos)) {
-            this.hovering = true;
-            event.callback(currentMouseEvent);
-          }
-          break;
-        }
-        case 'mouseleave': {
-          if (this.hovering && currentMousePos && !this.contains(currentMousePos)) {
-            this.hovering = false;
-            event.callback(currentMouseEvent);
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    });
-  }
-  on(event: ValidEvents, callback1: (event: MouseEvent) => void, callback2?: (event: MouseEvent) => void) {
-    if (!validEvents.includes(event)) {
-      console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
-      return;
-    }
-
-    // specific events
-    if (event === 'mousemove') {
-      if (!this.sim) return;
-      this.sim.addEventListener('mousemove', (e) => {
-        const p = new Point(e.offsetX, e.offsetY);
-        if (this.contains(p)) {
-          callback1(e);
-        }
-      });
-    } else if (event === 'hover') {
-      this.on('mouseover', callback1);
-      if (!callback2) return;
-      this.on('mouseleave', callback2);
-    } else if (event === 'click') {
-      if (!this.sim) return;
-      this.sim.addEventListener('click', (e) => {
-        const p = new Point(e.clientX, e.clientY);
-        if (this.contains(p)) {
-          callback1(e);
-        }
-      });
-    } else {
-      const newEvent = new Event(event, callback1);
-      this.events.push(newEvent);
-    }
-  }
   contains(p: Point) {
     return distance(p, this.pos) < this.radius;
   }
 }
 
 export class Polygon extends SimulationElement {
-  rawPoints: Point[];
   offsetPoint: Point;
   offsetX: number;
   offsetY: number;
@@ -568,7 +530,6 @@ export class Polygon extends SimulationElement {
   rotation: number;
   constructor(pos: Point, points: Point[], color: Color, r = 0, offsetPoint = new Point(0, 0)) {
     super(pos, color, 'polygon');
-    this.rawPoints = points;
     this.offsetPoint = offsetPoint;
     this.offsetX = this.offsetPoint.x;
     this.offsetY = this.offsetPoint.y;
@@ -576,36 +537,102 @@ export class Polygon extends SimulationElement {
       return new Point(p.x + this.offsetX, p.y + this.offsetY);
     });
     this.rotation = r;
-    this.setRotation();
   }
-  setPoints(points: Point[]) {
-    this.points = points.map((p) => {
-      return new Point(p.x + this.offsetX, p.y + this.offsetY);
-    });
+  setPoints(points: Point[], t = 0, f?: LerpFunc) {
+    if (t === 0) {
+      this.points = points.map((p) => {
+        return new Point(p.x + this.offsetX, p.y + this.offsetY);
+      });
+      return Promise.resolve();
+    } else {
+      if (points.length > this.points.length) {
+        const lastPoint = this.points[this.points.length - 1];
+        while (points.length > this.points.length) {
+          this.points.push(new Point(lastPoint.x, lastPoint.y));
+        }
+      } else if (points.length < this.points.length) {
+        this.points.splice(0, points.length);
+      }
+
+      const initial = this.points.map((p) => p.clone());
+      const changes = points.map((p, i) => {
+        return new Vector(p.x - this.points[i].x, p.y - this.points[i].y);
+      });
+
+      return transitionValues(
+        () => {},
+        (p) => {
+          this.points = this.points.map((point, i) => {
+            point.x += changes[i].x * p;
+            point.y += changes[i].y * p;
+            return point;
+          });
+          return this.running;
+        },
+        () => {
+          this.points = initial.map((p, i) => {
+            p.x += changes[i].x;
+            p.y += changes[i].y;
+            return p.clone();
+          });
+        },
+        t,
+        f
+      );
+    }
   }
   clone() {
     return new Polygon(
       this.pos.clone(),
-      [...this.rawPoints],
+      [...this.points.map((p) => p.clone())],
       this.color.clone(),
       this.rotation,
       this.offsetPoint.clone()
     );
   }
-  rotate(deg: number) {
-    this.rotation += deg;
-    this.setRotation();
+  rotate(deg: number, t = 0, f?: LerpFunc) {
+    const initial = this.rotation;
+    return transitionValues(
+      () => {
+        this.rotation = initial + deg;
+        this.setPointRotation();
+      },
+      (p) => {
+        this.rotation += deg * p;
+        this.setPointRotation();
+        return this.running;
+      },
+      () => {
+        this.rotation = initial + deg;
+        this.setPointRotation();
+      },
+      t,
+      f
+    );
   }
-  rotateTo(deg: number) {
-    this.rotation = deg;
-    this.setRotation();
+  rotateTo(deg: number, t = 0, f?: LerpFunc) {
+    const rotationChange = deg - this.rotation;
+    return transitionValues(
+      () => {
+        this.rotation = deg;
+        this.setPointRotation();
+      },
+      (p) => {
+        this.rotation += rotationChange * p;
+        this.setPointRotation();
+        return this.running;
+      },
+      () => {
+        this.rotation = deg;
+        this.setPointRotation();
+      },
+      t,
+      f
+    );
   }
-  private setRotation() {
+  private setPointRotation() {
     this.rotation = minimizeRotation(this.rotation);
-    this.points = this.points.map((p) => {
-      p.rotateTo(this.rotation);
-      return p;
-    });
+    this.points = this.points.map((p) => p.rotateTo(this.rotation));
   }
   draw(c: CanvasRenderingContext2D) {
     c.beginPath();
@@ -616,15 +643,6 @@ export class Polygon extends SimulationElement {
     }
     c.fill();
     c.closePath();
-  }
-}
-
-export class Event {
-  name: string;
-  callback: (event: MouseEvent) => void;
-  constructor(name: string, callback: (event: MouseEvent) => void) {
-    this.name = name;
-    this.callback = callback;
   }
 }
 
@@ -708,6 +726,7 @@ export class Square extends SimulationElement {
       (p) => {
         this.rotation += deg * p;
         this.setRotation();
+        return this.running;
       },
       func,
       t,
@@ -728,6 +747,7 @@ export class Square extends SimulationElement {
       (p) => {
         this.rotation += rotationChange * p;
         this.setRotation();
+        return this.running;
       },
       func,
       t,
@@ -769,8 +789,6 @@ export class Square extends SimulationElement {
         testVecs.forEach((vec) => vec.draw(c, new Point(this.pos.x, this.pos.y), new Color(0, 0, 255)));
       }
     }
-
-    this.checkEvents();
   }
   scale(value: number, t = 0, f?: LerpFunc) {
     const topRightMag = this.topRight.mag;
@@ -797,6 +815,7 @@ export class Square extends SimulationElement {
         this.topLeft.appendMag(topLeftChange * p);
         this.bottomRight.appendMag(bottomRightChange * p);
         this.bottomLeft.appendMag(bottomLeftChange * p);
+        return this.running;
       },
       () => {
         this.topRight.normalize();
@@ -846,6 +865,7 @@ export class Square extends SimulationElement {
         this.topLeft.appendX(topLeftChange * p);
         this.bottomRight.appendX(bottomRightChange * p);
         this.bottomLeft.appendX(bottomLeftChange * p);
+        return this.running;
       },
       () => {
         topRightClone.setX(1);
@@ -899,6 +919,7 @@ export class Square extends SimulationElement {
         this.topLeft.appendY(topLeftChange * p);
         this.bottomRight.appendY(bottomRightChange * p);
         this.bottomLeft.appendY(bottomLeftChange * p);
+        return this.running;
       },
       () => {
         topRightClone.setY(1);
@@ -969,61 +990,6 @@ export class Square extends SimulationElement {
     this.height = this.topRight.y + this.bottomRight.y;
     this.width = this.topRight.x + this.topLeft.x;
   }
-  private checkEvents() {
-    this.events.forEach((event) => {
-      const name = event.name;
-      switch (name) {
-        case 'mouseover': {
-          if (!this.hovering && currentMousePos && this.contains(currentMousePos)) {
-            this.hovering = true;
-            event.callback(currentMouseEvent);
-          }
-          break;
-        }
-        case 'mouseleave': {
-          if (this.hovering && currentMousePos && !this.contains(currentMousePos)) {
-            this.hovering = false;
-            event.callback(currentMouseEvent);
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    });
-  }
-  on(event: ValidEvents, callback1: (event: MouseEvent) => void, callback2?: (event: MouseEvent) => void) {
-    if (!validEvents.includes(event)) {
-      console.warn(`Invalid event: ${event}. Event must be one of ${validEvents.join(', ')}`);
-      return;
-    }
-
-    // specific events
-    if (event === 'mousemove') {
-      if (!this.sim) return;
-      this.sim.addEventListener('mousemove', (e) => {
-        const p = new Point(e.clientX, e.clientY);
-        if (this.contains(p)) {
-          callback1(e);
-        }
-      });
-    } else if (event === 'click') {
-      if (!this.sim) return;
-      this.sim.addEventListener('click', (e) => {
-        const p = new Point(e.clientX, e.clientY);
-        if (this.contains(p)) {
-          callback1(e);
-        }
-      });
-    } else if (event === 'hover') {
-      this.on('mouseover', callback1);
-      if (!callback2) return;
-      this.on('mouseleave', callback2);
-    } else {
-      const newEvent = new Event(event, callback1);
-      this.events.push(newEvent);
-    }
-  }
   clone() {
     return new Square(
       this.pos.clone(),
@@ -1071,6 +1037,7 @@ export class Arc extends SimulationElement {
       },
       (p) => {
         this.radius += scaleChange * p;
+        return this.running;
       },
       () => {
         this.radius = initialRadius * scale;
@@ -1088,6 +1055,7 @@ export class Arc extends SimulationElement {
       },
       (p) => {
         this.radius += radChange * p;
+        return this.running;
       },
       () => {
         this.radius = value;
@@ -1105,6 +1073,7 @@ export class Arc extends SimulationElement {
       },
       (p) => {
         this.thickness += thicknessChange * p;
+        return this.running;
       },
       () => {
         this.thickness = val;
@@ -1122,6 +1091,7 @@ export class Arc extends SimulationElement {
       },
       (p) => {
         this.startAngle += angleChange * p;
+        return this.running;
       },
       () => {
         this.startAngle = angle;
@@ -1139,6 +1109,7 @@ export class Arc extends SimulationElement {
       },
       (p) => {
         this.endAngle += angleChange / p;
+        return this.running;
       },
       () => {
         this.endAngle = angle;
@@ -1157,6 +1128,7 @@ export class Arc extends SimulationElement {
       },
       (p) => {
         this.rotation += rotationChange * p;
+        return this.running;
       },
       () => {
         this.rotation = initialRotation + amount;
@@ -1174,6 +1146,7 @@ export class Arc extends SimulationElement {
       },
       (p) => {
         this.rotation += rotationChange * p;
+        return this.running;
       },
       () => {
         this.rotation = deg;
@@ -1211,6 +1184,15 @@ export class Arc extends SimulationElement {
   }
 }
 
+class Event {
+  event: string;
+  callback: Function;
+  constructor(event: string, callback: Function) {
+    this.event = event;
+    this.callback = callback;
+  }
+}
+
 export class Simulation {
   scene: SimulationElement[];
   idObjs: { [key: string]: SimulationElement };
@@ -1220,11 +1202,17 @@ export class Simulation {
   width: number = 0;
   height: number = 0;
   ratio: number;
+  private running: boolean;
+  private _prevReq: number;
+  events: Event[];
   constructor(id: string) {
     this.scene = [];
     this.idObjs = {};
     this.fitting = false;
     this.bgColor = new Color(255, 255, 255);
+    this.running = true;
+    this._prevReq = 0;
+    this.events = [];
 
     this.ratio = window.devicePixelRatio;
 
@@ -1233,10 +1221,6 @@ export class Simulation {
       console.error(`Canvas with id "${id}" not found`);
       return;
     }
-    this.canvas.addEventListener('mousemove', (e) => {
-      currentMousePos = new Point(e.offsetX, e.offsetY);
-      currentMouseEvent = e;
-    });
 
     window.addEventListener('resize', () => this.resizeCanvas(this.canvas));
     this.resizeCanvas(this.canvas);
@@ -1261,7 +1245,20 @@ export class Simulation {
     Object.values(this.idObjs).forEach((element) => {
       element.draw(c);
     });
-    window.requestAnimationFrame(() => this.render(c));
+    if (this.running) {
+      this._prevReq = window.requestAnimationFrame(() => this.render(c));
+    }
+  }
+  end() {
+    this.running = false;
+    for (let i = 0; i < this.scene.length; i++) {
+      this.scene[i].end();
+    }
+    Object.keys(this.idObjs).forEach((key) => {
+      this.idObjs[key].end();
+    });
+    window.removeEventListener('resize', () => this.resizeCanvas(this.canvas));
+    window.cancelAnimationFrame(this._prevReq);
   }
   add(element: SimulationElement, id: string | null = null) {
     if (!this.canvas) return;
@@ -1290,9 +1287,23 @@ export class Simulation {
       }
     }
   }
-  on(event: string, callback: (e: any) => void) {
+  on<K extends keyof HTMLElementEventMap>(event: K, callback: Function) {
     if (!this.canvas) return;
+    this.events.push(new Event(event, callback));
+    // @ts-ignore
     this.canvas.addEventListener(event, callback);
+  }
+  removeListener<K extends keyof HTMLElementEventMap>(event: K, callback: Function) {
+    this.events = this.events.filter((e) => {
+      if (e.event === event && e.callback == callback) {
+        if (this.canvas) {
+          // @ts-ignore
+          this.canvas.removeEventListener(e.event, e.callback);
+        }
+        return false;
+      }
+      return true;
+    });
   }
   fitElement() {
     if (!this.canvas) return;
@@ -1374,7 +1385,7 @@ export function linearStep(n: number) {
  */
 export function transitionValues(
   callback1: () => void,
-  callback2: (percent: number) => void,
+  callback2: (percent: number) => boolean | void,
   callback3: () => void,
   t: number,
   func?: (n: number) => number
@@ -1386,12 +1397,17 @@ export function transitionValues(
     } else {
       const inc = 1 / (60 * t);
       let prevPercent = 0;
+      let prevFrame = 0;
       const step = (t: number, f: (n: number) => number) => {
         const newT = f(t);
-        callback2(newT - prevPercent);
+        const canContinue = callback2(newT - prevPercent);
+        if (!canContinue) {
+          window.cancelAnimationFrame(prevFrame);
+          return;
+        }
         prevPercent = newT;
         if (t < 1) {
-          window.requestAnimationFrame(() => step(t + inc, f));
+          prevFrame = window.requestAnimationFrame(() => step(t + inc, f));
         } else {
           callback3();
           resolve();
@@ -1449,11 +1465,15 @@ export function compare(val1: any, val2: any) {
 }
 
 export function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Parameters<T>) => void {
+  let prevFrame = 0;
   function start(...args: Parameters<T>) {
     let res = cb(...args);
-    if (res === false) return;
+    if (res === false) {
+      window.cancelAnimationFrame(prevFrame);
+      return;
+    }
     if (!Array.isArray(res)) res = args;
-    requestAnimationFrame(() => start(...res));
+    prevFrame = window.requestAnimationFrame(() => start(...res));
   }
   return (...p: Parameters<T>) => {
     start(...p);
