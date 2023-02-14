@@ -402,30 +402,42 @@ export class Line extends SimulationElement {
 }
 export class Circle extends SimulationElement {
     radius;
-    constructor(pos, radius, color) {
+    startAngle;
+    endAngle;
+    counterClockwise;
+    thickness;
+    rotation;
+    fillCircle;
+    constructor(pos, radius, color = new Color(0, 0, 0), startAngle = 0, endAngle = 360, thickness = 1, rotation = 0, fill = true, counterClockwise = false) {
         super(pos, color, 'circle');
         this.radius = radius;
+        this.startAngle = startAngle;
+        this.endAngle = endAngle;
+        this.counterClockwise = counterClockwise;
+        this.thickness = thickness;
+        this.rotation = rotation;
+        this.fillCircle = fill;
     }
-    clone() {
-        return new Circle(this.pos.clone(), this.radius, this.color.clone());
+    setCounterClockwise(val) {
+        this.counterClockwise = val;
+    }
+    setFillCircle(val) {
+        this.fillCircle = val;
     }
     draw(c) {
         c.beginPath();
+        c.strokeStyle = this.color.toHex();
         c.fillStyle = this.color.toHex();
-        c.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2, false);
-        c.fill();
+        c.lineWidth = this.thickness;
+        c.arc(this.pos.x, this.pos.y, this.radius, degToRad(this.startAngle + this.rotation), degToRad(this.endAngle + this.rotation), this.counterClockwise);
+        c.lineTo(this.pos.x, this.pos.y);
+        c.moveTo(this.pos.x, this.pos.y);
+        c.lineTo(this.pos.x + Math.cos(degToRad(this.rotation)) * this.radius, this.pos.y + Math.sin(degToRad(this.rotation)) * this.radius);
+        c.stroke();
+        if (this.fillCircle) {
+            c.fill();
+        }
         c.closePath();
-    }
-    setRadius(value, t = 0, f) {
-        const radiusChange = value - this.radius;
-        return transitionValues(() => {
-            this.radius = value;
-        }, (p) => {
-            this.radius += radiusChange * p;
-            return this.running;
-        }, () => {
-            this.radius = value;
-        }, t, f);
     }
     scale(value, t = 0, f) {
         const radiusChange = this.radius * value - this.radius;
@@ -441,6 +453,88 @@ export class Circle extends SimulationElement {
     }
     contains(p) {
         return distance(p, this.pos) < this.radius;
+    }
+    scaleRadius(scale, t = 0, f) {
+        const initialRadius = this.radius;
+        const scaleChange = this.radius * scale - this.radius;
+        return transitionValues(() => {
+            this.radius *= scale;
+        }, (p) => {
+            this.radius += scaleChange * p;
+            return this.running;
+        }, () => {
+            this.radius = initialRadius * scale;
+        }, t, f);
+    }
+    setRadius(value, t = 0, f) {
+        const radChange = value - this.radius;
+        return transitionValues(() => {
+            this.radius = value;
+        }, (p) => {
+            this.radius += radChange * p;
+            return this.running;
+        }, () => {
+            this.radius = value;
+        }, t, f);
+    }
+    setThickness(val, t = 0, f) {
+        const thicknessChange = val - this.thickness;
+        return transitionValues(() => {
+            this.thickness = val;
+        }, (p) => {
+            this.thickness += thicknessChange * p;
+            return this.running;
+        }, () => {
+            this.thickness = val;
+        }, t, f);
+    }
+    setStartAngle(angle, t = 0, f) {
+        const angleChange = angle - this.startAngle;
+        return transitionValues(() => {
+            this.startAngle = angle;
+        }, (p) => {
+            this.startAngle += angleChange * p;
+            return this.running;
+        }, () => {
+            this.startAngle = angle;
+        }, t, f);
+    }
+    setEndAngle(angle, t = 0, f) {
+        const angleChange = angle - this.endAngle;
+        return transitionValues(() => {
+            this.endAngle = angle;
+        }, (p) => {
+            this.endAngle += angleChange * p;
+            return this.running;
+        }, () => {
+            this.endAngle = angle;
+        }, t, f);
+    }
+    rotate(amount, t = 0, f) {
+        const initialRotation = this.rotation;
+        const rotationChange = this.rotation + amount - this.rotation;
+        return transitionValues(() => {
+            this.rotation += amount;
+        }, (p) => {
+            this.rotation += rotationChange * p;
+            return this.running;
+        }, () => {
+            this.rotation = initialRotation + amount;
+        }, t, f);
+    }
+    rotateTo(deg, t = 0, f) {
+        const rotationChange = deg - this.rotation;
+        return transitionValues(() => {
+            this.rotation = deg;
+        }, (p) => {
+            this.rotation += rotationChange * p;
+            return this.running;
+        }, () => {
+            this.rotation = deg;
+        }, t, f);
+    }
+    clone() {
+        return new Circle(this.pos.clone(), this.radius, this.color.clone(), this.startAngle, this.endAngle, this.thickness, this.rotation, this.counterClockwise);
     }
 }
 export class Polygon extends SimulationElement {
@@ -460,41 +554,38 @@ export class Polygon extends SimulationElement {
         this.rotation = r;
     }
     setPoints(points, t = 0, f) {
-        if (t === 0) {
+        const lastPoint = this.points.length > 0 ? this.points[this.points.length - 1] : new Point(0, 0);
+        if (points.length > this.points.length) {
+            while (points.length > this.points.length) {
+                this.points.push(new Point(lastPoint.x, lastPoint.y));
+            }
+        }
+        const initial = this.points.map((p) => p.clone());
+        const changes = [
+            ...points.map((p, i) => p.clone().sub(this.points[i])),
+            ...this.points
+                .slice(points.length, this.points.length)
+                .map((point) => points[points.length - 1].clone().sub(point))
+        ];
+        return transitionValues(() => {
             this.points = points.map((p) => {
                 return new Point(p.x + this.offsetX, p.y + this.offsetY);
             });
-            return Promise.resolve();
-        }
-        else {
-            if (points.length > this.points.length) {
-                const lastPoint = this.points[this.points.length - 1];
-                while (points.length > this.points.length) {
-                    this.points.push(new Point(lastPoint.x, lastPoint.y));
-                }
-            }
-            else if (points.length < this.points.length) {
-                this.points.splice(0, points.length);
-            }
-            const initial = this.points.map((p) => p.clone());
-            const changes = points.map((p, i) => {
-                return new Vector(p.x - this.points[i].x, p.y - this.points[i].y);
+        }, (p) => {
+            this.points = this.points.map((point, i) => {
+                point.x += (changes[i]?.x || 0) * p;
+                point.y += (changes[i]?.y || 0) * p;
+                return point;
             });
-            return transitionValues(() => { }, (p) => {
-                this.points = this.points.map((point, i) => {
-                    point.x += changes[i].x * p;
-                    point.y += changes[i].y * p;
-                    return point;
-                });
-                return this.running;
-            }, () => {
-                this.points = initial.map((p, i) => {
-                    p.x += changes[i].x;
-                    p.y += changes[i].y;
-                    return p.clone();
-                });
-            }, t, f);
-        }
+            return this.running;
+        }, () => {
+            this.points = initial.map((p, i) => {
+                p.x += changes[i].x;
+                p.y += changes[i].y;
+                return p.clone();
+            });
+            this.points.splice(points.length, this.points.length);
+        }, t, f);
     }
     clone() {
         return new Polygon(this.pos.clone(), [...this.points.map((p) => p.clone())], this.color.clone(), this.rotation, this.offsetPoint.clone());
@@ -802,113 +893,6 @@ export class Square extends SimulationElement {
     }
     clone() {
         return new Square(this.pos.clone(), this.width, this.height, this.color.clone(), this.offsetPoint.clone(), this.rotation);
-    }
-}
-export class Arc extends SimulationElement {
-    radius;
-    startAngle;
-    endAngle;
-    counterClockwise;
-    thickness;
-    rotation;
-    constructor(pos, radius, startAngle, endAngle, thickness = 1, color = new Color(0, 0, 0), rotation = 0, counterClockwise = false) {
-        super(pos, color, 'arc');
-        this.radius = radius;
-        this.startAngle = startAngle;
-        this.endAngle = endAngle;
-        this.counterClockwise = counterClockwise;
-        this.thickness = thickness;
-        this.rotation = rotation;
-    }
-    scaleRadius(scale, t = 0, f) {
-        const initialRadius = this.radius;
-        const scaleChange = this.radius * scale - this.radius;
-        return transitionValues(() => {
-            this.radius *= scale;
-        }, (p) => {
-            this.radius += scaleChange * p;
-            return this.running;
-        }, () => {
-            this.radius = initialRadius * scale;
-        }, t, f);
-    }
-    setRadius(value, t = 0, f) {
-        const radChange = value - this.radius;
-        return transitionValues(() => {
-            this.radius = value;
-        }, (p) => {
-            this.radius += radChange * p;
-            return this.running;
-        }, () => {
-            this.radius = value;
-        }, t, f);
-    }
-    setThickness(val, t = 0, f) {
-        const thicknessChange = val - this.thickness;
-        return transitionValues(() => {
-            this.thickness = val;
-        }, (p) => {
-            this.thickness += thicknessChange * p;
-            return this.running;
-        }, () => {
-            this.thickness = val;
-        }, t, f);
-    }
-    setStartAngle(angle, t = 0, f) {
-        const angleChange = angle - this.startAngle;
-        return transitionValues(() => {
-            this.startAngle = angle;
-        }, (p) => {
-            this.startAngle += angleChange * p;
-            return this.running;
-        }, () => {
-            this.startAngle = angle;
-        }, t, f);
-    }
-    setEndAngle(angle, t = 0, f) {
-        const angleChange = angle - this.endAngle;
-        return transitionValues(() => {
-            this.endAngle = angle;
-        }, (p) => {
-            this.endAngle += angleChange / p;
-            return this.running;
-        }, () => {
-            this.endAngle = angle;
-        }, t, f);
-    }
-    rotate(amount, t = 0, f) {
-        const initialRotation = this.rotation;
-        const rotationChange = this.rotation + amount - this.rotation;
-        return transitionValues(() => {
-            this.rotation += amount;
-        }, (p) => {
-            this.rotation += rotationChange * p;
-            return this.running;
-        }, () => {
-            this.rotation = initialRotation + amount;
-        }, t, f);
-    }
-    rotateTo(deg, t = 0, f) {
-        const rotationChange = deg - this.rotation;
-        return transitionValues(() => {
-            this.rotation = deg;
-        }, (p) => {
-            this.rotation += rotationChange * p;
-            return this.running;
-        }, () => {
-            this.rotation = deg;
-        }, t, f);
-    }
-    clone() {
-        return new Arc(this.pos.clone(), this.radius, this.startAngle, this.endAngle, this.thickness, this.color.clone(), this.rotation, this.counterClockwise);
-    }
-    draw(c) {
-        c.beginPath();
-        c.strokeStyle = this.color.toHex();
-        c.lineWidth = this.thickness;
-        c.arc(this.pos.x, this.pos.y, this.radius, degToRad(this.startAngle + this.rotation), degToRad(this.endAngle + this.rotation), this.counterClockwise);
-        c.stroke();
-        c.closePath();
     }
 }
 class Event {

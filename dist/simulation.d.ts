@@ -91,12 +91,26 @@ export declare class Line extends SimulationElement {
 }
 export declare class Circle extends SimulationElement {
     radius: number;
-    constructor(pos: Point, radius: number, color: Color);
-    clone(): Circle;
+    startAngle: number;
+    endAngle: number;
+    counterClockwise: boolean;
+    thickness: number;
+    rotation: number;
+    fillCircle: boolean;
+    constructor(pos: Point, radius: number, color?: Color, startAngle?: number, endAngle?: number, thickness?: number, rotation?: number, fill?: boolean, counterClockwise?: boolean);
+    setCounterClockwise(val: boolean): void;
+    setFillCircle(val: boolean): void;
     draw(c: CanvasRenderingContext2D): void;
-    setRadius(value: number, t?: number, f?: LerpFunc): Promise<void>;
     scale(value: number, t?: number, f?: LerpFunc): Promise<void>;
     contains(p: Point): boolean;
+    scaleRadius(scale: number, t?: number, f?: LerpFunc): Promise<void>;
+    setRadius(value: number, t?: number, f?: LerpFunc): Promise<void>;
+    setThickness(val: number, t?: number, f?: LerpFunc): Promise<void>;
+    setStartAngle(angle: number, t?: number, f?: LerpFunc): Promise<void>;
+    setEndAngle(angle: number, t?: number, f?: LerpFunc): Promise<void>;
+    rotate(amount: number, t?: number, f?: LerpFunc): Promise<void>;
+    rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
+    clone(): Circle;
 }
 export declare class Polygon extends SimulationElement {
     offsetPoint: Point;
@@ -134,7 +148,7 @@ export declare class Square extends SimulationElement {
     updateOffsetPosition(p: Point): void;
     setNodeVectors(show: boolean): void;
     setCollisionVectors(show: boolean): void;
-    setRotation(): void;
+    private setRotation;
     rotate(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     draw(c: CanvasRenderingContext2D): void;
@@ -146,24 +160,6 @@ export declare class Square extends SimulationElement {
     contains(p: Point): boolean;
     private updateDimensions;
     clone(): Square;
-}
-export declare class Arc extends SimulationElement {
-    radius: number;
-    startAngle: number;
-    endAngle: number;
-    counterClockwise: boolean;
-    thickness: number;
-    rotation: number;
-    constructor(pos: Point, radius: number, startAngle: number, endAngle: number, thickness?: number, color?: Color, rotation?: number, counterClockwise?: boolean);
-    scaleRadius(scale: number, t?: number, f?: LerpFunc): Promise<void>;
-    setRadius(value: number, t?: number, f?: LerpFunc): Promise<void>;
-    setThickness(val: number, t?: number, f?: LerpFunc): Promise<void>;
-    setStartAngle(angle: number, t?: number, f?: LerpFunc): Promise<void>;
-    setEndAngle(angle: number, t?: number, f?: LerpFunc): Promise<void>;
-    rotate(amount: number, t?: number, f?: LerpFunc): Promise<void>;
-    rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
-    clone(): Arc;
-    draw(c: CanvasRenderingContext2D): void;
 }
 declare class Event {
     event: string;
