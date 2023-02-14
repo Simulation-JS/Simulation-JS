@@ -134,7 +134,7 @@ export class Vector {
     setMag(value) {
         this.normalize();
         this.multiply(value);
-        this.mag = value;
+        this.updateMag();
         return this;
     }
     clone() {
