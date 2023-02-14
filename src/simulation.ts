@@ -1367,7 +1367,7 @@ export function linearStep(n: number) {
  */
 export function transitionValues(
   callback1: () => void,
-  callback2: (percent: number) => boolean | void,
+  callback2: (percent: number) => boolean,
   callback3: () => void,
   t: number,
   func?: (n: number) => number
