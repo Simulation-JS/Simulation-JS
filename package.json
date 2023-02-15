@@ -1,8 +1,8 @@
 {
   "name": "simulationjs",
-  "version": "2.9.2",
+  "version": "3.0.0",
   "type": "module",
-  "description": "A simple graphics library for 2d graphics on html canvas",
+  "description": "A simple graphics library for 2d and 3d graphics on html canvas",
   "main": "./dist/simulation.js",
   "scripts": {
     "dev": "vite",
@@ -27,10 +27,13 @@
   "keywords": [
     "simulation",
     "simulation js",
+    "simulationjs",
     "canvas",
     "graphics",
     "html",
-    "2d"
+    "2d",
+    "3d",
+    "js"
   ],
   "devDependencies": {
     "vite": "^3.2.4"

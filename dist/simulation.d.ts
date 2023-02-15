@@ -1,18 +1,30 @@
 declare type LerpFunc = (n: number) => number;
 declare type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
+declare type SimulationElement3dType = 'cube';
+export declare class Camera {
+    pos: Vector3;
+    rot: Vector3;
+    constructor(pos: Vector3, rot: Vector3);
+}
+export declare class Vector3 {
+    x: number;
+    y: number;
+    z: number;
+    constructor(x: number, y: number, z: number);
+    format(): string;
+    clone(): Vector3;
+    multiply(val: number): this;
+    add(vec: Vector3): this;
+}
 export declare class Vector {
     x: number;
     y: number;
-    mag: number;
-    startAngle: number;
-    startX: number;
-    startY: number;
-    rotation: number;
-    constructor(x: number, y: number, r?: number);
+    constructor(x: number, y: number);
+    getRotation(): number;
+    getMag(): number;
     rotate(deg: number): this;
     rotateTo(deg: number): this;
-    private setRotation;
-    draw(c: CanvasRenderingContext2D, pos?: Point, color?: Color, thickness?: number): void;
+    draw(c: CanvasRenderingContext2D, pos?: Vector, color?: Color, thickness?: number): void;
     normalize(): this;
     multiply(n: number): this;
     sub(v: Vector): this;
@@ -25,21 +37,23 @@ export declare class Vector {
     appendY(value: number): this;
     setX(value: number): this;
     setY(value: number): this;
-    private updateMag;
     setMag(value: number): this;
     clone(): Vector;
     format(): string;
 }
 export declare class SimulationElement {
-    pos: Point;
+    pos: Vector;
     color: Color;
     sim: HTMLCanvasElement | null;
     type: SimulationElementType | null;
     running: boolean;
-    constructor(pos: Point, color?: Color, type?: SimulationElementType | null);
+    _3d: boolean;
+    id: string;
+    constructor(pos: Vector, color?: Color, type?: SimulationElementType | null, id?: string);
     end(): void;
     draw(_: CanvasRenderingContext2D): void;
     setSimulationElement(el: HTMLCanvasElement): void;
+    setId(id: string): void;
     fill(color: Color, t?: number, f?: LerpFunc): Promise<void>;
     moveTo(p: Vector, t?: number, f?: LerpFunc): Promise<void>;
     move(p: Vector, t?: number, f?: LerpFunc): Promise<void>;
@@ -53,18 +67,18 @@ export declare class Color {
     private compToHex;
     toHex(): string;
 }
-export declare class Point extends Vector {
-    constructor(x: number, y: number);
-    clone(): Point;
-}
 export declare class SceneCollection extends SimulationElement {
     name: string;
-    scene: SimulationElement[];
-    idObjs: {
-        [key: string]: SimulationElement;
-    };
+    scene: (SimulationElement | SimulationElement3d)[];
+    sim: HTMLCanvasElement | null;
+    _isSceneCollection: boolean;
+    camera: Camera;
+    displaySurface: Vector3;
+    ratio: number;
     constructor(name?: string);
+    set3dObjects(cam: Camera, displaySurface: Vector3, ratio: number): void;
     end(): void;
+    setPixelRatio(num: number): void;
     add(element: SimulationElement, id?: string | null): void;
     removeWithId(id: string): void;
     removeWithObject(element: SimulationElement): void;
@@ -72,20 +86,37 @@ export declare class SceneCollection extends SimulationElement {
     draw(c: CanvasRenderingContext2D): void;
     empty(): void;
 }
+export declare class SimulationElement3d {
+    pos: Vector3;
+    color: Color;
+    sim: HTMLCanvasElement | null;
+    type: SimulationElement3dType | null;
+    running: boolean;
+    _3d: boolean;
+    id: string;
+    constructor(pos: Vector3, color?: Color, type?: SimulationElement3dType | null, id?: string);
+    setId(id: string): void;
+    end(): void;
+    draw(_ctx: CanvasRenderingContext2D, _camera: Camera, _displaySurface: Vector3, _ratio: number): void;
+    setSimulationElement(el: HTMLCanvasElement): void;
+    fill(color: Color, t?: number, f?: LerpFunc): Promise<void>;
+    moveTo(p: Vector3, t?: number, f?: LerpFunc): Promise<void>;
+    move(p: Vector3, t?: number, f?: LerpFunc): Promise<void>;
+}
 export declare class Line extends SimulationElement {
-    startPoint: Point;
-    endPoint: Point;
+    startPoint: Vector;
+    endPoint: Vector;
     rotation: number;
     thickness: number;
     vec: Vector;
-    constructor(p1: Point, p2: Point, color?: Color, thickness?: number, r?: number);
+    constructor(p1: Vector, p2: Vector, color?: Color, thickness?: number, r?: number);
     clone(): Line;
-    setStart(p: Point, t?: number, f?: LerpFunc): Promise<void>;
-    setEnd(p: Point, t?: number, f?: LerpFunc): Promise<void>;
+    setStart(p: Vector, t?: number, f?: LerpFunc): Promise<void>;
+    setEnd(p: Vector, t?: number, f?: LerpFunc): Promise<void>;
     private setVector;
     rotate(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
-    moveTo(p: Point, t?: number): Promise<void>;
+    moveTo(p: Vector, t?: number): Promise<void>;
     move(v: Vector, t?: number): Promise<void>;
     draw(c: CanvasRenderingContext2D): void;
 }
@@ -97,12 +128,12 @@ export declare class Circle extends SimulationElement {
     thickness: number;
     rotation: number;
     fillCircle: boolean;
-    constructor(pos: Point, radius: number, color?: Color, startAngle?: number, endAngle?: number, thickness?: number, rotation?: number, fill?: boolean, counterClockwise?: boolean);
+    constructor(pos: Vector, radius: number, color?: Color, startAngle?: number, endAngle?: number, thickness?: number, rotation?: number, fill?: boolean, counterClockwise?: boolean);
     setCounterClockwise(val: boolean): void;
     setFillCircle(val: boolean): void;
     draw(c: CanvasRenderingContext2D): void;
     scale(value: number, t?: number, f?: LerpFunc): Promise<void>;
-    contains(p: Point): boolean;
+    contains(p: Vector): boolean;
     scaleRadius(scale: number, t?: number, f?: LerpFunc): Promise<void>;
     setRadius(value: number, t?: number, f?: LerpFunc): Promise<void>;
     setThickness(val: number, t?: number, f?: LerpFunc): Promise<void>;
@@ -113,18 +144,23 @@ export declare class Circle extends SimulationElement {
     clone(): Circle;
 }
 export declare class Polygon extends SimulationElement {
-    offsetPoint: Point;
-    offsetX: number;
-    offsetY: number;
-    points: Point[];
+    offsetPoint: Vector;
+    points: Vector[];
     rotation: number;
-    constructor(pos: Point, points: Point[], color: Color, r?: number, offsetPoint?: Point);
-    setPoints(points: Point[], t?: number, f?: LerpFunc): Promise<void>;
+    constructor(pos: Vector, points: Vector[], color: Color, r?: number, offsetPoint?: Vector);
+    setPoints(points: Vector[], t?: number, f?: LerpFunc): Promise<void>;
     clone(): Polygon;
     rotate(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
-    private setPointRotation;
     draw(c: CanvasRenderingContext2D): void;
+}
+export declare class Cube extends SimulationElement3d {
+    width: number;
+    height: number;
+    depth: number;
+    points: Vector3[];
+    constructor(pos: Vector3, x: number, y: number, z: number, color?: Color);
+    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, ratio: number): void;
 }
 export declare class Square extends SimulationElement {
     width: number;
@@ -134,7 +170,7 @@ export declare class Square extends SimulationElement {
     private showCollisionVectors;
     hovering: boolean;
     events: Event[];
-    offsetPoint: Point;
+    offsetPoint: Vector;
     topLeft: Vector;
     topRight: Vector;
     bottomLeft: Vector;
@@ -144,11 +180,11 @@ export declare class Square extends SimulationElement {
     v3: Vector;
     v4: Vector;
     v5: Vector;
-    constructor(pos: Point, width: number, height: number, color: Color, offsetPoint?: Point, rotation?: number);
-    updateOffsetPosition(p: Point): void;
+    constructor(pos: Vector, width: number, height: number, color?: Color, offsetPoint?: Vector, rotation?: number);
+    private resetVectors;
+    updateOffsetPosition(p: Vector): void;
     setNodeVectors(show: boolean): void;
     setCollisionVectors(show: boolean): void;
-    private setRotation;
     rotate(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     draw(c: CanvasRenderingContext2D): void;
@@ -157,7 +193,7 @@ export declare class Square extends SimulationElement {
     scaleHeight(value: number, t?: number, f?: LerpFunc): Promise<void>;
     setWidth(value: number, t?: number): Promise<void>;
     setHeight(value: number, t?: number): Promise<void>;
-    contains(p: Point): boolean;
+    contains(p: Vector): boolean;
     private updateDimensions;
     clone(): Square;
 }
@@ -167,23 +203,24 @@ declare class Event {
     constructor(event: string, callback: Function);
 }
 export declare class Simulation {
-    scene: SimulationElement[];
-    idObjs: {
-        [key: string]: SimulationElement;
-    };
+    scene: (SimulationElement | SimulationElement3d)[];
     fitting: boolean;
-    private bgColor;
+    bgColor: Color;
     canvas: HTMLCanvasElement | null;
     width: number;
     height: number;
     ratio: number;
-    private running;
-    private _prevReq;
+    running: boolean;
+    _prevReq: number;
     events: Event[];
-    constructor(id: string);
-    private render;
+    ctx: CanvasRenderingContext2D | null;
+    camera: Camera;
+    center: Vector;
+    displaySurface: Vector3;
+    constructor(id: string, cameraPos?: Vector3, cameraRot?: Vector3, center?: Vector, displaySurfaceSize?: Vector, displaySurfaceDepth?: number);
+    render(c: CanvasRenderingContext2D): void;
     end(): void;
-    add(element: SimulationElement, id?: string | null): void;
+    add(element: SimulationElement | SimulationElement3d, id?: string | null): void;
     removeWithId(id: string): void;
     removeWithObject(element: SimulationElement): void;
     on<K extends keyof HTMLElementEventMap>(event: K, callback: Function): void;
@@ -191,11 +228,15 @@ export declare class Simulation {
     fitElement(): void;
     setSize(x: number, y: number): void;
     setBgColor(color: Color): void;
-    private resizeCanvas;
+    resizeCanvas(c: HTMLCanvasElement | null): void;
     empty(): void;
+    moveCamera(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
+    moveCameraTo(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
+    rotateCamera(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
+    rotateCameraTo(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
 }
 export declare function pythag(x: number, y: number): number;
-export declare function distance(p1: Point, p2: Point): number;
+export declare function distance(p1: Vector, p2: Vector): number;
 export declare function degToRad(deg: number): number;
 export declare function radToDeg(rad: number): number;
 export declare function lerp(a: number, b: number, t: number): number;
@@ -211,11 +252,11 @@ export declare function linearStep(n: number): number;
 export declare function transitionValues(callback1: () => void, callback2: (percent: number) => boolean, callback3: () => void, t: number, func?: (n: number) => number): Promise<void>;
 export declare function compare(val1: any, val2: any): boolean;
 export declare function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Parameters<T>) => void;
+export declare function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): Vector;
 declare const _default: {
     Vector: typeof Vector;
     SimulationElement: typeof SimulationElement;
     Color: typeof Color;
-    Point: typeof Point;
     SceneCollection: typeof SceneCollection;
     Line: typeof Line;
     Circle: typeof Circle;
@@ -228,5 +269,6 @@ declare const _default: {
     radToDeg: typeof radToDeg;
     transitionValues: typeof transitionValues;
     compare: typeof compare;
+    Cube: typeof Cube;
 };
 export default _default;
