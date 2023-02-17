@@ -217,7 +217,7 @@ export declare class Simulation {
     camera: Camera;
     center: Vector;
     displaySurface: Vector3;
-    constructor(id: string, cameraPos?: Vector3, cameraRot?: Vector3, center?: Vector, displaySurfaceSize?: Vector, displaySurfaceDepth?: number);
+    constructor(id: string, cameraPos?: Vector3, cameraRot?: Vector3, displaySurfaceDepth?: number, center?: Vector, displaySurfaceSize?: Vector);
     render(c: CanvasRenderingContext2D): void;
     end(): void;
     add(element: SimulationElement | SimulationElement3d, id?: string | null): void;

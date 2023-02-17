@@ -1022,7 +1022,7 @@ export class Simulation {
     camera;
     center;
     displaySurface;
-    constructor(id, cameraPos = new Vector3(0, 0, -200), cameraRot = new Vector3(0, 0, 0), center = new Vector(0, 0), displaySurfaceSize, displaySurfaceDepth) {
+    constructor(id, cameraPos = new Vector3(0, 0, -200), cameraRot = new Vector3(0, 0, 0), displaySurfaceDepth, center = new Vector(0, 0), displaySurfaceSize) {
         this.scene = [];
         this.fitting = false;
         this.bgColor = new Color(255, 255, 255);
