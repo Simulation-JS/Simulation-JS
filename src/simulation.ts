@@ -1005,33 +1005,37 @@ export class Cube extends SimulationElement3d {
   height: number;
   depth: number;
   planes: Plane[] = [];
-  points: Vector3[];
+  points: Vector3[] = [];
   fillCube: boolean;
   wireframe: boolean;
   constructor(
     pos: Vector3,
-    x: number,
-    y: number,
-    z: number,
+    width: number,
+    height: number,
+    depth: number,
     color = new Color(0, 0, 0),
     fill = true,
     wireframe = false
   ) {
     super(pos, color, 'cube');
-    this.width = x;
-    this.height = y;
-    this.depth = z;
+    this.width = width;
+    this.height = height;
+    this.depth = depth;
     this.wireframe = wireframe;
     this.fillCube = fill;
+    this.generatePoints();
+    this.generatePlanes();
+  }
+  generatePoints() {
     this.points = [
-      new Vector3(-x / 2 + this.pos.x, -y / 2 + this.pos.y, -z / 2 + this.pos.z),
-      new Vector3(x / 2 + this.pos.x, -y / 2 + this.pos.y, -z / 2 + this.pos.z),
-      new Vector3(x / 2 + this.pos.x, y / 2 + this.pos.y, -z / 2 + this.pos.z),
-      new Vector3(-x / 2 + this.pos.x, y / 2 + this.pos.y, -z / 2 + this.pos.z),
-      new Vector3(-x / 2 + this.pos.x, -y / 2 + this.pos.y, z / 2 + this.pos.z),
-      new Vector3(x / 2 + this.pos.x, -y / 2 + this.pos.y, z / 2 + this.pos.z),
-      new Vector3(x / 2 + this.pos.x, y / 2 + this.pos.y, z / 2 + this.pos.z),
-      new Vector3(-x / 2 + this.pos.x, y / 2 + this.pos.y, z / 2 + this.pos.z)
+      new Vector3(-this.width / 2 + this.pos.x, -this.height / 2 + this.pos.y, -this.depth / 2 + this.pos.z),
+      new Vector3(this.width / 2 + this.pos.x, -this.height / 2 + this.pos.y, -this.depth / 2 + this.pos.z),
+      new Vector3(this.width / 2 + this.pos.x, this.height / 2 + this.pos.y, -this.depth / 2 + this.pos.z),
+      new Vector3(-this.width / 2 + this.pos.x, this.height / 2 + this.pos.y, -this.depth / 2 + this.pos.z),
+      new Vector3(-this.width / 2 + this.pos.x, -this.height / 2 + this.pos.y, this.depth / 2 + this.pos.z),
+      new Vector3(this.width / 2 + this.pos.x, -this.height / 2 + this.pos.y, this.depth / 2 + this.pos.z),
+      new Vector3(this.width / 2 + this.pos.x, this.height / 2 + this.pos.y, this.depth / 2 + this.pos.z),
+      new Vector3(-this.width / 2 + this.pos.x, this.height / 2 + this.pos.y, this.depth / 2 + this.pos.z)
     ];
     this.generatePlanes();
   }
@@ -1082,6 +1086,7 @@ export class Cube extends SimulationElement3d {
     ];
   }
   draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3) {
+    this.generatePoints();
     this.planes = sortPlanes(this.planes, camera);
     for (let i = 0; i < this.planes.length; i++) {
       this.planes[i].draw(c, camera, displaySurface);

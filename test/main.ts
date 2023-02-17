@@ -25,6 +25,18 @@ const cube = new Cube(
 );
 canvas.add(cube);
 
+function timeFunc(x: number): number {
+  const c4 = (2 * Math.PI) / 3;
+
+  return x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
+}
+
+(async function main() {
+  await cube.move(new Vector3(100, 0, 0), 2.5, timeFunc);
+  await cube.move(new Vector3(-100, 0, 0), 2.5, timeFunc);
+  main();
+})();
+
 function random(range: number) {
   return Math.floor(Math.random() * range);
 }
