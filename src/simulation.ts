@@ -962,7 +962,7 @@ export class Cube extends SimulationElement3d {
   width: number;
   height: number;
   depth: number;
-  planes: Plane[];
+  // planes: Plane[];
   points: Vector3[];
   constructor(pos: Vector3, x: number, y: number, z: number, color = new Color(0, 0, 0)) {
     super(pos, color, 'cube');
@@ -979,21 +979,22 @@ export class Cube extends SimulationElement3d {
       new Vector3(x / 2 + this.pos.x, y / 2 + this.pos.y, z / 2 + this.pos.z),
       new Vector3(-x / 2 + this.pos.x, y / 2 + this.pos.y, z / 2 + this.pos.z)
     ];
-    this.planes = [
-      new Plane(pos, [this.points[0], this.points[1], this.points[2], this.points[3]], color),
-      new Plane(pos, [this.points[0], this.points[1], this.points[4], this.points[5]], color),
-      new Plane(pos, [this.points[4], this.points[5], this.points[6], this.points[7]], color),
-      new Plane(pos, [this.points[4], this.points[3], this.points[6], this.points[7]], color),
-      new Plane(pos, [this.points[0], this.points[3], this.points[7], this.points[4]], color),
-      new Plane(pos, [this.points[1], this.points[2], this.points[5], this.points[6]], color)
-    ];
+    // this.planes = [
+    //   new Plane(pos, [this.points[0], this.points[1], this.points[2], this.points[3]], color),
+    //   new Plane(pos, [this.points[0], this.points[1], this.points[4], this.points[5]], color),
+    //   new Plane(pos, [this.points[4], this.points[5], this.points[6], this.points[7]], color),
+    //   new Plane(pos, [this.points[4], this.points[3], this.points[6], this.points[7]], color),
+    //   new Plane(pos, [this.points[0], this.points[3], this.points[7], this.points[4]], color),
+    //   new Plane(pos, [this.points[1], this.points[2], this.points[5], this.points[6]], color)
+    // ];
   }
   draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, ratio: number) {
-    // fix or sum
+    let projPoints: Vector[] = [];
     for (let i = 0; i < this.points.length; i++) {
-      if (checkBehindCamera(this.points[i], camera)) return;
+      const res = projectPoint(this.points[i], camera, displaySurface);
+      if (!res.behindCamera) projPoints.push(res.point);
+      else return;
     }
-    const projPoints = this.points.map((p) => projectPoint(p.clone(), camera, displaySurface));
     for (let i = 0; i < projPoints.length / 2; i++) {
       if (i === projPoints.length / 2 - 1) {
         const line1 = new Line(
@@ -1784,7 +1785,12 @@ export function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params:
   };
 }
 
-export function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): Vector {
+type ProjectedPoint = {
+  point: Vector;
+  behindCamera: boolean;
+};
+
+export function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): ProjectedPoint {
   const mat1 = [
     [1, 0, 0],
     [0, Math.cos(cam.rot.x), Math.sin(cam.rot.x)],
@@ -1845,19 +1851,10 @@ export function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): 
   const bx = (displaySurface.z * d.x) / d.z + displaySurface.x;
   const by = (displaySurface.z * d.y) / d.z + displaySurface.y;
 
-  return new Vector(bx, by);
-}
-
-function checkBehindCamera(point: Vector3, camera: Camera) {
-  const p = point.clone().sub(camera.pos);
-  const rotAmountY = Math.atan2(p.x, p.z);
-  const rotAmountX = Math.atan2(p.y, p.z);
-  const rotAmount = camera.rot
-    .clone()
-    .multiply(Math.sign(camera.pos.z))
-    .add(new Vector3(rotAmountX, rotAmountY, 0).divide(2));
-  p.rotate(rotAmount);
-  return p.z < 0;
+  return {
+    point: new Vector(bx, by),
+    behindCamera: d.z <= 0
+  };
 }
 
 export default {
