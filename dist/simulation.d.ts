@@ -166,7 +166,11 @@ export declare class Polygon extends SimulationElement {
 }
 export declare class Plane extends SimulationElement3d {
     points: Vector3[];
-    constructor(pos: Vector3, points: Vector3[], color?: Color);
+    wireframe: boolean;
+    fillPlane: boolean;
+    constructor(pos: Vector3, points: Vector3[], color?: Color, fill?: boolean, wireframe?: boolean);
+    clone(): Plane;
+    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3): void;
 }
 export declare class Cube extends SimulationElement3d {
     width: number;
@@ -174,8 +178,11 @@ export declare class Cube extends SimulationElement3d {
     depth: number;
     planes: Plane[];
     points: Vector3[];
-    constructor(pos: Vector3, x: number, y: number, z: number, color?: Color);
-    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, ratio: number): void;
+    fillCube: boolean;
+    wireframe: boolean;
+    constructor(pos: Vector3, x: number, y: number, z: number, color?: Color, fill?: boolean, wireframe?: boolean);
+    generatePlanes(): void;
+    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3): void;
 }
 export declare class Square extends SimulationElement {
     width: number;
@@ -253,6 +260,7 @@ export declare class Simulation {
 }
 export declare function pythag(x: number, y: number): number;
 export declare function distance(p1: Vector, p2: Vector): number;
+export declare function distance3d(vec1: Vector3, vec2: Vector3): number;
 export declare function degToRad(deg: number): number;
 export declare function radToDeg(rad: number): number;
 export declare function lerp(a: number, b: number, t: number): number;
@@ -268,7 +276,11 @@ export declare function linearStep(n: number): number;
 export declare function transitionValues(callback1: () => void, callback2: (percent: number) => boolean, callback3: () => void, t: number, func?: (n: number) => number): Promise<void>;
 export declare function compare(val1: any, val2: any): boolean;
 export declare function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Parameters<T>) => void;
-export declare function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): Vector;
+declare type ProjectedPoint = {
+    point: Vector;
+    behindCamera: boolean;
+};
+export declare function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): ProjectedPoint;
 declare const _default: {
     Vector: typeof Vector;
     SimulationElement: typeof SimulationElement;
@@ -287,5 +299,6 @@ declare const _default: {
     compare: typeof compare;
     Cube: typeof Cube;
     Camera: typeof Camera;
+    Plane: typeof Plane;
 };
 export default _default;
