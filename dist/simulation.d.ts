@@ -254,7 +254,6 @@ export declare class Simulation {
     empty(): void;
     moveCamera(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
     moveCameraTo(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
-    private minimizeCameraRotation;
     rotateCamera(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
     rotateCameraTo(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
 }

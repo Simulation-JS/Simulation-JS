@@ -976,6 +976,7 @@ export class Plane extends SimulationElement3d {
     c.beginPath();
     c.strokeStyle = '#000000';
     c.fillStyle = this.color.toHex();
+    c.lineWidth = 2;
     for (let i = 0; i < this.points.length; i++) {
       let p1: ProjectedPoint;
       let p2: ProjectedPoint;
@@ -1645,17 +1646,13 @@ export class Simulation {
       f
     );
   }
-  private minimizeCameraRotation() {
-    this.camera.rot.x = minimizeRotation(this.camera.rot.x);
-    this.camera.rot.y = minimizeRotation(this.camera.rot.y);
-    this.camera.rot.z = minimizeRotation(this.camera.rot.z);
-  }
   rotateCamera(v: Vector3, t = 0, f?: LerpFunc) {
     const initial = this.camera.rot.clone();
     return transitionValues(
       () => {
-        this.camera.rot.add(v);
-        this.minimizeCameraRotation();
+        this.camera.rot.x = initial.x + degToRad(v.x);
+        this.camera.rot.y = initial.y + degToRad(v.y);
+        this.camera.rot.z = initial.z + degToRad(v.z);
       },
       (p) => {
         this.camera.rot.x += degToRad(v.x) * p;
@@ -1664,8 +1661,9 @@ export class Simulation {
         return this.running;
       },
       () => {
-        this.camera.rot = initial.add(v);
-        this.minimizeCameraRotation();
+        this.camera.rot.x = initial.x + degToRad(v.x);
+        this.camera.rot.y = initial.y + degToRad(v.y);
+        this.camera.rot.z = initial.z + degToRad(v.z);
       },
       t,
       f
