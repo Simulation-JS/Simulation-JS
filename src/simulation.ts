@@ -7,6 +7,9 @@ export class Camera {
   rot: Vector3;
   constructor(pos: Vector3, rot: Vector3) {
     this.pos = pos;
+    rot.x = radToDeg(rot.x);
+    rot.y = radToDeg(rot.y);
+    rot.z = radToDeg(rot.z);
     this.rot = rot;
   }
 }
@@ -40,9 +43,9 @@ export class Vector3 {
     return this;
   }
   rotate(vec: Vector3) {
-    this.rotateX(vec.x);
-    this.rotateY(vec.y);
-    this.rotateZ(vec.z);
+    this.rotateX(degToRad(vec.x));
+    this.rotateY(degToRad(vec.y));
+    this.rotateZ(degToRad(vec.z));
     return this;
   }
   multiply(val: number) {
@@ -952,9 +955,47 @@ export class Polygon extends SimulationElement {
 
 export class Plane extends SimulationElement3d {
   points: Vector3[];
-  constructor(pos: Vector3, points: Vector3[], color = new Color(0, 0, 0)) {
+  wireframe: boolean;
+  fillPlane: boolean;
+  constructor(pos: Vector3, points: Vector3[], color = new Color(0, 0, 0), fill = true, wireframe = false) {
     super(pos, color, 'plane');
     this.points = points;
+    this.fillPlane = fill;
+    this.wireframe = wireframe;
+  }
+  clone() {
+    return new Plane(
+      this.pos.clone(),
+      this.points.map((p) => p.clone()),
+      this.color.clone(),
+      this.fillPlane,
+      this.wireframe
+    );
+  }
+  draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3) {
+    c.beginPath();
+    c.strokeStyle = '#000000';
+    c.fillStyle = this.color.toHex();
+    for (let i = 0; i < this.points.length; i++) {
+      let p1: ProjectedPoint;
+      let p2: ProjectedPoint;
+      if (i === this.points.length - 1) {
+        p1 = projectPoint(this.points[i], camera, displaySurface);
+        p2 = projectPoint(this.points[0], camera, displaySurface);
+      } else {
+        p1 = projectPoint(this.points[i], camera, displaySurface);
+        p2 = projectPoint(this.points[i + 1], camera, displaySurface);
+      }
+      if (!p1.behindCamera && !p2.behindCamera) {
+        if (i === 0) {
+          c.moveTo(p1.point.x, p1.point.y);
+        }
+        c.lineTo(p2.point.x, p2.point.y);
+      }
+    }
+    if (this.wireframe) c.stroke();
+    if (this.fillPlane) c.fill();
+    c.closePath();
   }
 }
 
@@ -962,80 +1003,87 @@ export class Cube extends SimulationElement3d {
   width: number;
   height: number;
   depth: number;
-  // planes: Plane[];
+  planes: Plane[] = [];
   points: Vector3[];
-  constructor(pos: Vector3, x: number, y: number, z: number, color = new Color(0, 0, 0)) {
+  fillCube: boolean;
+  wireframe: boolean;
+  constructor(
+    pos: Vector3,
+    x: number,
+    y: number,
+    z: number,
+    color = new Color(0, 0, 0),
+    fill = true,
+    wireframe = false
+  ) {
     super(pos, color, 'cube');
     this.width = x;
     this.height = y;
     this.depth = z;
+    this.wireframe = wireframe;
+    this.fillCube = fill;
     this.points = [
       new Vector3(-x / 2 + this.pos.x, -y / 2 + this.pos.y, -z / 2 + this.pos.z),
       new Vector3(x / 2 + this.pos.x, -y / 2 + this.pos.y, -z / 2 + this.pos.z),
-      new Vector3(x / 2 + this.pos.x, y / 2, +this.pos.y - z / 2 + this.pos.z),
-      new Vector3(-x / 2 + this.pos.x, y / 2, +this.pos.y - z / 2 + this.pos.z),
+      new Vector3(x / 2 + this.pos.x, y / 2 + this.pos.y, -z / 2 + this.pos.z),
+      new Vector3(-x / 2 + this.pos.x, y / 2 + this.pos.y, -z / 2 + this.pos.z),
       new Vector3(-x / 2 + this.pos.x, -y / 2 + this.pos.y, z / 2 + this.pos.z),
       new Vector3(x / 2 + this.pos.x, -y / 2 + this.pos.y, z / 2 + this.pos.z),
       new Vector3(x / 2 + this.pos.x, y / 2 + this.pos.y, z / 2 + this.pos.z),
       new Vector3(-x / 2 + this.pos.x, y / 2 + this.pos.y, z / 2 + this.pos.z)
     ];
-    // this.planes = [
-    //   new Plane(pos, [this.points[0], this.points[1], this.points[2], this.points[3]], color),
-    //   new Plane(pos, [this.points[0], this.points[1], this.points[4], this.points[5]], color),
-    //   new Plane(pos, [this.points[4], this.points[5], this.points[6], this.points[7]], color),
-    //   new Plane(pos, [this.points[4], this.points[3], this.points[6], this.points[7]], color),
-    //   new Plane(pos, [this.points[0], this.points[3], this.points[7], this.points[4]], color),
-    //   new Plane(pos, [this.points[1], this.points[2], this.points[5], this.points[6]], color)
-    // ];
+    this.generatePlanes();
   }
-  draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, ratio: number) {
-    let projPoints: Vector[] = [];
-    for (let i = 0; i < this.points.length; i++) {
-      const res = projectPoint(this.points[i], camera, displaySurface);
-      if (!res.behindCamera) projPoints.push(res.point);
-      else return;
-    }
-    for (let i = 0; i < projPoints.length / 2; i++) {
-      if (i === projPoints.length / 2 - 1) {
-        const line1 = new Line(
-          projPoints[i],
-          projPoints[i - (projPoints.length / 2 - 1)],
-          new Color(0, 0, 0),
-          ratio
-        );
-        line1.draw(c);
-        const line2 = new Line(
-          projPoints[i + projPoints.length / 2],
-          projPoints[i],
-          new Color(0, 0, 0),
-          ratio
-        );
-        line2.draw(c);
-        const line3 = new Line(
-          projPoints[i + projPoints.length / 2],
-          projPoints[i + 1],
-          new Color(0, 0, 0),
-          ratio
-        );
-        line3.draw(c);
-      } else {
-        const line1 = new Line(projPoints[i], projPoints[i + 1], new Color(0, 0, 0), ratio);
-        line1.draw(c);
-        const line2 = new Line(
-          projPoints[i + projPoints.length / 2],
-          projPoints[i],
-          new Color(0, 0, 0),
-          ratio
-        );
-        line2.draw(c);
-        const line3 = new Line(
-          projPoints[i + projPoints.length / 2],
-          projPoints[i + (projPoints.length / 2 + 1)],
-          new Color(0, 0, 0),
-          ratio
-        );
-        line3.draw(c);
-      }
+  generatePlanes() {
+    this.planes = [
+      new Plane(
+        this.pos,
+        [this.points[0], this.points[1], this.points[2], this.points[3]],
+        this.color,
+        this.fillCube,
+        this.wireframe
+      ),
+      new Plane(
+        this.pos,
+        [this.points[0], this.points[1], this.points[5], this.points[4]],
+        this.color,
+        this.fillCube,
+        this.wireframe
+      ),
+      new Plane(
+        this.pos,
+        [this.points[4], this.points[5], this.points[6], this.points[7]],
+        this.color,
+        this.fillCube,
+        this.wireframe
+      ),
+      new Plane(
+        this.pos,
+        [this.points[3], this.points[2], this.points[6], this.points[7]],
+        this.color,
+        this.fillCube,
+        this.wireframe
+      ),
+      new Plane(
+        this.pos,
+        [this.points[0], this.points[3], this.points[7], this.points[4]],
+        this.color,
+        this.fillCube,
+        this.wireframe
+      ),
+      new Plane(
+        this.pos,
+        [this.points[2], this.points[1], this.points[5], this.points[6]],
+        this.color,
+        this.fillCube,
+        this.wireframe
+      )
+    ];
+  }
+  draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3) {
+    this.planes = sortPlanes(this.planes, camera);
+    for (let i = 0; i < this.planes.length; i++) {
+      this.planes[i].draw(c, camera, displaySurface);
     }
   }
 }
@@ -1654,6 +1702,12 @@ export function distance(p1: Vector, p2: Vector) {
   return pythag(p1.x - p2.x, p1.y - p2.y);
 }
 
+export function distance3d(vec1: Vector3, vec2: Vector3) {
+  return Math.sqrt(
+    Math.pow(vec2.x - vec1.x, 2) + Math.pow(vec2.y - vec1.y, 2) + Math.pow(vec2.z - vec1.z, 2)
+  );
+}
+
 export function degToRad(deg: number) {
   return (deg * Math.PI) / 180;
 }
@@ -1790,6 +1844,33 @@ type ProjectedPoint = {
   behindCamera: boolean;
 };
 
+function getTopPoint(points: Vector3[], camera: Camera) {
+  return points.reduce(
+    (prev, curr) => (distance3d(curr, camera.pos) <= distance3d(prev, camera.pos) ? curr : prev),
+    points[0]
+  );
+}
+
+function getAveragePointDist(points: Vector3[], camera: Camera) {
+  return points.reduce((prev, curr) => prev + distance3d(curr, camera.pos), 0);
+}
+
+function sortPlanes(planes: Plane[], camera: Camera) {
+  const res = planes.sort((a, b) => {
+    const topPointA = getTopPoint(a.points, camera);
+    const topPointB = getTopPoint(b.points, camera);
+    const distA = distance3d(topPointA, camera.pos);
+    const distB = distance3d(topPointB, camera.pos);
+    if (distA === distB) {
+      const avgDistA = getAveragePointDist(a.points, camera);
+      const avgDistB = getAveragePointDist(b.points, camera);
+      return avgDistB - avgDistA;
+    }
+    return distB - distA;
+  });
+  return res;
+}
+
 export function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): ProjectedPoint {
   const mat1 = [
     [1, 0, 0],
@@ -1874,5 +1955,6 @@ export default {
   transitionValues,
   compare,
   Cube,
-  Camera
+  Camera,
+  Plane
 };

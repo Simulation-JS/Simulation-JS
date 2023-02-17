@@ -1,10 +1,22 @@
 import { Simulation, Vector3, Cube, frameLoop, Vector, degToRad, Square, Color } from '../src/simulation';
 
-const canvas = new Simulation('canvas', new Vector3(0, 0, -200), new Vector3(0, 0, 0), 10000);
+const canvas = new Simulation('canvas', new Vector3(0, 0, -200), new Vector3(0, 0, 0));
 canvas.fitElement();
 
-const cube = new Cube(new Vector3(0, 0, 0), 100, 100, 100);
+const cube = new Cube(
+  new Vector3(0, 0, 0),
+  100,
+  100,
+  100,
+  new Color(random(255), random(255), random(255)),
+  true,
+  true
+);
 canvas.add(cube);
+
+function random(range: number) {
+  return Math.floor(Math.random() * range);
+}
 
 let pressingW = false;
 let pressingA = false;
@@ -42,10 +54,10 @@ canvas.on('mouseup', () => {
 
 let prev = new Vector(0, 0);
 canvas.on('mousemove', (e: MouseEvent) => {
-  const dampen = canvas.displaySurface.z / 100;
+  const dampen = 1000;
   const point = new Vector(e.offsetX, e.offsetY);
   if (looking) {
-    const amount = new Vector(degToRad(point.y - prev.y) / dampen, degToRad(point.x - prev.x) / dampen);
+    const amount = new Vector((point.y - prev.y) / dampen, (point.x - prev.x) / dampen);
     amount.multiplyX(-1);
     amount.multiply(-1);
     canvas.rotateCamera(new Vector3(amount.x, amount.y, 0));
