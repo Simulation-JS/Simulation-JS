@@ -1,6 +1,6 @@
 declare type LerpFunc = (n: number) => number;
 declare type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
-declare type SimulationElement3dType = 'cube';
+declare type SimulationElement3dType = 'cube' | 'plane';
 export declare class Camera {
     pos: Vector3;
     rot: Vector3;
@@ -13,8 +13,18 @@ export declare class Vector3 {
     constructor(x: number, y: number, z: number);
     format(): string;
     clone(): Vector3;
+    rotateX(val: number): void;
+    rotateY(val: number): void;
+    rotateZ(val: number): this;
+    rotate(vec: Vector3): this;
     multiply(val: number): this;
+    divide(val: number): this;
     add(vec: Vector3): this;
+    sub(vec: Vector3): this;
+    getMag(): number;
+    getRotation(): Vector;
+    dot(vec: Vector3): number;
+    normalize(): this;
 }
 export declare class Vector {
     x: number;
@@ -154,10 +164,15 @@ export declare class Polygon extends SimulationElement {
     rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     draw(c: CanvasRenderingContext2D): void;
 }
+export declare class Plane extends SimulationElement3d {
+    points: Vector3[];
+    constructor(pos: Vector3, points: Vector3[], color?: Color);
+}
 export declare class Cube extends SimulationElement3d {
     width: number;
     height: number;
     depth: number;
+    planes: Plane[];
     points: Vector3[];
     constructor(pos: Vector3, x: number, y: number, z: number, color?: Color);
     draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, ratio: number): void;
@@ -232,6 +247,7 @@ export declare class Simulation {
     empty(): void;
     moveCamera(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
     moveCameraTo(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
+    private minimizeCameraRotation;
     rotateCamera(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
     rotateCameraTo(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
 }
@@ -270,5 +286,6 @@ declare const _default: {
     transitionValues: typeof transitionValues;
     compare: typeof compare;
     Cube: typeof Cube;
+    Camera: typeof Camera;
 };
 export default _default;

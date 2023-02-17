@@ -21,16 +21,65 @@ export class Vector3 {
     clone() {
         return new Vector3(this.x, this.y, this.z);
     }
+    rotateX(val) {
+        this.y = this.y * Math.cos(val) - this.z * Math.sin(val);
+        this.z = this.y * Math.sin(val) + this.z * Math.cos(val);
+    }
+    rotateY(val) {
+        this.x = this.x * Math.cos(val) + this.z * Math.sin(val);
+        this.z = -this.x * Math.sin(val) + this.z * Math.cos(val);
+    }
+    rotateZ(val) {
+        this.x = this.x * Math.cos(val) - this.y * Math.sin(val);
+        this.y = this.x * Math.sin(val) + this.y * Math.cos(val);
+        return this;
+    }
+    rotate(vec) {
+        this.rotateX(vec.x);
+        this.rotateY(vec.y);
+        this.rotateZ(vec.z);
+        return this;
+    }
     multiply(val) {
         this.x *= val;
         this.y *= val;
         this.z *= val;
         return this;
     }
+    divide(val) {
+        this.x /= val;
+        this.y /= val;
+        this.z /= val;
+        return this;
+    }
     add(vec) {
         this.x += vec.x;
         this.y += vec.y;
         this.z += vec.z;
+        return this;
+    }
+    sub(vec) {
+        this.x -= vec.x;
+        this.y -= vec.y;
+        this.z -= vec.z;
+        return this;
+    }
+    getMag() {
+        return pythag(pythag(this.x, this.y), this.z);
+    }
+    getRotation() {
+        const ay = radToDeg(Math.atan2(this.x, this.z));
+        const ax = radToDeg(Math.atan2(this.y, this.z));
+        return new Vector(ax, ay);
+    }
+    dot(vec) {
+        return this.x * vec.x + this.y * vec.y + this.z * vec.z;
+    }
+    normalize() {
+        const mag = this.getMag();
+        this.x /= mag;
+        this.y /= mag;
+        this.z /= mag;
         return this;
     }
 }
@@ -694,10 +743,18 @@ export class Polygon extends SimulationElement {
         c.closePath();
     }
 }
+export class Plane extends SimulationElement3d {
+    points;
+    constructor(pos, points, color = new Color(0, 0, 0)) {
+        super(pos, color, 'plane');
+        this.points = points;
+    }
+}
 export class Cube extends SimulationElement3d {
     width;
     height;
     depth;
+    planes;
     points;
     constructor(pos, x, y, z, color = new Color(0, 0, 0)) {
         super(pos, color, 'cube');
@@ -705,33 +762,46 @@ export class Cube extends SimulationElement3d {
         this.height = y;
         this.depth = z;
         this.points = [
-            new Vector3(-x / 2, -y / 2, -z / 2),
-            new Vector3(x / 2, -y / 2, -z / 2),
-            new Vector3(x / 2, y / 2, -z / 2),
-            new Vector3(-x / 2, y / 2, -z / 2),
-            new Vector3(-x / 2, -y / 2, z / 2),
-            new Vector3(x / 2, -y / 2, z / 2),
-            new Vector3(x / 2, y / 2, z / 2),
-            new Vector3(-x / 2, y / 2, z / 2)
+            new Vector3(-x / 2 + this.pos.x, -y / 2 + this.pos.y, -z / 2 + this.pos.z),
+            new Vector3(x / 2 + this.pos.x, -y / 2 + this.pos.y, -z / 2 + this.pos.z),
+            new Vector3(x / 2 + this.pos.x, y / 2, +this.pos.y - z / 2 + this.pos.z),
+            new Vector3(-x / 2 + this.pos.x, y / 2, +this.pos.y - z / 2 + this.pos.z),
+            new Vector3(-x / 2 + this.pos.x, -y / 2 + this.pos.y, z / 2 + this.pos.z),
+            new Vector3(x / 2 + this.pos.x, -y / 2 + this.pos.y, z / 2 + this.pos.z),
+            new Vector3(x / 2 + this.pos.x, y / 2 + this.pos.y, z / 2 + this.pos.z),
+            new Vector3(-x / 2 + this.pos.x, y / 2 + this.pos.y, z / 2 + this.pos.z)
+        ];
+        this.planes = [
+            new Plane(pos, [this.points[0], this.points[1], this.points[2], this.points[3]], color),
+            new Plane(pos, [this.points[0], this.points[1], this.points[4], this.points[5]], color),
+            new Plane(pos, [this.points[4], this.points[5], this.points[6], this.points[7]], color),
+            new Plane(pos, [this.points[4], this.points[3], this.points[6], this.points[7]], color),
+            new Plane(pos, [this.points[0], this.points[3], this.points[7], this.points[4]], color),
+            new Plane(pos, [this.points[1], this.points[2], this.points[5], this.points[6]], color)
         ];
     }
     draw(c, camera, displaySurface, ratio) {
+        // fix or sum
+        for (let i = 0; i < this.points.length; i++) {
+            if (checkBehindCamera(this.points[i], camera))
+                return;
+        }
         const projPoints = this.points.map((p) => projectPoint(p.clone(), camera, displaySurface));
         for (let i = 0; i < projPoints.length / 2; i++) {
             if (i === projPoints.length / 2 - 1) {
                 const line1 = new Line(projPoints[i], projPoints[i - (projPoints.length / 2 - 1)], new Color(0, 0, 0), ratio);
-                const line2 = new Line(projPoints[i + projPoints.length / 2], projPoints[i], new Color(0, 0, 0), ratio);
-                const line3 = new Line(projPoints[i + projPoints.length / 2], projPoints[i + 1], new Color(0, 0, 0), ratio);
                 line1.draw(c);
+                const line2 = new Line(projPoints[i + projPoints.length / 2], projPoints[i], new Color(0, 0, 0), ratio);
                 line2.draw(c);
+                const line3 = new Line(projPoints[i + projPoints.length / 2], projPoints[i + 1], new Color(0, 0, 0), ratio);
                 line3.draw(c);
             }
             else {
                 const line1 = new Line(projPoints[i], projPoints[i + 1], new Color(0, 0, 0), ratio);
-                const line2 = new Line(projPoints[i + projPoints.length / 2], projPoints[i], new Color(0, 0, 0), ratio);
-                const line3 = new Line(projPoints[i + projPoints.length / 2], projPoints[i + (projPoints.length / 2 + 1)], new Color(0, 0, 0), ratio);
                 line1.draw(c);
+                const line2 = new Line(projPoints[i + projPoints.length / 2], projPoints[i], new Color(0, 0, 0), ratio);
                 line2.draw(c);
+                const line3 = new Line(projPoints[i + projPoints.length / 2], projPoints[i + (projPoints.length / 2 + 1)], new Color(0, 0, 0), ratio);
                 line3.draw(c);
             }
         }
@@ -1033,7 +1103,7 @@ export class Simulation {
         this.center = center;
         this.displaySurface = new Vector3(0, 0, 0);
         this.ratio = window.devicePixelRatio;
-        const defaultDepth = 1000;
+        const defaultDepth = 2000;
         this.canvas = document.getElementById(id);
         if (!this.canvas) {
             console.error(`Canvas with id "${id}" not found`);
@@ -1185,10 +1255,16 @@ export class Simulation {
             this.camera.pos = v.clone();
         }, t, f);
     }
+    minimizeCameraRotation() {
+        this.camera.rot.x = minimizeRotation(this.camera.rot.x);
+        this.camera.rot.y = minimizeRotation(this.camera.rot.y);
+        this.camera.rot.z = minimizeRotation(this.camera.rot.z);
+    }
     rotateCamera(v, t = 0, f) {
         const initial = this.camera.rot.clone();
         return transitionValues(() => {
             this.camera.rot.add(v);
+            this.minimizeCameraRotation();
         }, (p) => {
             this.camera.rot.x += degToRad(v.x) * p;
             this.camera.rot.y += degToRad(v.y) * p;
@@ -1196,6 +1272,7 @@ export class Simulation {
             return this.running;
         }, () => {
             this.camera.rot = initial.add(v);
+            this.minimizeCameraRotation();
         }, t, f);
     }
     rotateCameraTo(v, t = 0, f) {
@@ -1226,9 +1303,9 @@ export function degToRad(deg) {
 export function radToDeg(rad) {
     return (rad * 180) / Math.PI;
 }
-function minimizeRotation(rotation) {
-    while (rotation > 360)
-        rotation -= 360;
+function minimizeRotation(rotation, amount = 360) {
+    while (Math.abs(rotation) > amount)
+        rotation += amount * -Math.sign(rotation);
     return rotation;
 }
 export function lerp(a, b, t) {
@@ -1399,6 +1476,17 @@ export function projectPoint(p, cam, displaySurface) {
     const by = (displaySurface.z * d.y) / d.z + displaySurface.y;
     return new Vector(bx, by);
 }
+function checkBehindCamera(point, camera) {
+    const p = point.clone().sub(camera.pos);
+    const rotAmountY = Math.atan2(p.x, p.z);
+    const rotAmountX = Math.atan2(p.y, p.z);
+    const rotAmount = camera.rot
+        .clone()
+        .multiply(Math.sign(camera.pos.z))
+        .add(new Vector3(rotAmountX, rotAmountY, 0).divide(2));
+    p.rotate(rotAmount);
+    return p.z < 0;
+}
 export default {
     Vector,
     SimulationElement,
@@ -1415,5 +1503,6 @@ export default {
     radToDeg,
     transitionValues,
     compare,
-    Cube
+    Cube,
+    Camera
 };
