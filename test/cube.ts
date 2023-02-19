@@ -33,7 +33,7 @@ function timeFunc(x: number): number {
 }
 
 (async function main() {
-  await cube.rotateTo(new Vector3(360, 360, 0), 10);
+  await cube.rotate(new Vector3(360, 360, 0), 8);
   main();
 })();
 

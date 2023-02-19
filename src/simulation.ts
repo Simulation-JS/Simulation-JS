@@ -505,26 +505,18 @@ export class SimulationElement3d {
 export class Line extends SimulationElement {
   startPoint: Vector;
   endPoint: Vector;
-  rotation: number;
   thickness: number;
   vec: Vector;
-  constructor(p1: Vector, p2: Vector, color = new Color(0, 0, 0), thickness = 1, r = 0) {
+  constructor(p1: Vector, p2: Vector, color = new Color(0, 0, 0), thickness = 1) {
     super(p1, color, 'line');
     this.startPoint = p1;
     this.endPoint = p2;
-    this.rotation = r;
     this.thickness = thickness;
     this.vec = new Vector(0, 0);
     this.setVector();
   }
   clone() {
-    return new Line(
-      this.startPoint.clone(),
-      this.endPoint.clone(),
-      this.color.clone(),
-      this.thickness,
-      this.rotation
-    );
+    return new Line(this.startPoint.clone(), this.endPoint.clone(), this.color.clone(), this.thickness);
   }
   setStart(p: Vector, t = 0, f?: LerpFunc) {
     const xChange = p.x - this.startPoint.x;
@@ -572,46 +564,6 @@ export class Line extends SimulationElement {
   private setVector() {
     this.vec = new Vector(this.endPoint.x - this.startPoint.x, this.endPoint.y - this.startPoint.y);
   }
-  rotate(deg: number, t = 0, f?: LerpFunc) {
-    const initial = this.rotation;
-
-    return transitionValues(
-      () => {
-        this.rotation = initial + deg;
-        this.rotation = minimizeRotation(this.rotation);
-      },
-      (p) => {
-        this.rotation += deg * p;
-        return this.running;
-      },
-      () => {
-        this.rotation = initial + deg;
-        this.rotation = minimizeRotation(this.rotation);
-      },
-      t,
-      f
-    );
-  }
-  rotateTo(deg: number, t = 0, f?: LerpFunc) {
-    const rotationChange = deg - this.rotation;
-
-    return transitionValues(
-      () => {
-        this.rotation = deg;
-        this.rotation = minimizeRotation(this.rotation);
-      },
-      (p) => {
-        this.rotation += rotationChange * p;
-        return this.running;
-      },
-      () => {
-        this.rotation = deg;
-        this.rotation = minimizeRotation(this.rotation);
-      },
-      t,
-      f
-    );
-  }
   moveTo(p: Vector, t = 0) {
     return this.setStart(p, t);
   }
@@ -619,10 +571,7 @@ export class Line extends SimulationElement {
     return this.moveTo(this.startPoint.add(v), t);
   }
   draw(c: CanvasRenderingContext2D) {
-    this.vec
-      .clone()
-      .rotate(this.rotation)
-      .draw(c, new Vector(this.startPoint.x, this.startPoint.y), this.color, this.thickness);
+    this.vec.clone().draw(c, new Vector(this.startPoint.x, this.startPoint.y), this.color, this.thickness);
   }
 }
 
@@ -1158,7 +1107,6 @@ export class Square extends SimulationElement {
   height: number;
   rotation: number;
   private showNodeVectors: boolean;
-  private showCollisionVectors: boolean;
   hovering: boolean;
   events: Event[];
   offsetPoint: Vector;
@@ -1184,7 +1132,6 @@ export class Square extends SimulationElement {
     this.height = height;
     this.rotation = rotation;
     this.showNodeVectors = false;
-    this.showCollisionVectors = false;
     this.hovering = false;
     this.events = [];
     this.topLeft = new Vector(0, 0);
@@ -1215,9 +1162,6 @@ export class Square extends SimulationElement {
   }
   setNodeVectors(show: boolean) {
     this.showNodeVectors = show;
-  }
-  setCollisionVectors(show: boolean) {
-    this.showCollisionVectors = show;
   }
   rotate(deg: number, t = 0, f?: LerpFunc) {
     const newRotation = this.rotation + deg;
@@ -1281,11 +1225,9 @@ export class Square extends SimulationElement {
       this.bottomRight.draw(c, new Vector(this.pos.x + this.offsetPoint.x, this.pos.y + this.offsetPoint.y));
     }
 
-    if (this.showCollisionVectors) {
-      const testVecs = [this.v1, this.v2, this.v3, this.v4, this.v5];
-      if (testVecs.some((el) => el)) {
-        testVecs.forEach((vec) => vec.draw(c, new Vector(this.pos.x, this.pos.y), new Color(0, 0, 255)));
-      }
+    const testVecs = [this.v1, this.v2, this.v3, this.v4, this.v5];
+    if (testVecs.some((el) => el)) {
+      testVecs.forEach((vec) => vec.draw(c, new Vector(this.pos.x, this.pos.y), new Color(0, 0, 255)));
     }
   }
   scale(value: number, t = 0, f?: LerpFunc) {
@@ -1452,26 +1394,22 @@ export class Square extends SimulationElement {
   }
   contains(p: Vector) {
     const topLeftVector = this.topLeft.clone();
-    topLeftVector.rotateTo(-this.rotation);
     this.v1 = topLeftVector;
 
     const topRightVector = this.topRight.clone();
-    topRightVector.rotateTo(-this.rotation);
     this.v2 = topRightVector;
 
     const bottomLeftVector = this.bottomLeft.clone();
-    bottomLeftVector.rotateTo(-this.rotation);
     this.v3 = bottomLeftVector;
 
     const bottomRightVector = this.bottomRight.clone();
-    bottomRightVector.rotateTo(-this.rotation);
     this.v4 = bottomRightVector;
 
     const cursorVector = new Vector(
       p.x - this.pos.x - this.offsetPoint.x,
       p.y - this.pos.y - this.offsetPoint.y
     );
-    cursorVector.rotateTo(-this.rotation);
+    cursorVector.rotate(-this.rotation);
     this.v5 = cursorVector;
 
     if (
@@ -2000,6 +1938,10 @@ export function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): 
   };
 }
 
+export function randInt(range: number, min = 0) {
+  return Math.floor(Math.random() * (range - min)) + min;
+}
+
 export default {
   Vector,
   SimulationElement,
@@ -2018,5 +1960,10 @@ export default {
   compare,
   Cube,
   Camera,
-  Plane
+  Plane,
+  lerp,
+  smoothStep,
+  linearStep,
+  frameLoop,
+  randInt
 };
