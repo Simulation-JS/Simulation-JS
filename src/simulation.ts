@@ -30,22 +30,28 @@ export class Vector3 {
     return new Vector3(this.x, this.y, this.z);
   }
   rotateX(val: number) {
-    this.y = this.y * Math.cos(val) - this.z * Math.sin(val);
-    this.z = this.y * Math.sin(val) + this.z * Math.cos(val);
+    const initialY = this.y;
+    const initialZ = this.z;
+    this.y = initialY * Math.cos(val) - initialZ * Math.sin(val);
+    this.z = initialY * Math.sin(val) + initialZ * Math.cos(val);
   }
   rotateY(val: number) {
-    this.x = this.x * Math.cos(val) + this.z * Math.sin(val);
-    this.z = -this.x * Math.sin(val) + this.z * Math.cos(val);
+    const initialX = this.x;
+    const initialZ = this.z;
+    this.x = initialX * Math.cos(val) + initialZ * Math.sin(val);
+    this.z = -initialX * Math.sin(val) + initialZ * Math.cos(val);
   }
   rotateZ(val: number) {
-    this.x = this.x * Math.cos(val) - this.y * Math.sin(val);
-    this.y = this.x * Math.sin(val) + this.y * Math.cos(val);
+    const initialX = this.x;
+    const initialY = this.y;
+    this.x = initialX * Math.cos(val) - initialY * Math.sin(val);
+    this.y = initialX * Math.sin(val) + initialY * Math.cos(val);
     return this;
   }
   rotate(vec: Vector3) {
+    this.rotateZ(degToRad(vec.z));
     this.rotateX(degToRad(vec.x));
     this.rotateY(degToRad(vec.y));
-    this.rotateZ(degToRad(vec.z));
     return this;
   }
   multiply(val: number) {
@@ -868,7 +874,7 @@ export class Polygon extends SimulationElement {
       ...points.map((p, i) => p.clone().sub(this.points[i])),
       ...this.points
         .slice(points.length, this.points.length)
-        .map((point) => points[points.length - 1].clone().sub(point))
+        .map((point) => (points[points.length - 1] || new Vector(0, 0)).clone().sub(point))
     ];
 
     return transitionValues(
@@ -1006,6 +1012,7 @@ export class Cube extends SimulationElement3d {
   depth: number;
   planes: Plane[] = [];
   points: Vector3[] = [];
+  rotation: Vector3;
   fillCube: boolean;
   wireframe: boolean;
   constructor(
@@ -1014,6 +1021,7 @@ export class Cube extends SimulationElement3d {
     height: number,
     depth: number,
     color = new Color(0, 0, 0),
+    rotation = new Vector3(0, 0, 0),
     fill = true,
     wireframe = false
   ) {
@@ -1023,6 +1031,7 @@ export class Cube extends SimulationElement3d {
     this.depth = depth;
     this.wireframe = wireframe;
     this.fillCube = fill;
+    this.rotation = rotation;
     this.generatePoints();
     this.generatePlanes();
   }
@@ -1040,50 +1049,118 @@ export class Cube extends SimulationElement3d {
     this.generatePlanes();
   }
   generatePlanes() {
+    const points = this.points.map((p) => p.clone().rotate(this.rotation));
     this.planes = [
       new Plane(
         this.pos,
-        [this.points[0], this.points[1], this.points[2], this.points[3]],
+        [points[0], points[1], points[2], points[3]],
         this.color,
         this.fillCube,
         this.wireframe
       ),
       new Plane(
         this.pos,
-        [this.points[0], this.points[1], this.points[5], this.points[4]],
+        [points[0], points[1], points[5], points[4]],
         this.color,
         this.fillCube,
         this.wireframe
       ),
       new Plane(
         this.pos,
-        [this.points[4], this.points[5], this.points[6], this.points[7]],
+        [points[4], points[5], points[6], points[7]],
         this.color,
         this.fillCube,
         this.wireframe
       ),
       new Plane(
         this.pos,
-        [this.points[3], this.points[2], this.points[6], this.points[7]],
+        [points[3], points[2], points[6], points[7]],
         this.color,
         this.fillCube,
         this.wireframe
       ),
       new Plane(
         this.pos,
-        [this.points[0], this.points[3], this.points[7], this.points[4]],
+        [points[0], points[3], points[7], points[4]],
         this.color,
         this.fillCube,
         this.wireframe
       ),
       new Plane(
         this.pos,
-        [this.points[2], this.points[1], this.points[5], this.points[6]],
+        [points[2], points[1], points[5], points[6]],
         this.color,
         this.fillCube,
         this.wireframe
       )
     ];
+    // this.planes = [
+    //   new Plane(
+    //     this.pos,
+    //     [this.points[0], this.points[1], this.points[2], this.points[3]],
+    //     this.color,
+    //     this.fillCube,
+    //     this.wireframe
+    //   ),
+    //   new Plane(
+    //     this.pos,
+    //     [this.points[0], this.points[1], this.points[5], this.points[4]],
+    //     this.color,
+    //     this.fillCube,
+    //     this.wireframe
+    //   ),
+    //   new Plane(
+    //     this.pos,
+    //     [this.points[4], this.points[5], this.points[6], this.points[7]],
+    //     this.color,
+    //     this.fillCube,
+    //     this.wireframe
+    //   ),
+    //   new Plane(
+    //     this.pos,
+    //     [this.points[3], this.points[2], this.points[6], this.points[7]],
+    //     this.color,
+    //     this.fillCube,
+    //     this.wireframe
+    //   ),
+    //   new Plane(
+    //     this.pos,
+    //     [this.points[0], this.points[3], this.points[7], this.points[4]],
+    //     this.color,
+    //     this.fillCube,
+    //     this.wireframe
+    //   ),
+    //   new Plane(
+    //     this.pos,
+    //     [this.points[2], this.points[1], this.points[5], this.points[6]],
+    //     this.color,
+    //     this.fillCube,
+    //     this.wireframe
+    //   )
+    // ];
+  }
+  rotate(amount: Vector3, t = 0, f?: LerpFunc) {
+    const initial = this.rotation.clone();
+    return transitionValues(
+      () => {
+        this.rotation.x = initial.x + amount.x;
+        this.rotation.y = initial.y + amount.y;
+        this.rotation.z = initial.z + amount.z;
+      },
+      (p) => {
+        this.rotation.x += amount.x * p;
+        this.rotation.y += amount.y * p;
+        this.rotation.z += amount.z * p;
+        return this.running;
+      },
+      () => {
+        this.rotation.x = initial.x + amount.x;
+        this.rotation.y = initial.y + amount.y;
+        this.rotation.z = initial.z + amount.z;
+      },
+      t,
+      f
+    );
   }
   draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3) {
     this.generatePoints();

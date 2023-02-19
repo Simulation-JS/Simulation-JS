@@ -178,10 +178,13 @@ export declare class Cube extends SimulationElement3d {
     depth: number;
     planes: Plane[];
     points: Vector3[];
+    rotation: Vector3;
     fillCube: boolean;
     wireframe: boolean;
-    constructor(pos: Vector3, x: number, y: number, z: number, color?: Color, fill?: boolean, wireframe?: boolean);
+    constructor(pos: Vector3, width: number, height: number, depth: number, color?: Color, rotation?: Vector3, fill?: boolean, wireframe?: boolean);
+    generatePoints(): void;
     generatePlanes(): void;
+    rotate(amount: Vector3, t?: number, f?: LerpFunc): Promise<void>;
     draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3): void;
 }
 export declare class Square extends SimulationElement {
