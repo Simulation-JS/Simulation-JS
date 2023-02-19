@@ -1094,50 +1094,6 @@ export class Cube extends SimulationElement3d {
         this.wireframe
       )
     ];
-    // this.planes = [
-    //   new Plane(
-    //     this.pos,
-    //     [this.points[0], this.points[1], this.points[2], this.points[3]],
-    //     this.color,
-    //     this.fillCube,
-    //     this.wireframe
-    //   ),
-    //   new Plane(
-    //     this.pos,
-    //     [this.points[0], this.points[1], this.points[5], this.points[4]],
-    //     this.color,
-    //     this.fillCube,
-    //     this.wireframe
-    //   ),
-    //   new Plane(
-    //     this.pos,
-    //     [this.points[4], this.points[5], this.points[6], this.points[7]],
-    //     this.color,
-    //     this.fillCube,
-    //     this.wireframe
-    //   ),
-    //   new Plane(
-    //     this.pos,
-    //     [this.points[3], this.points[2], this.points[6], this.points[7]],
-    //     this.color,
-    //     this.fillCube,
-    //     this.wireframe
-    //   ),
-    //   new Plane(
-    //     this.pos,
-    //     [this.points[0], this.points[3], this.points[7], this.points[4]],
-    //     this.color,
-    //     this.fillCube,
-    //     this.wireframe
-    //   ),
-    //   new Plane(
-    //     this.pos,
-    //     [this.points[2], this.points[1], this.points[5], this.points[6]],
-    //     this.color,
-    //     this.fillCube,
-    //     this.wireframe
-    //   )
-    // ];
   }
   rotate(amount: Vector3, t = 0, f?: LerpFunc) {
     const initial = this.rotation.clone();
@@ -1157,6 +1113,32 @@ export class Cube extends SimulationElement3d {
         this.rotation.x = initial.x + amount.x;
         this.rotation.y = initial.y + amount.y;
         this.rotation.z = initial.z + amount.z;
+      },
+      t,
+      f
+    );
+  }
+  rotateTo(amount: Vector3, t = 0, f?: LerpFunc) {
+    const changeX = amount.x - this.rotation.x;
+    const changeY = amount.y - this.rotation.y;
+    const changeZ = amount.z - this.rotation.z;
+
+    return transitionValues(
+      () => {
+        this.rotation.x = amount.x;
+        this.rotation.y = amount.y;
+        this.rotation.z = amount.z;
+      },
+      (p) => {
+        this.rotation.x += changeX * p;
+        this.rotation.y += changeY * p;
+        this.rotation.z += changeZ * p;
+        return this.running;
+      },
+      () => {
+        this.rotation.x = amount.x;
+        this.rotation.y = amount.y;
+        this.rotation.z = amount.z;
       },
       t,
       f

@@ -185,6 +185,7 @@ export declare class Cube extends SimulationElement3d {
     generatePoints(): void;
     generatePlanes(): void;
     rotate(amount: Vector3, t?: number, f?: LerpFunc): Promise<void>;
+    rotateTo(amount: Vector3, t?: number, f?: LerpFunc): Promise<void>;
     draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3): void;
 }
 export declare class Square extends SimulationElement {
