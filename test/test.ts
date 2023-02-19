@@ -11,6 +11,14 @@ const square = new Square(
 );
 canvas.add(square);
 
+function timeFunc(x: number): number {
+  const c4 = (2 * Math.PI) / 3;
+
+  return x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
+}
+
+square.scale(2, 2, timeFunc);
+
 const circle = new Circle(new Vector(0, 0), 4, new Color(0, 0, 0));
 canvas.add(circle);
 
@@ -34,7 +42,7 @@ frameLoop(() => {
   }
 })();
 
-(async function main() {
-  await square.rotate(90, 1);
-  main();
-})();
+// (async function main() {
+//   await square.rotate(90, 1);
+//   main();
+// })();

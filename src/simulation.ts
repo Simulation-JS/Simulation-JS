@@ -1114,11 +1114,6 @@ export class Square extends SimulationElement {
   topRight: Vector;
   bottomLeft: Vector;
   bottomRight: Vector;
-  v1: Vector;
-  v2: Vector;
-  v3: Vector;
-  v4: Vector;
-  v5: Vector;
   constructor(
     pos: Vector,
     width: number,
@@ -1138,45 +1133,36 @@ export class Square extends SimulationElement {
     this.topRight = new Vector(0, 0);
     this.bottomLeft = new Vector(0, 0);
     this.bottomRight = new Vector(0, 0);
-    this.v1 = new Vector(0, 0);
-    this.v2 = new Vector(0, 0);
-    this.v3 = new Vector(0, 0);
-    this.v4 = new Vector(0, 0);
-    this.v5 = new Vector(0, 0);
     this.offsetPoint = offsetPoint;
     this.updateOffsetPosition(offsetPoint);
   }
-  private resetVectors() {
-    this.topLeft.setX(-this.width / 2 - this.offsetPoint.x);
-    this.topLeft.setY(-this.height / 2 - this.offsetPoint.y);
-    this.topRight.setX(this.width / 2 - this.offsetPoint.x);
-    this.topRight.setY(-this.height / 2 - this.offsetPoint.y);
-    this.bottomLeft.setX(-this.width / 2 - this.offsetPoint.x);
-    this.bottomLeft.setY(this.height / 2 - this.offsetPoint.y);
-    this.bottomRight.setX(this.width / 2 - this.offsetPoint.x);
-    this.bottomRight.setY(this.height / 2 - this.offsetPoint.y);
+  private generateVectors() {
+    this.topLeft = new Vector(-this.width / 2 - this.offsetPoint.x, -this.height / 2 - this.offsetPoint.y);
+    this.topRight = new Vector(this.width / 2 - this.offsetPoint.x, -this.height / 2 - this.offsetPoint.y);
+    this.bottomLeft = new Vector(-this.width / 2 - this.offsetPoint.x, this.height / 2 - this.offsetPoint.y);
+    this.bottomRight = new Vector(this.width / 2 - this.offsetPoint.x, this.height / 2 - this.offsetPoint.y);
   }
   updateOffsetPosition(p: Vector) {
     this.offsetPoint = p.clone();
-    this.resetVectors();
+    this.generateVectors();
   }
   setNodeVectors(show: boolean) {
     this.showNodeVectors = show;
   }
   rotate(deg: number, t = 0, f?: LerpFunc) {
-    const newRotation = this.rotation + deg;
-    const func = () => {
-      this.rotation = newRotation;
-      this.rotation = minimizeRotation(this.rotation);
-    };
+    const initial = this.rotation;
 
     return transitionValues(
-      func,
+      () => {
+        this.rotation = initial + deg;
+      },
       (p) => {
         this.rotation += deg * p;
         return this.running;
       },
-      func,
+      () => {
+        this.rotation = initial + deg;
+      },
       t,
       f
     );
@@ -1184,23 +1170,23 @@ export class Square extends SimulationElement {
   rotateTo(deg: number, t = 0, f?: LerpFunc) {
     const rotationChange = deg - this.rotation;
 
-    const func = () => {
-      this.rotation = deg;
-      this.rotation = minimizeRotation(this.rotation);
-    };
-
     return transitionValues(
-      func,
+      () => {
+        this.rotation = deg;
+      },
       (p) => {
         this.rotation += rotationChange * p;
         return this.running;
       },
-      func,
+      () => {
+        this.rotation = deg;
+      },
       t,
       f
     );
   }
   draw(c: CanvasRenderingContext2D) {
+    this.generateVectors();
     const topRight = this.topRight.clone().rotate(this.rotation);
     const topLeft = this.topLeft.clone().rotate(this.rotation);
     const bottomRight = this.bottomRight.clone().rotate(this.rotation);
@@ -1224,193 +1210,65 @@ export class Square extends SimulationElement {
       this.bottomLeft.draw(c, new Vector(this.pos.x + this.offsetPoint.x, this.pos.y + this.offsetPoint.y));
       this.bottomRight.draw(c, new Vector(this.pos.x + this.offsetPoint.x, this.pos.y + this.offsetPoint.y));
     }
-
-    const testVecs = [this.v1, this.v2, this.v3, this.v4, this.v5];
-    if (testVecs.some((el) => el)) {
-      testVecs.forEach((vec) => vec.draw(c, new Vector(this.pos.x, this.pos.y), new Color(0, 0, 255)));
-    }
   }
   scale(value: number, t = 0, f?: LerpFunc) {
-    const topRightMag = this.topRight.getMag();
-    const topLeftMag = this.topLeft.getMag();
-    const bottomRightMag = this.bottomRight.getMag();
-    const bottomLeftMag = this.bottomLeft.getMag();
-
-    const topRightChange = topRightMag * value - topRightMag;
-    const topLeftChange = topLeftMag * value - topLeftMag;
-    const bottomRightChange = bottomRightMag * value - bottomRightMag;
-    const bottomLeftChange = bottomLeftMag * value - bottomLeftMag;
-
-    return transitionValues(
-      () => {
-        this.topRight.multiply(value);
-        this.topLeft.multiply(value);
-        this.bottomRight.multiply(value);
-        this.bottomLeft.multiply(value);
-
-        this.updateDimensions();
-      },
-      (p) => {
-        this.topRight.appendMag(topRightChange * p);
-        this.topLeft.appendMag(topLeftChange * p);
-        this.bottomRight.appendMag(bottomRightChange * p);
-        this.bottomLeft.appendMag(bottomLeftChange * p);
-        return this.running;
-      },
-      () => {
-        this.topRight.normalize();
-        this.topRight.multiply(topRightMag * value);
-
-        this.topLeft.normalize();
-        this.topLeft.multiply(topLeftMag * value);
-
-        this.bottomRight.normalize();
-        this.bottomRight.multiply(bottomRightMag * value);
-
-        this.bottomLeft.normalize();
-        this.bottomLeft.multiply(bottomLeftMag * value);
-
-        this.updateDimensions();
-      },
-      t,
-      f
-    );
+    return Promise.all([this.scaleWidth(value, t, f), this.scaleHeight(value, t, f)]);
   }
   scaleWidth(value: number, t = 0, f?: LerpFunc) {
-    const topRightClone = this.topRight.clone();
-    const topLeftClone = this.topLeft.clone();
-    const bottomRightClone = this.bottomRight.clone();
-    const bottomLeftClone = this.bottomLeft.clone();
-    const topRightMag = topRightClone.getMag();
-    const topLeftMag = topLeftClone.getMag();
-    const bottomRightMag = bottomRightClone.getMag();
-    const bottomLeftMag = bottomLeftClone.getMag();
-
-    const topRightChange = topRightMag * value - topRightMag;
-    const topLeftChange = topLeftMag * value - topLeftMag;
-    const bottomRightChange = bottomRightMag * value - bottomRightMag;
-    const bottomLeftChange = bottomLeftMag * value - bottomLeftMag;
-
-    return transitionValues(
-      () => {
-        this.topRight.multiplyX(value);
-        this.topLeft.multiplyX(value);
-        this.bottomRight.multiplyX(value);
-        this.bottomLeft.multiplyX(value);
-
-        this.updateDimensions();
-      },
-      (p) => {
-        this.topRight.appendX(topRightChange * p);
-        this.topLeft.appendX(topLeftChange * p);
-        this.bottomRight.appendX(bottomRightChange * p);
-        this.bottomLeft.appendX(bottomLeftChange * p);
-        return this.running;
-      },
-      () => {
-        topRightClone.setX(1);
-        topRightClone.multiplyX(topRightMag * value);
-        this.topRight = topRightClone.clone();
-
-        topLeftClone.setX(1);
-        topLeftClone.multiplyX(topLeftMag * value);
-        this.topLeft = topLeftClone.clone();
-
-        bottomRightClone.setX(1);
-        bottomRightClone.multiplyX(bottomRightMag * value);
-        this.bottomRight = bottomRightClone.clone();
-
-        bottomLeftClone.setX(1);
-        bottomLeftClone.multiplyX(bottomLeftMag * value);
-        this.bottomLeft = bottomLeftClone.clone();
-
-        this.updateDimensions();
-      },
-      t,
-      f
-    );
+    const width = this.width * value;
+    return this.setWidth(width, t, f);
   }
   scaleHeight(value: number, t = 0, f?: LerpFunc) {
-    const topRightClone = this.topRight.clone();
-    const topLeftClone = this.topLeft.clone();
-    const bottomRightClone = this.bottomRight.clone();
-    const bottomLeftClone = this.bottomLeft.clone();
-    const topRightMag = topRightClone.getMag();
-    const topLeftMag = topLeftClone.getMag();
-    const bottomRightMag = bottomRightClone.getMag();
-    const bottomLeftMag = bottomLeftClone.getMag();
-
-    const topRightChange = topRightMag * value - topRightMag;
-    const topLeftChange = topLeftMag * value - topLeftMag;
-    const bottomRightChange = bottomRightMag * value - bottomRightMag;
-    const bottomLeftChange = bottomLeftMag * value - bottomLeftMag;
+    const height = this.height * value;
+    return this.setHeight(height, t, f);
+  }
+  setWidth(value: number, t = 0, f?: LerpFunc) {
+    const initial = this.width;
+    const change = value - initial;
 
     return transitionValues(
       () => {
-        this.topRight.multiplyY(value);
-        this.topLeft.multiplyY(value);
-        this.bottomRight.multiplyY(value);
-        this.bottomLeft.multiplyY(value);
-
-        this.updateDimensions();
+        this.width = value;
       },
       (p) => {
-        this.topRight.appendY(topRightChange * p);
-        this.topLeft.appendY(topLeftChange * p);
-        this.bottomRight.appendY(bottomRightChange * p);
-        this.bottomLeft.appendY(bottomLeftChange * p);
+        this.width += change * p;
         return this.running;
       },
       () => {
-        topRightClone.setY(1);
-        topRightClone.multiplyY(topRightMag * value);
-        this.topRight = topRightClone.clone();
-
-        topLeftClone.setY(1);
-        topLeftClone.multiplyY(topLeftMag * value);
-        this.topLeft = topLeftClone.clone();
-
-        bottomRightClone.setY(1);
-        bottomRightClone.multiplyY(bottomRightMag * value);
-        this.bottomRight = bottomRightClone.clone();
-
-        bottomLeftClone.setY(1);
-        bottomLeftClone.multiplyY(bottomLeftMag * value);
-        this.bottomLeft = bottomLeftClone.clone();
-
-        this.updateDimensions();
+        this.width = value;
       },
       t,
       f
     );
   }
-  setWidth(value: number, t = 0) {
-    const scale = value / this.width;
-    return this.scaleWidth(scale, t);
-  }
-  setHeight(value: number, t = 0) {
-    const scale = value / this.height;
-    return this.scaleHeight(scale, t);
+  setHeight(value: number, t = 0, f?: LerpFunc) {
+    const initial = this.height;
+    const change = value - initial;
+
+    return transitionValues(
+      () => {
+        this.height = value;
+      },
+      (p) => {
+        this.height += change * p;
+        return this.running;
+      },
+      () => {
+        this.height = value;
+      },
+      t,
+      f
+    );
   }
   contains(p: Vector) {
     const topLeftVector = this.topLeft.clone();
-    this.v1 = topLeftVector;
-
     const topRightVector = this.topRight.clone();
-    this.v2 = topRightVector;
-
     const bottomLeftVector = this.bottomLeft.clone();
-    this.v3 = bottomLeftVector;
-
-    const bottomRightVector = this.bottomRight.clone();
-    this.v4 = bottomRightVector;
-
     const cursorVector = new Vector(
       p.x - this.pos.x - this.offsetPoint.x,
       p.y - this.pos.y - this.offsetPoint.y
     );
     cursorVector.rotate(-this.rotation);
-    this.v5 = cursorVector;
 
     if (
       cursorVector.x > bottomLeftVector.x &&
@@ -1421,10 +1279,6 @@ export class Square extends SimulationElement {
       return true;
     }
     return false;
-  }
-  private updateDimensions() {
-    this.height = this.topRight.y + this.bottomRight.y;
-    this.width = this.topRight.x + this.topLeft.x;
   }
   clone() {
     return new Square(
@@ -1714,11 +1568,6 @@ export function degToRad(deg: number) {
 
 export function radToDeg(rad: number) {
   return (rad * 180) / Math.PI;
-}
-
-function minimizeRotation(rotation: number, amount = 360) {
-  while (Math.abs(rotation) > amount) rotation += amount * -Math.sign(rotation);
-  return rotation;
 }
 
 export function lerp(a: number, b: number, t: number) {
