@@ -116,16 +116,11 @@ export declare class SimulationElement3d {
 export declare class Line extends SimulationElement {
     startPoint: Vector;
     endPoint: Vector;
-    rotation: number;
     thickness: number;
-    vec: Vector;
-    constructor(p1: Vector, p2: Vector, color?: Color, thickness?: number, r?: number);
+    constructor(p1: Vector, p2: Vector, color?: Color, thickness?: number);
     clone(): Line;
     setStart(p: Vector, t?: number, f?: LerpFunc): Promise<void>;
     setEnd(p: Vector, t?: number, f?: LerpFunc): Promise<void>;
-    private setVector;
-    rotate(deg: number, t?: number, f?: LerpFunc): Promise<void>;
-    rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     moveTo(p: Vector, t?: number): Promise<void>;
     move(v: Vector, t?: number): Promise<void>;
     draw(c: CanvasRenderingContext2D): void;
@@ -142,7 +137,6 @@ export declare class Circle extends SimulationElement {
     setCounterClockwise(val: boolean): void;
     setFillCircle(val: boolean): void;
     draw(c: CanvasRenderingContext2D): void;
-    scale(value: number, t?: number, f?: LerpFunc): Promise<void>;
     contains(p: Vector): boolean;
     scaleRadius(scale: number, t?: number, f?: LerpFunc): Promise<void>;
     setRadius(value: number, t?: number, f?: LerpFunc): Promise<void>;
@@ -157,7 +151,7 @@ export declare class Polygon extends SimulationElement {
     offsetPoint: Vector;
     points: Vector[];
     rotation: number;
-    constructor(pos: Vector, points: Vector[], color: Color, r?: number, offsetPoint?: Vector);
+    constructor(pos: Vector, points: Vector[], color?: Color, r?: number, offsetPoint?: Vector);
     setPoints(points: Vector[], t?: number, f?: LerpFunc): Promise<void>;
     clone(): Polygon;
     rotate(deg: number, t?: number, f?: LerpFunc): Promise<void>;
@@ -170,6 +164,7 @@ export declare class Plane extends SimulationElement3d {
     fillPlane: boolean;
     constructor(pos: Vector3, points: Vector3[], color?: Color, fill?: boolean, wireframe?: boolean);
     clone(): Plane;
+    setPoints(points: Vector3[], t?: number, f?: LerpFunc): Promise<void>;
     draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3): void;
 }
 export declare class Cube extends SimulationElement3d {
@@ -193,7 +188,6 @@ export declare class Square extends SimulationElement {
     height: number;
     rotation: number;
     private showNodeVectors;
-    private showCollisionVectors;
     hovering: boolean;
     events: Event[];
     offsetPoint: Vector;
@@ -201,26 +195,19 @@ export declare class Square extends SimulationElement {
     topRight: Vector;
     bottomLeft: Vector;
     bottomRight: Vector;
-    v1: Vector;
-    v2: Vector;
-    v3: Vector;
-    v4: Vector;
-    v5: Vector;
     constructor(pos: Vector, width: number, height: number, color?: Color, offsetPoint?: Vector, rotation?: number);
-    private resetVectors;
+    private generateVectors;
     updateOffsetPosition(p: Vector): void;
     setNodeVectors(show: boolean): void;
-    setCollisionVectors(show: boolean): void;
     rotate(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     rotateTo(deg: number, t?: number, f?: LerpFunc): Promise<void>;
     draw(c: CanvasRenderingContext2D): void;
     scale(value: number, t?: number, f?: LerpFunc): Promise<void>;
     scaleWidth(value: number, t?: number, f?: LerpFunc): Promise<void>;
     scaleHeight(value: number, t?: number, f?: LerpFunc): Promise<void>;
-    setWidth(value: number, t?: number): Promise<void>;
-    setHeight(value: number, t?: number): Promise<void>;
+    setWidth(value: number, t?: number, f?: LerpFunc): Promise<void>;
+    setHeight(value: number, t?: number, f?: LerpFunc): Promise<void>;
     contains(p: Vector): boolean;
-    private updateDimensions;
     clone(): Square;
 }
 declare class Event {
@@ -284,6 +271,8 @@ declare type ProjectedPoint = {
     behindCamera: boolean;
 };
 export declare function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): ProjectedPoint;
+export declare function randInt(range: number, min?: number): number;
+export declare function randomColor(): Color;
 declare const _default: {
     Vector: typeof Vector;
     SimulationElement: typeof SimulationElement;
@@ -303,5 +292,11 @@ declare const _default: {
     Cube: typeof Cube;
     Camera: typeof Camera;
     Plane: typeof Plane;
+    lerp: typeof lerp;
+    smoothStep: typeof smoothStep;
+    linearStep: typeof linearStep;
+    frameLoop: typeof frameLoop;
+    randInt: typeof randInt;
+    randomColor: typeof randomColor;
 };
 export default _default;

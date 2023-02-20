@@ -506,14 +506,11 @@ export class Line extends SimulationElement {
   startPoint: Vector;
   endPoint: Vector;
   thickness: number;
-  vec: Vector;
   constructor(p1: Vector, p2: Vector, color = new Color(0, 0, 0), thickness = 1) {
-    super(p1, color, 'line');
+    super(new Vector(0, 0), color, 'line');
     this.startPoint = p1;
     this.endPoint = p2;
     this.thickness = thickness;
-    this.vec = new Vector(0, 0);
-    this.setVector();
   }
   clone() {
     return new Line(this.startPoint.clone(), this.endPoint.clone(), this.color.clone(), this.thickness);
@@ -545,33 +542,36 @@ export class Line extends SimulationElement {
     return transitionValues(
       () => {
         this.endPoint = p;
-        this.setVector();
       },
       (p) => {
         this.endPoint.x += xChange * p;
         this.endPoint.y += yChange * p;
-        this.setVector();
         return this.running;
       },
       () => {
         this.endPoint = p;
-        this.setVector();
       },
       t,
       f
     );
   }
-  private setVector() {
-    this.vec = new Vector(this.endPoint.x - this.startPoint.x, this.endPoint.y - this.startPoint.y);
-  }
   moveTo(p: Vector, t = 0) {
-    return this.setStart(p, t);
+    return new Promise<void>(async (resolve) => {
+      await Promise.all([this.setStart(p, t), this.setEnd(this.endPoint.clone().add(p), t)]);
+      resolve();
+    });
   }
   move(v: Vector, t = 0) {
-    return this.moveTo(this.startPoint.add(v), t);
+    return this.moveTo(this.startPoint.clone().add(v), t);
   }
   draw(c: CanvasRenderingContext2D) {
-    this.vec.clone().draw(c, new Vector(this.startPoint.x, this.startPoint.y), this.color, this.thickness);
+    c.beginPath();
+    c.lineWidth = this.thickness;
+    c.strokeStyle = this.color.toHex();
+    c.moveTo(this.startPoint.x, this.startPoint.y);
+    c.lineTo(this.endPoint.x, this.endPoint.y);
+    c.stroke();
+    c.closePath();
   }
 }
 
@@ -622,36 +622,19 @@ export class Circle extends SimulationElement {
       degToRad(this.endAngle + this.rotation),
       this.counterClockwise
     );
-    c.lineTo(this.pos.x, this.pos.y);
-    c.moveTo(this.pos.x, this.pos.y);
-    c.lineTo(
-      this.pos.x + Math.cos(degToRad(this.rotation)) * this.radius,
-      this.pos.y + Math.sin(degToRad(this.rotation)) * this.radius
-    );
+    if (this.endAngle > 0 && this.startAngle + 360 > this.endAngle) {
+      c.lineTo(this.pos.x, this.pos.y);
+      c.moveTo(this.pos.x, this.pos.y);
+      c.lineTo(
+        this.pos.x + Math.cos(degToRad(this.rotation)) * this.radius,
+        this.pos.y + Math.sin(degToRad(this.rotation)) * this.radius
+      );
+    }
     c.stroke();
     if (this.fillCircle) {
       c.fill();
     }
     c.closePath();
-  }
-  scale(value: number, t = 0, f?: LerpFunc) {
-    const radiusChange = this.radius * value - this.radius;
-    const finalValue = this.radius * value;
-
-    return transitionValues(
-      () => {
-        this.radius = finalValue;
-      },
-      (p) => {
-        this.radius += radiusChange * p;
-        return this.running;
-      },
-      () => {
-        this.radius = finalValue;
-      },
-      t,
-      f
-    );
   }
   contains(p: Vector) {
     return distance(p, this.pos) < this.radius;
@@ -802,7 +785,13 @@ export class Polygon extends SimulationElement {
   offsetPoint: Vector;
   points: Vector[];
   rotation: number;
-  constructor(pos: Vector, points: Vector[], color: Color, r = 0, offsetPoint = new Vector(0, 0)) {
+  constructor(
+    pos: Vector,
+    points: Vector[],
+    color = new Color(0, 0, 0),
+    r = 0,
+    offsetPoint = new Vector(0, 0)
+  ) {
     super(pos, color, 'polygon');
     this.offsetPoint = offsetPoint;
     this.points = points.map((p) => {
@@ -925,6 +914,48 @@ export class Plane extends SimulationElement3d {
       this.color.clone(),
       this.fillPlane,
       this.wireframe
+    );
+  }
+  setPoints(points: Vector3[], t = 0, f?: LerpFunc) {
+    const lastPoint = this.points.length > 0 ? this.points[this.points.length - 1] : new Vector3(0, 0, 0);
+    if (points.length > this.points.length) {
+      while (points.length > this.points.length) {
+        this.points.push(new Vector3(lastPoint.x, lastPoint.y, lastPoint.z));
+      }
+    }
+
+    const initial = this.points.map((p) => p.clone());
+    const changes = [
+      ...points.map((p, i) => p.clone().sub(this.points[i])),
+      ...this.points
+        .slice(points.length, this.points.length)
+        .map((point) => (points[points.length - 1] || new Vector3(0, 0, 0)).clone().sub(point))
+    ];
+
+    return transitionValues(
+      () => {
+        this.points = points.map((p) => new Vector3(p.x, p.y, p.z));
+      },
+      (p) => {
+        this.points = this.points.map((point, i) => {
+          point.x += (changes[i]?.x || 0) * p;
+          point.y += (changes[i]?.y || 0) * p;
+          point.z += (changes[i]?.z || 0) * p;
+          return point;
+        });
+        return this.running;
+      },
+      () => {
+        this.points = initial.map((p, i) => {
+          p.x += changes[i].x;
+          p.y += changes[i].y;
+          p.z += changes[i].z;
+          return p.clone();
+        });
+        this.points.splice(points.length, this.points.length);
+      },
+      t,
+      f
     );
   }
   draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3) {
@@ -1212,7 +1243,10 @@ export class Square extends SimulationElement {
     }
   }
   scale(value: number, t = 0, f?: LerpFunc) {
-    return Promise.all([this.scaleWidth(value, t, f), this.scaleHeight(value, t, f)]);
+    return new Promise<void>(async (resolve) => {
+      await Promise.all([this.scaleWidth(value, t, f), this.scaleHeight(value, t, f)]);
+      resolve();
+    });
   }
   scaleWidth(value: number, t = 0, f?: LerpFunc) {
     const width = this.width * value;
@@ -1791,6 +1825,10 @@ export function randInt(range: number, min = 0) {
   return Math.floor(Math.random() * (range - min)) + min;
 }
 
+export function randomColor() {
+  return new Color(randInt(255), randInt(255), randInt(255));
+}
+
 export default {
   Vector,
   SimulationElement,
@@ -1814,5 +1852,6 @@ export default {
   smoothStep,
   linearStep,
   frameLoop,
-  randInt
+  randInt,
+  randomColor
 };

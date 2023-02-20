@@ -446,20 +446,15 @@ export class SimulationElement3d {
 export class Line extends SimulationElement {
     startPoint;
     endPoint;
-    rotation;
     thickness;
-    vec;
-    constructor(p1, p2, color = new Color(0, 0, 0), thickness = 1, r = 0) {
-        super(p1, color, 'line');
+    constructor(p1, p2, color = new Color(0, 0, 0), thickness = 1) {
+        super(new Vector(0, 0), color, 'line');
         this.startPoint = p1;
         this.endPoint = p2;
-        this.rotation = r;
         this.thickness = thickness;
-        this.vec = new Vector(0, 0);
-        this.setVector();
     }
     clone() {
-        return new Line(this.startPoint.clone(), this.endPoint.clone(), this.color.clone(), this.thickness, this.rotation);
+        return new Line(this.startPoint.clone(), this.endPoint.clone(), this.color.clone(), this.thickness);
     }
     setStart(p, t = 0, f) {
         const xChange = p.x - this.startPoint.x;
@@ -479,57 +474,31 @@ export class Line extends SimulationElement {
         const yChange = p.y - this.endPoint.y;
         return transitionValues(() => {
             this.endPoint = p;
-            this.setVector();
         }, (p) => {
             this.endPoint.x += xChange * p;
             this.endPoint.y += yChange * p;
-            this.setVector();
             return this.running;
         }, () => {
             this.endPoint = p;
-            this.setVector();
-        }, t, f);
-    }
-    setVector() {
-        this.vec = new Vector(this.endPoint.x - this.startPoint.x, this.endPoint.y - this.startPoint.y);
-    }
-    rotate(deg, t = 0, f) {
-        const initial = this.rotation;
-        return transitionValues(() => {
-            this.rotation = initial + deg;
-            this.rotation = minimizeRotation(this.rotation);
-        }, (p) => {
-            this.rotation += deg * p;
-            return this.running;
-        }, () => {
-            this.rotation = initial + deg;
-            this.rotation = minimizeRotation(this.rotation);
-        }, t, f);
-    }
-    rotateTo(deg, t = 0, f) {
-        const rotationChange = deg - this.rotation;
-        return transitionValues(() => {
-            this.rotation = deg;
-            this.rotation = minimizeRotation(this.rotation);
-        }, (p) => {
-            this.rotation += rotationChange * p;
-            return this.running;
-        }, () => {
-            this.rotation = deg;
-            this.rotation = minimizeRotation(this.rotation);
         }, t, f);
     }
     moveTo(p, t = 0) {
-        return this.setStart(p, t);
+        return new Promise(async (resolve) => {
+            await Promise.all([this.setStart(p, t), this.setEnd(this.endPoint.clone().add(p), t)]);
+            resolve();
+        });
     }
     move(v, t = 0) {
-        return this.moveTo(this.startPoint.add(v), t);
+        return this.moveTo(this.startPoint.clone().add(v), t);
     }
     draw(c) {
-        this.vec
-            .clone()
-            .rotate(this.rotation)
-            .draw(c, new Vector(this.startPoint.x, this.startPoint.y), this.color, this.thickness);
+        c.beginPath();
+        c.lineWidth = this.thickness;
+        c.strokeStyle = this.color.toHex();
+        c.moveTo(this.startPoint.x, this.startPoint.y);
+        c.lineTo(this.endPoint.x, this.endPoint.y);
+        c.stroke();
+        c.closePath();
     }
 }
 export class Circle extends SimulationElement {
@@ -562,26 +531,16 @@ export class Circle extends SimulationElement {
         c.fillStyle = this.color.toHex();
         c.lineWidth = this.thickness;
         c.arc(this.pos.x, this.pos.y, this.radius, degToRad(this.startAngle + this.rotation), degToRad(this.endAngle + this.rotation), this.counterClockwise);
-        c.lineTo(this.pos.x, this.pos.y);
-        c.moveTo(this.pos.x, this.pos.y);
-        c.lineTo(this.pos.x + Math.cos(degToRad(this.rotation)) * this.radius, this.pos.y + Math.sin(degToRad(this.rotation)) * this.radius);
+        if (this.endAngle > 0 && this.startAngle + 360 > this.endAngle) {
+            c.lineTo(this.pos.x, this.pos.y);
+            c.moveTo(this.pos.x, this.pos.y);
+            c.lineTo(this.pos.x + Math.cos(degToRad(this.rotation)) * this.radius, this.pos.y + Math.sin(degToRad(this.rotation)) * this.radius);
+        }
         c.stroke();
         if (this.fillCircle) {
             c.fill();
         }
         c.closePath();
-    }
-    scale(value, t = 0, f) {
-        const radiusChange = this.radius * value - this.radius;
-        const finalValue = this.radius * value;
-        return transitionValues(() => {
-            this.radius = finalValue;
-        }, (p) => {
-            this.radius += radiusChange * p;
-            return this.running;
-        }, () => {
-            this.radius = finalValue;
-        }, t, f);
     }
     contains(p) {
         return distance(p, this.pos) < this.radius;
@@ -673,7 +632,7 @@ export class Polygon extends SimulationElement {
     offsetPoint;
     points;
     rotation;
-    constructor(pos, points, color, r = 0, offsetPoint = new Vector(0, 0)) {
+    constructor(pos, points, color = new Color(0, 0, 0), r = 0, offsetPoint = new Vector(0, 0)) {
         super(pos, color, 'polygon');
         this.offsetPoint = offsetPoint;
         this.points = points.map((p) => {
@@ -764,6 +723,40 @@ export class Plane extends SimulationElement3d {
     }
     clone() {
         return new Plane(this.pos.clone(), this.points.map((p) => p.clone()), this.color.clone(), this.fillPlane, this.wireframe);
+    }
+    setPoints(points, t = 0, f) {
+        const lastPoint = this.points.length > 0 ? this.points[this.points.length - 1] : new Vector3(0, 0, 0);
+        if (points.length > this.points.length) {
+            while (points.length > this.points.length) {
+                this.points.push(new Vector3(lastPoint.x, lastPoint.y, lastPoint.z));
+            }
+        }
+        const initial = this.points.map((p) => p.clone());
+        const changes = [
+            ...points.map((p, i) => p.clone().sub(this.points[i])),
+            ...this.points
+                .slice(points.length, this.points.length)
+                .map((point) => (points[points.length - 1] || new Vector3(0, 0, 0)).clone().sub(point))
+        ];
+        return transitionValues(() => {
+            this.points = points.map((p) => new Vector3(p.x, p.y, p.z));
+        }, (p) => {
+            this.points = this.points.map((point, i) => {
+                point.x += (changes[i]?.x || 0) * p;
+                point.y += (changes[i]?.y || 0) * p;
+                point.z += (changes[i]?.z || 0) * p;
+                return point;
+            });
+            return this.running;
+        }, () => {
+            this.points = initial.map((p, i) => {
+                p.x += changes[i].x;
+                p.y += changes[i].y;
+                p.z += changes[i].z;
+                return p.clone();
+            });
+            this.points.splice(points.length, this.points.length);
+        }, t, f);
     }
     draw(c, camera, displaySurface) {
         c.beginPath();
@@ -888,7 +881,6 @@ export class Square extends SimulationElement {
     height;
     rotation;
     showNodeVectors;
-    showCollisionVectors;
     hovering;
     events;
     offsetPoint;
@@ -896,75 +888,58 @@ export class Square extends SimulationElement {
     topRight;
     bottomLeft;
     bottomRight;
-    v1;
-    v2;
-    v3;
-    v4;
-    v5;
     constructor(pos, width, height, color = new Color(0, 0, 0), offsetPoint = new Vector(0, 0), rotation = 0) {
         super(pos, color, 'square');
         this.width = width;
         this.height = height;
         this.rotation = rotation;
         this.showNodeVectors = false;
-        this.showCollisionVectors = false;
         this.hovering = false;
         this.events = [];
         this.topLeft = new Vector(0, 0);
         this.topRight = new Vector(0, 0);
         this.bottomLeft = new Vector(0, 0);
         this.bottomRight = new Vector(0, 0);
-        this.v1 = new Vector(0, 0);
-        this.v2 = new Vector(0, 0);
-        this.v3 = new Vector(0, 0);
-        this.v4 = new Vector(0, 0);
-        this.v5 = new Vector(0, 0);
         this.offsetPoint = offsetPoint;
         this.updateOffsetPosition(offsetPoint);
     }
-    resetVectors() {
-        this.topLeft.setX(-this.width / 2 - this.offsetPoint.x);
-        this.topLeft.setY(-this.height / 2 - this.offsetPoint.y);
-        this.topRight.setX(this.width / 2 - this.offsetPoint.x);
-        this.topRight.setY(-this.height / 2 - this.offsetPoint.y);
-        this.bottomLeft.setX(-this.width / 2 - this.offsetPoint.x);
-        this.bottomLeft.setY(this.height / 2 - this.offsetPoint.y);
-        this.bottomRight.setX(this.width / 2 - this.offsetPoint.x);
-        this.bottomRight.setY(this.height / 2 - this.offsetPoint.y);
+    generateVectors() {
+        this.topLeft = new Vector(-this.width / 2 - this.offsetPoint.x, -this.height / 2 - this.offsetPoint.y);
+        this.topRight = new Vector(this.width / 2 - this.offsetPoint.x, -this.height / 2 - this.offsetPoint.y);
+        this.bottomLeft = new Vector(-this.width / 2 - this.offsetPoint.x, this.height / 2 - this.offsetPoint.y);
+        this.bottomRight = new Vector(this.width / 2 - this.offsetPoint.x, this.height / 2 - this.offsetPoint.y);
     }
     updateOffsetPosition(p) {
         this.offsetPoint = p.clone();
-        this.resetVectors();
+        this.generateVectors();
     }
     setNodeVectors(show) {
         this.showNodeVectors = show;
     }
-    setCollisionVectors(show) {
-        this.showCollisionVectors = show;
-    }
     rotate(deg, t = 0, f) {
-        const newRotation = this.rotation + deg;
-        const func = () => {
-            this.rotation = newRotation;
-            this.rotation = minimizeRotation(this.rotation);
-        };
-        return transitionValues(func, (p) => {
+        const initial = this.rotation;
+        return transitionValues(() => {
+            this.rotation = initial + deg;
+        }, (p) => {
             this.rotation += deg * p;
             return this.running;
-        }, func, t, f);
+        }, () => {
+            this.rotation = initial + deg;
+        }, t, f);
     }
     rotateTo(deg, t = 0, f) {
         const rotationChange = deg - this.rotation;
-        const func = () => {
+        return transitionValues(() => {
             this.rotation = deg;
-            this.rotation = minimizeRotation(this.rotation);
-        };
-        return transitionValues(func, (p) => {
+        }, (p) => {
             this.rotation += rotationChange * p;
             return this.running;
-        }, func, t, f);
+        }, () => {
+            this.rotation = deg;
+        }, t, f);
     }
     draw(c) {
+        this.generateVectors();
         const topRight = this.topRight.clone().rotate(this.rotation);
         const topLeft = this.topLeft.clone().rotate(this.rotation);
         const bottomRight = this.bottomRight.clone().rotate(this.rotation);
@@ -983,152 +958,51 @@ export class Square extends SimulationElement {
             this.bottomLeft.draw(c, new Vector(this.pos.x + this.offsetPoint.x, this.pos.y + this.offsetPoint.y));
             this.bottomRight.draw(c, new Vector(this.pos.x + this.offsetPoint.x, this.pos.y + this.offsetPoint.y));
         }
-        if (this.showCollisionVectors) {
-            const testVecs = [this.v1, this.v2, this.v3, this.v4, this.v5];
-            if (testVecs.some((el) => el)) {
-                testVecs.forEach((vec) => vec.draw(c, new Vector(this.pos.x, this.pos.y), new Color(0, 0, 255)));
-            }
-        }
     }
     scale(value, t = 0, f) {
-        const topRightMag = this.topRight.getMag();
-        const topLeftMag = this.topLeft.getMag();
-        const bottomRightMag = this.bottomRight.getMag();
-        const bottomLeftMag = this.bottomLeft.getMag();
-        const topRightChange = topRightMag * value - topRightMag;
-        const topLeftChange = topLeftMag * value - topLeftMag;
-        const bottomRightChange = bottomRightMag * value - bottomRightMag;
-        const bottomLeftChange = bottomLeftMag * value - bottomLeftMag;
-        return transitionValues(() => {
-            this.topRight.multiply(value);
-            this.topLeft.multiply(value);
-            this.bottomRight.multiply(value);
-            this.bottomLeft.multiply(value);
-            this.updateDimensions();
-        }, (p) => {
-            this.topRight.appendMag(topRightChange * p);
-            this.topLeft.appendMag(topLeftChange * p);
-            this.bottomRight.appendMag(bottomRightChange * p);
-            this.bottomLeft.appendMag(bottomLeftChange * p);
-            return this.running;
-        }, () => {
-            this.topRight.normalize();
-            this.topRight.multiply(topRightMag * value);
-            this.topLeft.normalize();
-            this.topLeft.multiply(topLeftMag * value);
-            this.bottomRight.normalize();
-            this.bottomRight.multiply(bottomRightMag * value);
-            this.bottomLeft.normalize();
-            this.bottomLeft.multiply(bottomLeftMag * value);
-            this.updateDimensions();
-        }, t, f);
+        return new Promise(async (resolve) => {
+            await Promise.all([this.scaleWidth(value, t, f), this.scaleHeight(value, t, f)]);
+            resolve();
+        });
     }
     scaleWidth(value, t = 0, f) {
-        const topRightClone = this.topRight.clone();
-        const topLeftClone = this.topLeft.clone();
-        const bottomRightClone = this.bottomRight.clone();
-        const bottomLeftClone = this.bottomLeft.clone();
-        const topRightMag = topRightClone.getMag();
-        const topLeftMag = topLeftClone.getMag();
-        const bottomRightMag = bottomRightClone.getMag();
-        const bottomLeftMag = bottomLeftClone.getMag();
-        const topRightChange = topRightMag * value - topRightMag;
-        const topLeftChange = topLeftMag * value - topLeftMag;
-        const bottomRightChange = bottomRightMag * value - bottomRightMag;
-        const bottomLeftChange = bottomLeftMag * value - bottomLeftMag;
-        return transitionValues(() => {
-            this.topRight.multiplyX(value);
-            this.topLeft.multiplyX(value);
-            this.bottomRight.multiplyX(value);
-            this.bottomLeft.multiplyX(value);
-            this.updateDimensions();
-        }, (p) => {
-            this.topRight.appendX(topRightChange * p);
-            this.topLeft.appendX(topLeftChange * p);
-            this.bottomRight.appendX(bottomRightChange * p);
-            this.bottomLeft.appendX(bottomLeftChange * p);
-            return this.running;
-        }, () => {
-            topRightClone.setX(1);
-            topRightClone.multiplyX(topRightMag * value);
-            this.topRight = topRightClone.clone();
-            topLeftClone.setX(1);
-            topLeftClone.multiplyX(topLeftMag * value);
-            this.topLeft = topLeftClone.clone();
-            bottomRightClone.setX(1);
-            bottomRightClone.multiplyX(bottomRightMag * value);
-            this.bottomRight = bottomRightClone.clone();
-            bottomLeftClone.setX(1);
-            bottomLeftClone.multiplyX(bottomLeftMag * value);
-            this.bottomLeft = bottomLeftClone.clone();
-            this.updateDimensions();
-        }, t, f);
+        const width = this.width * value;
+        return this.setWidth(width, t, f);
     }
     scaleHeight(value, t = 0, f) {
-        const topRightClone = this.topRight.clone();
-        const topLeftClone = this.topLeft.clone();
-        const bottomRightClone = this.bottomRight.clone();
-        const bottomLeftClone = this.bottomLeft.clone();
-        const topRightMag = topRightClone.getMag();
-        const topLeftMag = topLeftClone.getMag();
-        const bottomRightMag = bottomRightClone.getMag();
-        const bottomLeftMag = bottomLeftClone.getMag();
-        const topRightChange = topRightMag * value - topRightMag;
-        const topLeftChange = topLeftMag * value - topLeftMag;
-        const bottomRightChange = bottomRightMag * value - bottomRightMag;
-        const bottomLeftChange = bottomLeftMag * value - bottomLeftMag;
+        const height = this.height * value;
+        return this.setHeight(height, t, f);
+    }
+    setWidth(value, t = 0, f) {
+        const initial = this.width;
+        const change = value - initial;
         return transitionValues(() => {
-            this.topRight.multiplyY(value);
-            this.topLeft.multiplyY(value);
-            this.bottomRight.multiplyY(value);
-            this.bottomLeft.multiplyY(value);
-            this.updateDimensions();
+            this.width = value;
         }, (p) => {
-            this.topRight.appendY(topRightChange * p);
-            this.topLeft.appendY(topLeftChange * p);
-            this.bottomRight.appendY(bottomRightChange * p);
-            this.bottomLeft.appendY(bottomLeftChange * p);
+            this.width += change * p;
             return this.running;
         }, () => {
-            topRightClone.setY(1);
-            topRightClone.multiplyY(topRightMag * value);
-            this.topRight = topRightClone.clone();
-            topLeftClone.setY(1);
-            topLeftClone.multiplyY(topLeftMag * value);
-            this.topLeft = topLeftClone.clone();
-            bottomRightClone.setY(1);
-            bottomRightClone.multiplyY(bottomRightMag * value);
-            this.bottomRight = bottomRightClone.clone();
-            bottomLeftClone.setY(1);
-            bottomLeftClone.multiplyY(bottomLeftMag * value);
-            this.bottomLeft = bottomLeftClone.clone();
-            this.updateDimensions();
+            this.width = value;
         }, t, f);
     }
-    setWidth(value, t = 0) {
-        const scale = value / this.width;
-        return this.scaleWidth(scale, t);
-    }
-    setHeight(value, t = 0) {
-        const scale = value / this.height;
-        return this.scaleHeight(scale, t);
+    setHeight(value, t = 0, f) {
+        const initial = this.height;
+        const change = value - initial;
+        return transitionValues(() => {
+            this.height = value;
+        }, (p) => {
+            this.height += change * p;
+            return this.running;
+        }, () => {
+            this.height = value;
+        }, t, f);
     }
     contains(p) {
         const topLeftVector = this.topLeft.clone();
-        topLeftVector.rotateTo(-this.rotation);
-        this.v1 = topLeftVector;
         const topRightVector = this.topRight.clone();
-        topRightVector.rotateTo(-this.rotation);
-        this.v2 = topRightVector;
         const bottomLeftVector = this.bottomLeft.clone();
-        bottomLeftVector.rotateTo(-this.rotation);
-        this.v3 = bottomLeftVector;
-        const bottomRightVector = this.bottomRight.clone();
-        bottomRightVector.rotateTo(-this.rotation);
-        this.v4 = bottomRightVector;
         const cursorVector = new Vector(p.x - this.pos.x - this.offsetPoint.x, p.y - this.pos.y - this.offsetPoint.y);
-        cursorVector.rotateTo(-this.rotation);
-        this.v5 = cursorVector;
+        cursorVector.rotate(-this.rotation);
         if (cursorVector.x > bottomLeftVector.x &&
             cursorVector.x < topRightVector.x &&
             cursorVector.y > topLeftVector.y &&
@@ -1136,10 +1010,6 @@ export class Square extends SimulationElement {
             return true;
         }
         return false;
-    }
-    updateDimensions() {
-        this.height = this.topRight.y + this.bottomRight.y;
-        this.width = this.topRight.x + this.topLeft.x;
     }
     clone() {
         return new Square(this.pos.clone(), this.width, this.height, this.color.clone(), this.offsetPoint.clone(), this.rotation);
@@ -1379,11 +1249,6 @@ export function degToRad(deg) {
 export function radToDeg(rad) {
     return (rad * 180) / Math.PI;
 }
-function minimizeRotation(rotation, amount = 360) {
-    while (Math.abs(rotation) > amount)
-        rotation += amount * -Math.sign(rotation);
-    return rotation;
-}
 export function lerp(a, b, t) {
     return a + (b - a) * t;
 }
@@ -1576,6 +1441,12 @@ export function projectPoint(p, cam, displaySurface) {
         behindCamera: d.z <= 0
     };
 }
+export function randInt(range, min = 0) {
+    return Math.floor(Math.random() * (range - min)) + min;
+}
+export function randomColor() {
+    return new Color(randInt(255), randInt(255), randInt(255));
+}
 export default {
     Vector,
     SimulationElement,
@@ -1594,5 +1465,11 @@ export default {
     compare,
     Cube,
     Camera,
-    Plane
+    Plane,
+    lerp,
+    smoothStep,
+    linearStep,
+    frameLoop,
+    randInt,
+    randomColor
 };
