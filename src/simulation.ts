@@ -1350,6 +1350,12 @@ export class Simulation {
   camera: Camera;
   center: Vector;
   displaySurface: Vector3;
+  forward = new Vector3(0, 0, 1);
+  backward = new Vector3(0, 0, -1);
+  left = new Vector3(-1, 0, 0);
+  right = new Vector3(1, 0, 0);
+  up = new Vector3(0, -1, 0);
+  down = new Vector3(0, 1, 0);
   constructor(
     id: string,
     cameraPos = new Vector3(0, 0, -200),
@@ -1367,8 +1373,9 @@ export class Simulation {
     this.camera = new Camera(cameraPos, cameraRot);
     this.center = center;
     this.displaySurface = new Vector3(0, 0, 0);
-
     this.ratio = window.devicePixelRatio;
+
+    this.setDirections();
 
     const defaultDepth = 2000;
 
@@ -1397,6 +1404,17 @@ export class Simulation {
     this.ctx = ctx;
 
     this.render(ctx);
+  }
+  setDirections() {
+    const degRotation = new Vector3(
+      radToDeg(this.camera.rot.x),
+      radToDeg(this.camera.rot.y),
+      radToDeg(this.camera.rot.z)
+    );
+    this.forward = new Vector3(0, 0, 1).rotate(degRotation);
+    this.backward = this.forward.clone().multiply(-1);
+    this.left = new Vector3(-1, 0, 0).rotate(degRotation);
+    this.right = this.left.clone().multiply(-1);
   }
   render(c: CanvasRenderingContext2D) {
     if (!this.canvas) return;
@@ -1543,17 +1561,20 @@ export class Simulation {
         this.camera.rot.x = initial.x + degToRad(v.x);
         this.camera.rot.y = initial.y + degToRad(v.y);
         this.camera.rot.z = initial.z + degToRad(v.z);
+        this.setDirections();
       },
       (p) => {
         this.camera.rot.x += degToRad(v.x) * p;
         this.camera.rot.y += degToRad(v.y) * p;
         this.camera.rot.z += degToRad(v.z) * p;
+        this.setDirections();
         return this.running;
       },
       () => {
         this.camera.rot.x = initial.x + degToRad(v.x);
         this.camera.rot.y = initial.y + degToRad(v.y);
         this.camera.rot.z = initial.z + degToRad(v.z);
+        this.setDirections();
       },
       t,
       f
@@ -1566,15 +1587,18 @@ export class Simulation {
     return transitionValues(
       () => {
         this.camera.rot = v.clone();
+        this.setDirections();
       },
       (p) => {
         this.camera.rot.x += changeX * p;
         this.camera.rot.y += changeY * p;
         this.camera.rot.z += changeZ * p;
+        this.setDirections();
         return this.running;
       },
       () => {
         this.camera.rot = v.clone();
+        this.setDirections();
       },
       t,
       f

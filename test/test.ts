@@ -36,7 +36,11 @@ function generatePoints(n: number, s: number) {
 
 (async function main() {
   await plane.setPoints(generatePoints(vertices, size), 2, timeFunc);
-  vertices++;
+  if (vertices === 20) {
+    vertices = 0;
+  } else {
+    vertices++;
+  }
   main();
 })();
 
@@ -100,40 +104,16 @@ addEventListener('keyup', (e: KeyboardEvent) => {
 const speed = 2;
 frameLoop(() => {
   if (pressingW) {
-    canvas.moveCamera(
-      new Vector3(
-        Math.sin(canvas.camera.rot.y) * Math.cos(canvas.camera.rot.x) * speed,
-        0,
-        Math.cos(canvas.camera.rot.y) * Math.cos(canvas.camera.rot.x) * speed
-      )
-    );
+    canvas.moveCamera(canvas.forward);
   }
   if (pressingA) {
-    canvas.moveCamera(
-      new Vector3(
-        -Math.sin(canvas.camera.rot.y + Math.PI / 2) * speed,
-        0,
-        -Math.cos(canvas.camera.rot.y + Math.PI / 2) * speed
-      )
-    );
+    canvas.moveCamera(canvas.left);
   }
   if (pressingS) {
-    canvas.moveCamera(
-      new Vector3(
-        -Math.sin(canvas.camera.rot.y) * Math.cos(canvas.camera.rot.x) * speed,
-        0,
-        -Math.cos(canvas.camera.rot.y) * Math.cos(canvas.camera.rot.x) * speed
-      )
-    );
+    canvas.moveCamera(canvas.backward);
   }
   if (pressingD) {
-    canvas.moveCamera(
-      new Vector3(
-        Math.sin(canvas.camera.rot.y + Math.PI / 2) * speed,
-        0,
-        Math.cos(canvas.camera.rot.y + Math.PI / 2) * speed
-      )
-    );
+    canvas.moveCamera(canvas.right);
   }
   if (pressingSpace) {
     canvas.moveCamera(new Vector3(0, -speed, 0));
