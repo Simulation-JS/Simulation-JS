@@ -25,6 +25,7 @@ export declare class Vector3 {
     getRotation(): Vector;
     dot(vec: Vector3): number;
     normalize(): this;
+    cross(vec: Vector3): Vector3;
 }
 export declare class Vector {
     x: number;
@@ -33,21 +34,13 @@ export declare class Vector {
     getRotation(): number;
     getMag(): number;
     rotate(deg: number): this;
-    rotateTo(deg: number): this;
     draw(c: CanvasRenderingContext2D, pos?: Vector, color?: Color, thickness?: number): void;
     normalize(): this;
     multiply(n: number): this;
     sub(v: Vector): this;
     add(v: Vector): this;
-    multiplyX(n: number): this;
-    multiplyY(n: number): this;
     divide(n: number): this;
     appendMag(value: number): this;
-    appendX(value: number): this;
-    appendY(value: number): this;
-    setX(value: number): this;
-    setY(value: number): this;
-    setMag(value: number): this;
     clone(): Vector;
     format(): string;
 }
@@ -72,7 +65,8 @@ export declare class Color {
     r: number;
     g: number;
     b: number;
-    constructor(r: number, g: number, b: number);
+    a: number;
+    constructor(r: number, g: number, b: number, a?: number);
     clone(): Color;
     private compToHex;
     toHex(): string;
@@ -104,7 +98,10 @@ export declare class SimulationElement3d {
     running: boolean;
     _3d: boolean;
     id: string;
-    constructor(pos: Vector3, color?: Color, type?: SimulationElement3dType | null, id?: string);
+    lightSources: Vector3[];
+    lighting: boolean;
+    constructor(pos: Vector3, color?: Color, lighting?: boolean, type?: SimulationElement3dType | null, id?: string);
+    setLightSources(sources: Vector3[]): void;
     setId(id: string): void;
     end(): void;
     draw(_ctx: CanvasRenderingContext2D, _camera: Camera, _displaySurface: Vector3, _ratio: number): void;
@@ -162,10 +159,12 @@ export declare class Plane extends SimulationElement3d {
     points: Vector3[];
     wireframe: boolean;
     fillPlane: boolean;
-    constructor(pos: Vector3, points: Vector3[], color?: Color, fill?: boolean, wireframe?: boolean);
+    constructor(pos: Vector3, points: Vector3[], color?: Color, fill?: boolean, wireframe?: boolean, lighting?: boolean);
     clone(): Plane;
     setPoints(points: Vector3[], t?: number, f?: LerpFunc): Promise<void>;
     draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3): void;
+    getNormals(): Vector3[];
+    getCenter(): Vector3;
 }
 export declare class Cube extends SimulationElement3d {
     width: number;
@@ -176,7 +175,7 @@ export declare class Cube extends SimulationElement3d {
     rotation: Vector3;
     fillCube: boolean;
     wireframe: boolean;
-    constructor(pos: Vector3, width: number, height: number, depth: number, color?: Color, rotation?: Vector3, fill?: boolean, wireframe?: boolean);
+    constructor(pos: Vector3, width: number, height: number, depth: number, color?: Color, rotation?: Vector3, fill?: boolean, wireframe?: boolean, lighting?: boolean);
     generatePoints(): void;
     generatePlanes(): void;
     rotate(amount: Vector3, t?: number, f?: LerpFunc): Promise<void>;
@@ -230,7 +229,16 @@ export declare class Simulation {
     camera: Camera;
     center: Vector;
     displaySurface: Vector3;
+    forward: Vector3;
+    backward: Vector3;
+    left: Vector3;
+    right: Vector3;
+    up: Vector3;
+    down: Vector3;
+    lightSources: Vector3[];
     constructor(id: string, cameraPos?: Vector3, cameraRot?: Vector3, displaySurfaceDepth?: number, center?: Vector, displaySurfaceSize?: Vector);
+    setLightSources(sources: Vector3[]): void;
+    setDirections(): void;
     render(c: CanvasRenderingContext2D): void;
     end(): void;
     add(element: SimulationElement | SimulationElement3d, id?: string | null): void;
@@ -273,9 +281,13 @@ declare type ProjectedPoint = {
 export declare function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): ProjectedPoint;
 export declare function randInt(range: number, min?: number): number;
 export declare function randomColor(): Color;
+export declare function vector3DegToRad(vec: Vector3): Vector3;
+export declare function vector3RadToDeg(vec: Vector3): Vector3;
+export declare function angleBetweenVector3(vec1: Vector3, vec2: Vector3): number;
 declare const _default: {
     Vector: typeof Vector;
     SimulationElement: typeof SimulationElement;
+    SimulationElement3d: typeof SimulationElement3d;
     Color: typeof Color;
     SceneCollection: typeof SceneCollection;
     Line: typeof Line;
@@ -298,5 +310,8 @@ declare const _default: {
     frameLoop: typeof frameLoop;
     randInt: typeof randInt;
     randomColor: typeof randomColor;
+    vector3DegToRad: typeof vector3DegToRad;
+    vector3RadToDeg: typeof vector3RadToDeg;
+    angleBetweenVector3: typeof angleBetweenVector3;
 };
 export default _default;

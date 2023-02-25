@@ -91,6 +91,15 @@ export class Vector3 {
         this.z /= mag;
         return this;
     }
+    cross(vec) {
+        const i = [this.y, this.z, vec.y, vec.z];
+        const j = [this.x, this.z, vec.x, vec.z];
+        const k = [this.x, this.y, vec.x, vec.y];
+        const determinantI = i[0] * i[3] - i[1] * i[2];
+        const determinantJ = j[0] * j[3] - j[1] * j[2];
+        const determinantK = k[0] * k[3] - k[1] * k[2];
+        return new Vector3(determinantI, -determinantJ, determinantK);
+    }
 }
 export class Vector {
     x;
@@ -110,12 +119,6 @@ export class Vector {
         const mag = this.getMag();
         this.x = Math.cos(degToRad(rotation + deg)) * mag;
         this.y = Math.sin(degToRad(rotation + deg)) * mag;
-        return this;
-    }
-    rotateTo(deg) {
-        const mag = this.getMag();
-        this.x = Math.cos(degToRad(deg)) * mag;
-        this.y = Math.sin(degToRad(deg)) * mag;
         return this;
     }
     draw(c, pos = new Vector(0, 0), color = new Color(0, 0, 0), thickness = 1) {
@@ -150,14 +153,6 @@ export class Vector {
         this.y += v.y;
         return this;
     }
-    multiplyX(n) {
-        this.x *= n;
-        return this;
-    }
-    multiplyY(n) {
-        this.y *= n;
-        return this;
-    }
     divide(n) {
         this.x /= n;
         this.y /= n;
@@ -167,29 +162,9 @@ export class Vector {
         const mag = this.getMag();
         if (mag != 0) {
             const newMag = mag + value;
-            this.setMag(newMag);
+            this.normalize();
+            this.multiply(newMag);
         }
-        return this;
-    }
-    appendX(value) {
-        this.x += value;
-        return this;
-    }
-    appendY(value) {
-        this.y += value;
-        return this;
-    }
-    setX(value) {
-        this.x = value;
-        return this;
-    }
-    setY(value) {
-        this.y = value;
-        return this;
-    }
-    setMag(value) {
-        this.normalize();
-        this.multiply(value);
         return this;
     }
     clone() {
@@ -279,20 +254,26 @@ export class Color {
     r;
     g;
     b;
-    constructor(r, g, b) {
+    a;
+    constructor(r, g, b, a = 1) {
         this.r = r;
         this.g = g;
         this.b = b;
+        this.a = a;
     }
     clone() {
-        return new Color(this.r, this.g, this.b);
+        return new Color(this.r, this.g, this.b, this.a);
     }
     compToHex(c) {
         const hex = Math.round(c).toString(16);
         return hex.length == 1 ? '0' + hex : hex;
     }
     toHex() {
-        return '#' + this.compToHex(this.r) + this.compToHex(this.g) + this.compToHex(this.b);
+        return ('#' +
+            this.compToHex(this.r) +
+            this.compToHex(this.g) +
+            this.compToHex(this.b) +
+            this.compToHex(this.a * 255));
     }
 }
 // extend SimulationElement so it can be added to the
@@ -368,13 +349,19 @@ export class SimulationElement3d {
     running;
     _3d = true;
     id;
-    constructor(pos, color = new Color(0, 0, 0), type = null, id = '') {
+    lightSources = [];
+    lighting;
+    constructor(pos, color = new Color(0, 0, 0), lighting = false, type = null, id = '') {
         this.pos = pos;
         this.color = color;
         this.sim = null;
         this.type = type;
         this.running = true;
         this.id = id;
+        this.lighting = lighting;
+    }
+    setLightSources(sources) {
+        this.lightSources = sources;
     }
     setId(id) {
         this.id = id;
@@ -715,8 +702,8 @@ export class Plane extends SimulationElement3d {
     points;
     wireframe;
     fillPlane;
-    constructor(pos, points, color = new Color(0, 0, 0), fill = true, wireframe = false) {
-        super(pos, color, 'plane');
+    constructor(pos, points, color = new Color(0, 0, 0), fill = true, wireframe = false, lighting = false) {
+        super(pos, color, lighting, 'plane');
         this.points = points;
         this.fillPlane = fill;
         this.wireframe = wireframe;
@@ -759,9 +746,29 @@ export class Plane extends SimulationElement3d {
         }, t, f);
     }
     draw(c, camera, displaySurface) {
+        const minDampen = 0.25;
+        let dampen = minDampen;
+        if (this.lighting) {
+            for (let i = 0; i < this.lightSources.length; i++) {
+                const center = this.getCenter();
+                const normals = this.getNormals();
+                const vec = new Vector3(center.x - this.lightSources[i].x, center.y - this.lightSources[i].y, center.z + this.lightSources[i].z);
+                const angle1 = angleBetweenVector3(normals[0], vec);
+                const angle2 = angleBetweenVector3(normals[1], vec);
+                const angle = Math.min(angle1, angle2);
+                dampen += Math.max(minDampen, Math.max(0, 90 - angle) / 90);
+                dampen = Math.min(dampen, 1);
+            }
+        }
         c.beginPath();
         c.strokeStyle = '#000000';
-        c.fillStyle = this.color.toHex();
+        const tempColor = this.color.clone();
+        if (this.lighting) {
+            tempColor.r *= dampen;
+            tempColor.g *= dampen;
+            tempColor.b *= dampen;
+        }
+        c.fillStyle = tempColor.toHex();
         c.lineWidth = 2;
         for (let i = 0; i < this.points.length; i++) {
             let p1;
@@ -787,6 +794,20 @@ export class Plane extends SimulationElement3d {
             c.fill();
         c.closePath();
     }
+    getNormals() {
+        if (this.points.length >= 3) {
+            const vec1 = this.points[0].clone().sub(this.points[1]);
+            const vec2 = this.points[1].clone().sub(this.points[2]);
+            const res = vec1.cross(vec2).normalize();
+            return [res, res.clone().multiply(-1)];
+        }
+        return [new Vector3(0, 0, 0), new Vector3(0, 0, 0)];
+    }
+    getCenter() {
+        const avgVec = this.points.reduce((acc, curr) => acc.add(curr), new Vector3(0, 0, 0));
+        avgVec.divide(this.points.length);
+        return avgVec;
+    }
 }
 export class Cube extends SimulationElement3d {
     width;
@@ -797,8 +818,8 @@ export class Cube extends SimulationElement3d {
     rotation;
     fillCube;
     wireframe;
-    constructor(pos, width, height, depth, color = new Color(0, 0, 0), rotation = new Vector3(0, 0, 0), fill = true, wireframe = false) {
-        super(pos, color, 'cube');
+    constructor(pos, width, height, depth, color = new Color(0, 0, 0), rotation = new Vector3(0, 0, 0), fill = true, wireframe = false, lighting = false) {
+        super(pos, color, lighting, 'cube');
         this.width = width;
         this.height = height;
         this.depth = depth;
@@ -810,27 +831,30 @@ export class Cube extends SimulationElement3d {
     }
     generatePoints() {
         this.points = [
-            new Vector3(-this.width / 2 + this.pos.x, -this.height / 2 + this.pos.y, -this.depth / 2 + this.pos.z),
-            new Vector3(this.width / 2 + this.pos.x, -this.height / 2 + this.pos.y, -this.depth / 2 + this.pos.z),
-            new Vector3(this.width / 2 + this.pos.x, this.height / 2 + this.pos.y, -this.depth / 2 + this.pos.z),
-            new Vector3(-this.width / 2 + this.pos.x, this.height / 2 + this.pos.y, -this.depth / 2 + this.pos.z),
-            new Vector3(-this.width / 2 + this.pos.x, -this.height / 2 + this.pos.y, this.depth / 2 + this.pos.z),
-            new Vector3(this.width / 2 + this.pos.x, -this.height / 2 + this.pos.y, this.depth / 2 + this.pos.z),
-            new Vector3(this.width / 2 + this.pos.x, this.height / 2 + this.pos.y, this.depth / 2 + this.pos.z),
-            new Vector3(-this.width / 2 + this.pos.x, this.height / 2 + this.pos.y, this.depth / 2 + this.pos.z)
+            new Vector3(-this.width / 2, -this.height / 2, -this.depth / 2),
+            new Vector3(this.width / 2, -this.height / 2, -this.depth / 2),
+            new Vector3(this.width / 2, this.height / 2, -this.depth / 2),
+            new Vector3(-this.width / 2, this.height / 2, -this.depth / 2),
+            new Vector3(-this.width / 2, -this.height / 2, this.depth / 2),
+            new Vector3(this.width / 2, -this.height / 2, this.depth / 2),
+            new Vector3(this.width / 2, this.height / 2, this.depth / 2),
+            new Vector3(-this.width / 2, this.height / 2, this.depth / 2)
         ];
         this.generatePlanes();
     }
     generatePlanes() {
-        const points = this.points.map((p) => p.clone().rotate(this.rotation));
+        const points = this.points.map((p) => p.clone().rotate(this.rotation).add(this.pos));
         this.planes = [
-            new Plane(this.pos, [points[0], points[1], points[2], points[3]], this.color, this.fillCube, this.wireframe),
-            new Plane(this.pos, [points[0], points[1], points[5], points[4]], this.color, this.fillCube, this.wireframe),
-            new Plane(this.pos, [points[4], points[5], points[6], points[7]], this.color, this.fillCube, this.wireframe),
-            new Plane(this.pos, [points[3], points[2], points[6], points[7]], this.color, this.fillCube, this.wireframe),
-            new Plane(this.pos, [points[0], points[3], points[7], points[4]], this.color, this.fillCube, this.wireframe),
-            new Plane(this.pos, [points[2], points[1], points[5], points[6]], this.color, this.fillCube, this.wireframe)
-        ];
+            new Plane(this.pos, [points[0], points[1], points[2], points[3]], this.color, this.fillCube, this.wireframe, this.lighting),
+            new Plane(this.pos, [points[0], points[1], points[5], points[4]], this.color, this.fillCube, this.wireframe, this.lighting),
+            new Plane(this.pos, [points[4], points[5], points[6], points[7]], this.color, this.fillCube, this.wireframe, this.lighting),
+            new Plane(this.pos, [points[3], points[2], points[6], points[7]], this.color, this.fillCube, this.wireframe, this.lighting),
+            new Plane(this.pos, [points[0], points[3], points[7], points[4]], this.color, this.fillCube, this.wireframe, this.lighting),
+            new Plane(this.pos, [points[2], points[1], points[5], points[6]], this.color, this.fillCube, this.wireframe, this.lighting)
+        ].map((plane) => {
+            plane.setLightSources(this.lightSources);
+            return plane;
+        });
     }
     rotate(amount, t = 0, f) {
         const initial = this.rotation.clone();
@@ -1038,6 +1062,13 @@ export class Simulation {
     camera;
     center;
     displaySurface;
+    forward = new Vector3(0, 0, 1);
+    backward = new Vector3(0, 0, -1);
+    left = new Vector3(-1, 0, 0);
+    right = new Vector3(1, 0, 0);
+    up = new Vector3(0, -1, 0);
+    down = new Vector3(0, 1, 0);
+    lightSources;
     constructor(id, cameraPos = new Vector3(0, 0, -200), cameraRot = new Vector3(0, 0, 0), displaySurfaceDepth, center = new Vector(0, 0), displaySurfaceSize) {
         this.scene = [];
         this.fitting = false;
@@ -1049,6 +1080,8 @@ export class Simulation {
         this.center = center;
         this.displaySurface = new Vector3(0, 0, 0);
         this.ratio = window.devicePixelRatio;
+        this.lightSources = [];
+        this.setDirections();
         const defaultDepth = 2000;
         this.canvas = document.getElementById(id);
         if (!this.canvas) {
@@ -1068,6 +1101,21 @@ export class Simulation {
             return;
         this.ctx = ctx;
         this.render(ctx);
+    }
+    setLightSources(sources) {
+        this.lightSources = sources;
+        this.scene.forEach((obj) => {
+            if (obj._3d) {
+                obj.setLightSources(sources);
+            }
+        });
+    }
+    setDirections() {
+        const degRotation = new Vector3(radToDeg(this.camera.rot.y), radToDeg(this.camera.rot.x), radToDeg(this.camera.rot.z));
+        this.forward = new Vector3(0, 0, 1).rotate(degRotation);
+        this.backward = this.forward.clone().multiply(-1);
+        this.left = new Vector3(-1, 0, 0).rotate(degRotation);
+        this.right = this.left.clone().multiply(-1);
     }
     render(c) {
         if (!this.canvas)
@@ -1207,15 +1255,18 @@ export class Simulation {
             this.camera.rot.x = initial.x + degToRad(v.x);
             this.camera.rot.y = initial.y + degToRad(v.y);
             this.camera.rot.z = initial.z + degToRad(v.z);
+            this.setDirections();
         }, (p) => {
             this.camera.rot.x += degToRad(v.x) * p;
             this.camera.rot.y += degToRad(v.y) * p;
             this.camera.rot.z += degToRad(v.z) * p;
+            this.setDirections();
             return this.running;
         }, () => {
             this.camera.rot.x = initial.x + degToRad(v.x);
             this.camera.rot.y = initial.y + degToRad(v.y);
             this.camera.rot.z = initial.z + degToRad(v.z);
+            this.setDirections();
         }, t, f);
     }
     rotateCameraTo(v, t = 0, f) {
@@ -1224,13 +1275,16 @@ export class Simulation {
         const changeZ = degToRad(v.z) - this.camera.rot.z;
         return transitionValues(() => {
             this.camera.rot = v.clone();
+            this.setDirections();
         }, (p) => {
             this.camera.rot.x += changeX * p;
             this.camera.rot.y += changeY * p;
             this.camera.rot.z += changeZ * p;
+            this.setDirections();
             return this.running;
         }, () => {
             this.camera.rot = v.clone();
+            this.setDirections();
         }, t, f);
     }
 }
@@ -1447,9 +1501,22 @@ export function randInt(range, min = 0) {
 export function randomColor() {
     return new Color(randInt(255), randInt(255), randInt(255));
 }
+export function vector3DegToRad(vec) {
+    return new Vector3(degToRad(vec.x), degToRad(vec.y), degToRad(vec.z));
+}
+export function vector3RadToDeg(vec) {
+    return new Vector3(radToDeg(vec.x), radToDeg(vec.y), radToDeg(vec.z));
+}
+export function angleBetweenVector3(vec1, vec2) {
+    const dot = vec1.dot(vec2);
+    let val = dot / (vec1.getMag() * vec2.getMag());
+    val = Math.acos(val);
+    return radToDeg(val);
+}
 export default {
     Vector,
     SimulationElement,
+    SimulationElement3d,
     Color,
     SceneCollection,
     Line,
@@ -1471,5 +1538,8 @@ export default {
     linearStep,
     frameLoop,
     randInt,
-    randomColor
+    randomColor,
+    vector3DegToRad,
+    vector3RadToDeg,
+    angleBetweenVector3
 };
