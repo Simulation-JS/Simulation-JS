@@ -79,11 +79,13 @@ export declare class SceneCollection extends SimulationElement {
     camera: Camera;
     displaySurface: Vector3;
     ratio: number;
+    lightSources: Vector3[];
     constructor(name?: string);
     set3dObjects(cam: Camera, displaySurface: Vector3, ratio: number): void;
     end(): void;
     setPixelRatio(num: number): void;
-    add(element: SimulationElement, id?: string | null): void;
+    add(element: SimulationElement | SimulationElement3d, id?: string | null): void;
+    setLightSources(sources: Vector3[]): void;
     removeWithId(id: string): void;
     removeWithObject(element: SimulationElement): void;
     setSimulationElement(sim: HTMLCanvasElement): void;

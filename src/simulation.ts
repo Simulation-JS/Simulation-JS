@@ -319,6 +319,7 @@ export class SceneCollection extends SimulationElement {
   camera: Camera;
   displaySurface: Vector3;
   ratio;
+  lightSources: Vector3[];
   constructor(name = '') {
     super(new Vector(0, 0));
     this.name = name;
@@ -326,6 +327,7 @@ export class SceneCollection extends SimulationElement {
     this.camera = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 0));
     this.displaySurface = new Vector3(0, 0, 0);
     this.ratio = 1;
+    this.lightSources = [];
   }
   set3dObjects(cam: Camera, displaySurface: Vector3, ratio: number) {
     this.camera = cam;
@@ -339,14 +341,24 @@ export class SceneCollection extends SimulationElement {
   setPixelRatio(num: number) {
     this.ratio = num;
   }
-  add(element: SimulationElement, id: string | null = null) {
-    if (this.sim != null) {
-      element.setSimulationElement(this.sim);
-    }
-    if (id != null) {
+  add(element: SimulationElement | SimulationElement3d, id: string | null = null) {
+    if (!this.sim) return;
+    element.setSimulationElement(this.sim);
+    if (id !== null) {
       element.setId(id);
-      this.scene.push(element);
     }
+    if ((element as SceneCollection)._isSceneCollection) {
+      (element as SceneCollection).set3dObjects(this.camera, this.displaySurface, this.ratio);
+    }
+    this.scene.push(element);
+  }
+  setLightSources(sources: Vector3[]) {
+    this.lightSources = sources;
+    this.scene.forEach((obj) => {
+      if ((obj as SceneCollection)._isSceneCollection || obj._3d) {
+        (obj as SimulationElement3d).setLightSources(sources);
+      }
+    });
   }
   removeWithId(id: string) {
     this.scene = this.scene.filter((item) => item.id !== id);
@@ -1458,7 +1470,7 @@ export class Simulation {
   setLightSources(sources: Vector3[]) {
     this.lightSources = sources;
     this.scene.forEach((obj) => {
-      if (obj._3d) {
+      if ((obj as SceneCollection)._isSceneCollection || obj._3d) {
         (obj as SimulationElement3d).setLightSources(sources);
       }
     });

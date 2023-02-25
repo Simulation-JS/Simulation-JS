@@ -6,11 +6,15 @@ import {
   Vector,
   Color,
   radToDeg,
-  randomColor
+  randomColor,
+  SceneCollection
 } from '../src/simulation';
 
 const canvas = new Simulation('canvas', new Vector3(0, 0, -250), new Vector3(0, 0, 0));
 canvas.fitElement();
+
+const test = new SceneCollection('test');
+canvas.add(test);
 
 const cube = new Cube(
   new Vector3(0, 0, 0),
@@ -23,24 +27,9 @@ const cube = new Cube(
   true,
   true
 );
-canvas.add(cube);
-
-const cube1 = new Cube(
-  new Vector3(0, 0, 200),
-  100,
-  100,
-  100,
-  new Color(0, 123, 255, 0.3),
-  new Vector3(0, 0, 0),
-  true,
-  true,
-  true
-);
-canvas.add(cube1);
+test.add(cube);
 
 canvas.setLightSources([new Vector3(100, 100, -100)]);
-
-console.log(new Color(0, 123, 255, 0.3).toHex());
 
 function timeFunc(x: number): number {
   const c4 = (2 * Math.PI) / 3;
@@ -52,7 +41,6 @@ function timeFunc(x: number): number {
   // await cube.rotate(new Vector3(360, 360, 0), 8);
   // await cube.rotate(new Vector3(90, 0, 0), 2, timeFunc);
   // main();
-  cube1.rotate(new Vector3(-360, -360, 0), 4);
   await cube.rotate(new Vector3(360, 360, 0), 4);
   main();
 })();
