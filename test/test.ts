@@ -1,18 +1,4 @@
-import {
-  Vector3,
-  Plane,
-  Square,
-  randInt,
-  Vector,
-  Color,
-  Simulation,
-  Circle,
-  Line,
-  frameLoop,
-  Polygon,
-  radToDeg,
-  randomColor
-} from '../src/simulation';
+import { Vector3, Plane, Vector, Simulation, frameLoop, radToDeg, randomColor } from '../src/simulation';
 
 const canvas = new Simulation('canvas', new Vector3(0, 0, -250), new Vector3(0, 0, 0));
 canvas.fitElement();
@@ -35,7 +21,7 @@ function generatePoints(n: number, s: number) {
 }
 
 (async function main() {
-  await plane.setPoints(generatePoints(vertices, size), 2, timeFunc);
+  await plane.setPoints(generatePoints(vertices, size), 1.25, timeFunc);
   if (vertices === 20) {
     vertices = 0;
   } else {
@@ -84,12 +70,14 @@ canvas.on('mousemove', (e: MouseEvent) => {
   const point = new Vector(e.offsetX, e.offsetY);
   if (looking) {
     const amount = new Vector(radToDeg(point.y - prev.y) / dampen, radToDeg(point.x - prev.x) / dampen);
-    amount.multiplyX(-1);
+    amount.x *= -1;
     amount.multiply(-1);
     canvas.rotateCamera(new Vector3(amount.x, amount.y, 0));
   }
   prev = point;
 });
+
+console.log(new Vector3(1, 1, 1).cross(new Vector3(1, 1, -1)));
 
 addEventListener('keydown', (e: KeyboardEvent) => {
   const f = keydownEvents[e.key.toLowerCase()];
@@ -104,16 +92,16 @@ addEventListener('keyup', (e: KeyboardEvent) => {
 const speed = 2;
 frameLoop(() => {
   if (pressingW) {
-    canvas.moveCamera(canvas.forward);
+    canvas.moveCamera(canvas.forward.clone().multiply(speed));
   }
   if (pressingA) {
-    canvas.moveCamera(canvas.left);
+    canvas.moveCamera(canvas.left.clone().multiply(speed));
   }
   if (pressingS) {
-    canvas.moveCamera(canvas.backward);
+    canvas.moveCamera(canvas.backward.clone().multiply(speed));
   }
   if (pressingD) {
-    canvas.moveCamera(canvas.right);
+    canvas.moveCamera(canvas.right.clone().multiply(speed));
   }
   if (pressingSpace) {
     canvas.moveCamera(new Vector3(0, -speed, 0));

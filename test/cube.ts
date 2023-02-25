@@ -4,11 +4,9 @@ import {
   Cube,
   frameLoop,
   Vector,
-  degToRad,
-  Square,
   Color,
-  smoothStep,
-  radToDeg
+  radToDeg,
+  randomColor
 } from '../src/simulation';
 
 const canvas = new Simulation('canvas', new Vector3(0, 0, -250), new Vector3(0, 0, 0));
@@ -19,12 +17,30 @@ const cube = new Cube(
   100,
   100,
   100,
-  new Color(random(255), random(255), random(255)),
+  new Color(0, 123, 255, 0.3),
   new Vector3(0, 0, 0),
+  true,
   true,
   true
 );
 canvas.add(cube);
+
+const cube1 = new Cube(
+  new Vector3(0, 0, 200),
+  100,
+  100,
+  100,
+  new Color(0, 123, 255, 0.3),
+  new Vector3(0, 0, 0),
+  true,
+  true,
+  true
+);
+canvas.add(cube1);
+
+canvas.setLightSources([new Vector3(100, 100, -100)]);
+
+console.log(new Color(0, 123, 255, 0.3).toHex());
 
 function timeFunc(x: number): number {
   const c4 = (2 * Math.PI) / 3;
@@ -34,7 +50,10 @@ function timeFunc(x: number): number {
 
 (async function main() {
   // await cube.rotate(new Vector3(360, 360, 0), 8);
-  await cube.rotate(new Vector3(90, 0, 0), 2, timeFunc);
+  // await cube.rotate(new Vector3(90, 0, 0), 2, timeFunc);
+  // main();
+  cube1.rotate(new Vector3(-360, -360, 0), 4);
+  await cube.rotate(new Vector3(360, 360, 0), 4);
   main();
 })();
 
@@ -82,7 +101,7 @@ canvas.on('mousemove', (e: MouseEvent) => {
   const point = new Vector(e.offsetX, e.offsetY);
   if (looking) {
     const amount = new Vector(radToDeg(point.y - prev.y) / dampen, radToDeg(point.x - prev.x) / dampen);
-    amount.multiplyX(-1);
+    amount.x *= -1;
     amount.multiply(-1);
     canvas.rotateCamera(new Vector3(amount.x, amount.y, 0));
   }
