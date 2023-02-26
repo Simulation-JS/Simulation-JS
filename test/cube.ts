@@ -7,11 +7,13 @@ import {
   Color,
   radToDeg,
   randomColor,
-  SceneCollection
+  SceneCollection,
+  LightSource
 } from '../src/simulation';
 
 const canvas = new Simulation('canvas', new Vector3(0, 0, -250), new Vector3(0, 0, 0));
 canvas.fitElement();
+canvas.setAmbientLighting(0.4);
 
 const test = new SceneCollection('test');
 canvas.add(test);
@@ -21,7 +23,7 @@ const cube = new Cube(
   100,
   100,
   100,
-  new Color(0, 123, 255, 0.3),
+  new Color(0, 123, 255),
   new Vector3(0, 0, 0),
   true,
   true,
@@ -29,7 +31,9 @@ const cube = new Cube(
 );
 test.add(cube);
 
-canvas.setLightSources([new Vector3(100, 100, -100)]);
+setTimeout(() => {
+  canvas.addLightSource(new LightSource(new Vector3(100, 100, -100)));
+}, 1500);
 
 function timeFunc(x: number): number {
   const c4 = (2 * Math.PI) / 3;
@@ -41,13 +45,9 @@ function timeFunc(x: number): number {
   // await cube.rotate(new Vector3(360, 360, 0), 8);
   // await cube.rotate(new Vector3(90, 0, 0), 2, timeFunc);
   // main();
-  await cube.rotate(new Vector3(360, 360, 0), 4);
+  await cube.rotate(new Vector3(360, 360, 0), 8);
   main();
 })();
-
-function random(range: number) {
-  return Math.floor(Math.random() * range);
-}
 
 let pressingW = false;
 let pressingA = false;

@@ -2,6 +2,19 @@ type LerpFunc = (n: number) => number;
 type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
 type SimulationElement3dType = 'cube' | 'plane';
 
+export class LightSource {
+  pos: Vector3;
+  direction: Vector3 | null;
+  id: string;
+  intensity: number; // 0 to 1
+  constructor(pos: Vector3, intensity = 1, direction: Vector3 | null = null, id = '') {
+    this.pos = pos;
+    this.direction = direction;
+    this.id = id;
+    this.intensity = intensity;
+  }
+}
+
 export class Camera {
   pos: Vector3;
   rot: Vector3;
@@ -319,7 +332,8 @@ export class SceneCollection extends SimulationElement {
   camera: Camera;
   displaySurface: Vector3;
   ratio;
-  lightSources: Vector3[];
+  lightSources: LightSource[];
+  ambientLighting: number;
   constructor(name = '') {
     super(new Vector(0, 0));
     this.name = name;
@@ -328,11 +342,20 @@ export class SceneCollection extends SimulationElement {
     this.displaySurface = new Vector3(0, 0, 0);
     this.ratio = 1;
     this.lightSources = [];
+    this.ambientLighting = 0;
   }
   set3dObjects(cam: Camera, displaySurface: Vector3, ratio: number) {
     this.camera = cam;
     this.displaySurface = displaySurface;
     this.ratio = ratio;
+  }
+  setAmbientLighting(val: number) {
+    this.ambientLighting = val;
+    this.scene.forEach((obj) => {
+      if ((obj as SceneCollection)._isSceneCollection) {
+        (obj as SceneCollection).setAmbientLighting(this.ambientLighting);
+      }
+    });
   }
   end() {
     super.end();
@@ -352,13 +375,24 @@ export class SceneCollection extends SimulationElement {
     }
     this.scene.push(element);
   }
-  setLightSources(sources: Vector3[]) {
-    this.lightSources = sources;
+  private updateSceneLightSources() {
     this.scene.forEach((obj) => {
-      if ((obj as SceneCollection)._isSceneCollection || obj._3d) {
-        (obj as SimulationElement3d).setLightSources(sources);
+      if ((obj as SceneCollection)._isSceneCollection) {
+        (obj as SceneCollection).setLightSources(this.lightSources);
       }
     });
+  }
+  setLightSources(sources: LightSource[]) {
+    this.lightSources = sources;
+    this.updateSceneLightSources();
+  }
+  addLightSource(source: LightSource) {
+    this.lightSources.push(source);
+    this.updateSceneLightSources();
+  }
+  removeLightSourceWithId(id: string) {
+    this.lightSources = this.lightSources.filter((source) => source.id !== id);
+    this.updateSceneLightSources();
   }
   removeWithId(id: string) {
     this.scene = this.scene.filter((item) => item.id !== id);
@@ -375,7 +409,14 @@ export class SceneCollection extends SimulationElement {
   draw(c: CanvasRenderingContext2D) {
     for (const element of this.scene) {
       if (element._3d) {
-        (element as SimulationElement3d).draw(c, this.camera, this.displaySurface, this.ratio);
+        (element as SimulationElement3d).draw(
+          c,
+          this.camera,
+          this.displaySurface,
+          this.ratio,
+          this.lightSources,
+          this.ambientLighting
+        );
       } else {
         (element as SimulationElement).draw(c);
       }
@@ -394,7 +435,6 @@ export class SimulationElement3d {
   running: boolean;
   _3d = true;
   id: string;
-  lightSources: Vector3[] = [];
   lighting: boolean;
   constructor(
     pos: Vector3,
@@ -411,16 +451,20 @@ export class SimulationElement3d {
     this.id = id;
     this.lighting = lighting;
   }
-  setLightSources(sources: Vector3[]) {
-    this.lightSources = sources;
-  }
   setId(id: string) {
     this.id = id;
   }
   end() {
     this.running = false;
   }
-  draw(_ctx: CanvasRenderingContext2D, _camera: Camera, _displaySurface: Vector3, _ratio: number) {}
+  draw(
+    _ctx: CanvasRenderingContext2D,
+    _camera: Camera,
+    _displaySurface: Vector3,
+    _ratio: number,
+    _lightSources: LightSource[],
+    _ambientLighting: number
+  ) {}
   setSimulationElement(el: HTMLCanvasElement) {
     this.sim = el;
   }
@@ -967,22 +1011,26 @@ export class Plane extends SimulationElement3d {
       f
     );
   }
-  draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3) {
-    const minDampen = 0.25;
-    let dampen = minDampen;
+  draw(
+    c: CanvasRenderingContext2D,
+    camera: Camera,
+    displaySurface: Vector3,
+    _ratio: number,
+    lightSources: LightSource[],
+    ambientLighting: number
+  ) {
+    let dampen = 0;
     if (this.lighting) {
-      for (let i = 0; i < this.lightSources.length; i++) {
+      for (let i = 0; i < lightSources.length; i++) {
         const center = this.getCenter();
-        const normals = this.getNormals();
+        const normal = center.clone().sub(this.pos).normalize();
         const vec = new Vector3(
-          center.x - this.lightSources[i].x,
-          center.y - this.lightSources[i].y,
-          center.z + this.lightSources[i].z
+          center.x - lightSources[i].pos.x,
+          center.y - lightSources[i].pos.y,
+          center.z + lightSources[i].pos.z
         );
-        const angle1 = angleBetweenVector3(normals[0], vec);
-        const angle2 = angleBetweenVector3(normals[1], vec);
-        const angle = Math.min(angle1, angle2);
-        dampen += Math.max(minDampen, Math.max(0, 90 - angle) / 90);
+        const angle = angleBetweenVector3(normal, vec);
+        dampen += Math.max(ambientLighting, (Math.max(0, 90 - angle) / 90) * lightSources[i].intensity);
         dampen = Math.min(dampen, 1);
       }
     }
@@ -1130,10 +1178,7 @@ export class Cube extends SimulationElement3d {
         this.wireframe,
         this.lighting
       )
-    ].map((plane) => {
-      plane.setLightSources(this.lightSources);
-      return plane;
-    });
+    ];
   }
   rotate(amount: Vector3, t = 0, f?: LerpFunc) {
     const initial = this.rotation.clone();
@@ -1184,11 +1229,18 @@ export class Cube extends SimulationElement3d {
       f
     );
   }
-  draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3) {
+  draw(
+    c: CanvasRenderingContext2D,
+    camera: Camera,
+    displaySurface: Vector3,
+    _ratio: number,
+    lightSources: LightSource[],
+    ambientLighting: number
+  ) {
     this.generatePoints();
     this.planes = sortPlanes(this.planes, camera);
     for (let i = 0; i < this.planes.length; i++) {
-      this.planes[i].draw(c, camera, displaySurface);
+      this.planes[i].draw(c, camera, displaySurface, _ratio, lightSources, ambientLighting);
     }
   }
 }
@@ -1416,7 +1468,8 @@ export class Simulation {
   right = new Vector3(1, 0, 0);
   up = new Vector3(0, -1, 0);
   down = new Vector3(0, 1, 0);
-  lightSources: Vector3[];
+  lightSources: LightSource[];
+  ambientLighting: number;
   constructor(
     id: string,
     cameraPos = new Vector3(0, 0, -200),
@@ -1436,6 +1489,7 @@ export class Simulation {
     this.displaySurface = new Vector3(0, 0, 0);
     this.ratio = window.devicePixelRatio;
     this.lightSources = [];
+    this.ambientLighting = 0;
 
     this.setDirections();
 
@@ -1467,11 +1521,30 @@ export class Simulation {
 
     this.render(ctx);
   }
-  setLightSources(sources: Vector3[]) {
-    this.lightSources = sources;
+  private updateSceneLightSources() {
     this.scene.forEach((obj) => {
-      if ((obj as SceneCollection)._isSceneCollection || obj._3d) {
-        (obj as SimulationElement3d).setLightSources(sources);
+      if ((obj as SceneCollection)._isSceneCollection) {
+        (obj as SceneCollection).setLightSources(this.lightSources);
+      }
+    });
+  }
+  setLightSources(sources: LightSource[]) {
+    this.lightSources = sources;
+    this.updateSceneLightSources();
+  }
+  addLightSource(source: LightSource) {
+    this.lightSources.push(source);
+    this.updateSceneLightSources();
+  }
+  removeLightSourceWithId(id: string) {
+    this.lightSources = this.lightSources.filter((source) => source.id !== id);
+    this.updateSceneLightSources();
+  }
+  setAmbientLighting(val: number) {
+    this.ambientLighting = val;
+    this.scene.forEach((obj) => {
+      if ((obj as SceneCollection)._isSceneCollection) {
+        (obj as SceneCollection).setAmbientLighting(this.ambientLighting);
       }
     });
   }
@@ -1497,7 +1570,14 @@ export class Simulation {
 
     for (const element of this.scene) {
       if (element._3d) {
-        (element as SimulationElement3d).draw(c, this.camera, this.displaySurface, this.ratio);
+        (element as SimulationElement3d).draw(
+          c,
+          this.camera,
+          this.displaySurface,
+          this.ratio,
+          this.lightSources,
+          this.ambientLighting
+        );
       } else {
         (element as SimulationElement).draw(c);
       }
@@ -1522,6 +1602,7 @@ export class Simulation {
     }
     if ((element as SceneCollection)._isSceneCollection) {
       (element as SceneCollection).set3dObjects(this.camera, this.displaySurface, this.ratio);
+      (element as SceneCollection).setAmbientLighting(this.ambientLighting);
     }
     this.scene.push(element);
   }
