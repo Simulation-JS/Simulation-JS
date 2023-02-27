@@ -40,14 +40,14 @@ function timeFunc(x: number): number {
   return x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
 }
 
-(async function main() {
-  // await cube.rotate(new Vector3(360, 360, 0), 8);
-  // await cube.rotate(new Vector3(90, 0, 0), 2, timeFunc);
-  // main();
-  await cube.rotate(new Vector3(360, 360, 0), 8);
-  cube.setLighting(false);
-  main();
-})();
+// (async function main() {
+//   // await cube.rotate(new Vector3(360, 360, 0), 8);
+//   // await cube.rotate(new Vector3(90, 0, 0), 2, timeFunc);
+//   // main();
+//   await cube.rotate(new Vector3(360, 360, 0), 8);
+//   cube.setLighting(false);
+//   main();
+// })();
 
 let pressingW = false;
 let pressingA = false;
@@ -109,40 +109,16 @@ addEventListener('keyup', (e: KeyboardEvent) => {
 const speed = 2;
 frameLoop(() => {
   if (pressingW) {
-    canvas.moveCamera(
-      new Vector3(
-        Math.sin(canvas.camera.rot.y) * Math.cos(canvas.camera.rot.x) * speed,
-        0,
-        Math.cos(canvas.camera.rot.y) * Math.cos(canvas.camera.rot.x) * speed
-      )
-    );
+    canvas.moveCamera(canvas.forward);
   }
   if (pressingA) {
-    canvas.moveCamera(
-      new Vector3(
-        -Math.sin(canvas.camera.rot.y + Math.PI / 2) * speed,
-        0,
-        -Math.cos(canvas.camera.rot.y + Math.PI / 2) * speed
-      )
-    );
+    canvas.moveCamera(canvas.left);
   }
   if (pressingS) {
-    canvas.moveCamera(
-      new Vector3(
-        -Math.sin(canvas.camera.rot.y) * Math.cos(canvas.camera.rot.x) * speed,
-        0,
-        -Math.cos(canvas.camera.rot.y) * Math.cos(canvas.camera.rot.x) * speed
-      )
-    );
+    canvas.moveCamera(canvas.backward);
   }
   if (pressingD) {
-    canvas.moveCamera(
-      new Vector3(
-        Math.sin(canvas.camera.rot.y + Math.PI / 2) * speed,
-        0,
-        Math.cos(canvas.camera.rot.y + Math.PI / 2) * speed
-      )
-    );
+    canvas.moveCamera(canvas.right);
   }
   if (pressingSpace) {
     canvas.moveCamera(new Vector3(0, -speed, 0));

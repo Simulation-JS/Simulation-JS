@@ -1583,8 +1583,8 @@ export class Simulation {
   }
   setDirections() {
     const degRotation = new Vector3(
-      radToDeg(this.camera.rot.y),
       radToDeg(this.camera.rot.x),
+      radToDeg(this.camera.rot.y),
       radToDeg(this.camera.rot.z)
     );
     this.forward = new Vector3(0, 0, 1).rotate(degRotation);
@@ -2084,5 +2084,6 @@ export default {
   randomColor,
   vector3DegToRad,
   vector3RadToDeg,
-  angleBetweenVector3
+  angleBetweenVector3,
+  clamp
 };
