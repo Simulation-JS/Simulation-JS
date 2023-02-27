@@ -23,7 +23,8 @@ const cube = new Cube(
   100,
   100,
   100,
-  new Color(0, 123, 255),
+  // new Color(0, 123, 255),
+  randomColor(),
   new Vector3(0, 0, 0),
   true,
   true,
@@ -31,9 +32,7 @@ const cube = new Cube(
 );
 test.add(cube);
 
-setTimeout(() => {
-  canvas.addLightSource(new LightSource(new Vector3(100, 100, -100)));
-}, 1500);
+canvas.addLightSource(new LightSource(new Vector3(-100, -100, 0), 1, 's1'));
 
 function timeFunc(x: number): number {
   const c4 = (2 * Math.PI) / 3;
@@ -46,6 +45,7 @@ function timeFunc(x: number): number {
   // await cube.rotate(new Vector3(90, 0, 0), 2, timeFunc);
   // main();
   await cube.rotate(new Vector3(360, 360, 0), 8);
+  cube.setLighting(false);
   main();
 })();
 

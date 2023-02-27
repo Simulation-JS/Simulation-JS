@@ -4,12 +4,10 @@ type SimulationElement3dType = 'cube' | 'plane';
 
 export class LightSource {
   pos: Vector3;
-  direction: Vector3 | null;
   id: string;
-  intensity: number; // 0 to 1
-  constructor(pos: Vector3, intensity = 1, direction: Vector3 | null = null, id = '') {
+  intensity: number;
+  constructor(pos: Vector3, intensity = 1, id = '') {
     this.pos = pos;
-    this.direction = direction;
     this.id = id;
     this.intensity = intensity;
   }
@@ -394,6 +392,12 @@ export class SceneCollection extends SimulationElement {
     this.lightSources = this.lightSources.filter((source) => source.id !== id);
     this.updateSceneLightSources();
   }
+  getLightSourceWithId(id: string) {
+    for (let i = 0; i < this.lightSources.length; i++) {
+      if (this.lightSources[i].id === id) return this.lightSources[i];
+    }
+    return null;
+  }
   removeWithId(id: string) {
     this.scene = this.scene.filter((item) => item.id !== id);
   }
@@ -450,6 +454,9 @@ export class SimulationElement3d {
     this.running = true;
     this.id = id;
     this.lighting = lighting;
+  }
+  setLighting(val: boolean) {
+    this.lighting = val;
   }
   setId(id: string) {
     this.id = id;
@@ -1020,18 +1027,22 @@ export class Plane extends SimulationElement3d {
     ambientLighting: number
   ) {
     let dampen = 0;
+    const maxDampen = 2;
     if (this.lighting) {
       for (let i = 0; i < lightSources.length; i++) {
         const center = this.getCenter();
         const normal = center.clone().sub(this.pos).normalize();
         const vec = new Vector3(
-          center.x - lightSources[i].pos.x,
-          center.y - lightSources[i].pos.y,
-          center.z + lightSources[i].pos.z
+          center.x + lightSources[i].pos.x,
+          center.y + lightSources[i].pos.y,
+          center.z - lightSources[i].pos.z
         );
         const angle = angleBetweenVector3(normal, vec);
-        dampen += Math.max(ambientLighting, (Math.max(0, 90 - angle) / 90) * lightSources[i].intensity);
-        dampen = Math.min(dampen, 1);
+        dampen += Math.max(
+          ambientLighting,
+          (Math.max(0, 90 - Math.abs(angle)) / 90) * lightSources[i].intensity
+        );
+        dampen = Math.min(dampen, maxDampen);
       }
     }
 
@@ -1043,6 +1054,9 @@ export class Plane extends SimulationElement3d {
       tempColor.r *= dampen;
       tempColor.g *= dampen;
       tempColor.b *= dampen;
+      tempColor.r = clamp(tempColor.r, 0, 255);
+      tempColor.g = clamp(tempColor.g, 0, 255);
+      tempColor.b = clamp(tempColor.b, 0, 255);
     }
     c.fillStyle = tempColor.toHex();
 
@@ -1125,9 +1139,8 @@ export class Cube extends SimulationElement3d {
       new Vector3(this.width / 2, this.height / 2, this.depth / 2),
       new Vector3(-this.width / 2, this.height / 2, this.depth / 2)
     ];
-    this.generatePlanes();
   }
-  generatePlanes() {
+  private generatePlanes() {
     const points = this.points.map((p) => p.clone().rotate(this.rotation).add(this.pos));
     this.planes = [
       new Plane(
@@ -1179,6 +1192,20 @@ export class Cube extends SimulationElement3d {
         this.lighting
       )
     ];
+  }
+  private updatePlanes() {
+    const points = this.points.map((p) => p.clone().rotate(this.rotation).add(this.pos));
+    const pointsArr = [
+      [points[0], points[1], points[2], points[3]],
+      [points[0], points[1], points[5], points[4]],
+      [points[4], points[5], points[6], points[7]],
+      [points[3], points[2], points[6], points[7]],
+      [points[0], points[3], points[7], points[4]],
+      [points[2], points[1], points[5], points[6]]
+    ];
+    this.planes.forEach((plane, index) => {
+      plane.setPoints(pointsArr[index]);
+    });
   }
   rotate(amount: Vector3, t = 0, f?: LerpFunc) {
     const initial = this.rotation.clone();
@@ -1237,7 +1264,7 @@ export class Cube extends SimulationElement3d {
     lightSources: LightSource[],
     ambientLighting: number
   ) {
-    this.generatePoints();
+    this.updatePlanes();
     this.planes = sortPlanes(this.planes, camera);
     for (let i = 0; i < this.planes.length; i++) {
       this.planes[i].draw(c, camera, displaySurface, _ratio, lightSources, ambientLighting);
@@ -1539,6 +1566,12 @@ export class Simulation {
   removeLightSourceWithId(id: string) {
     this.lightSources = this.lightSources.filter((source) => source.id !== id);
     this.updateSceneLightSources();
+  }
+  getLightSourceWithId(id: string) {
+    for (let i = 0; i < this.lightSources.length; i++) {
+      if (this.lightSources[i].id === id) return this.lightSources[i];
+    }
+    return null;
   }
   setAmbientLighting(val: number) {
     this.ambientLighting = val;
@@ -2017,6 +2050,10 @@ export function angleBetweenVector3(vec1: Vector3, vec2: Vector3) {
   let val = dot / (vec1.getMag() * vec2.getMag());
   val = Math.acos(val);
   return radToDeg(val);
+}
+
+export function clamp(value: number, min: number, max: number) {
+  return Math.max(Math.min(value, max), min);
 }
 
 export default {
