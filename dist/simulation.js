@@ -1,3 +1,13 @@
+export class LightSource {
+    pos;
+    id;
+    intensity;
+    constructor(pos, intensity = 1, id = '') {
+        this.pos = pos;
+        this.id = id;
+        this.intensity = intensity;
+    }
+}
 export class Camera {
     pos;
     rot;
@@ -287,6 +297,7 @@ export class SceneCollection extends SimulationElement {
     displaySurface;
     ratio;
     lightSources;
+    ambientLighting;
     constructor(name = '') {
         super(new Vector(0, 0));
         this.name = name;
@@ -295,11 +306,20 @@ export class SceneCollection extends SimulationElement {
         this.displaySurface = new Vector3(0, 0, 0);
         this.ratio = 1;
         this.lightSources = [];
+        this.ambientLighting = 0;
     }
     set3dObjects(cam, displaySurface, ratio) {
         this.camera = cam;
         this.displaySurface = displaySurface;
         this.ratio = ratio;
+    }
+    setAmbientLighting(val) {
+        this.ambientLighting = val;
+        this.scene.forEach((obj) => {
+            if (obj._isSceneCollection) {
+                obj.setAmbientLighting(this.ambientLighting);
+            }
+        });
     }
     end() {
         super.end();
@@ -320,13 +340,31 @@ export class SceneCollection extends SimulationElement {
         }
         this.scene.push(element);
     }
-    setLightSources(sources) {
-        this.lightSources = sources;
+    updateSceneLightSources() {
         this.scene.forEach((obj) => {
-            if (obj._isSceneCollection || obj._3d) {
-                obj.setLightSources(sources);
+            if (obj._isSceneCollection) {
+                obj.setLightSources(this.lightSources);
             }
         });
+    }
+    setLightSources(sources) {
+        this.lightSources = sources;
+        this.updateSceneLightSources();
+    }
+    addLightSource(source) {
+        this.lightSources.push(source);
+        this.updateSceneLightSources();
+    }
+    removeLightSourceWithId(id) {
+        this.lightSources = this.lightSources.filter((source) => source.id !== id);
+        this.updateSceneLightSources();
+    }
+    getLightSourceWithId(id) {
+        for (let i = 0; i < this.lightSources.length; i++) {
+            if (this.lightSources[i].id === id)
+                return this.lightSources[i];
+        }
+        return null;
     }
     removeWithId(id) {
         this.scene = this.scene.filter((item) => item.id !== id);
@@ -343,7 +381,7 @@ export class SceneCollection extends SimulationElement {
     draw(c) {
         for (const element of this.scene) {
             if (element._3d) {
-                element.draw(c, this.camera, this.displaySurface, this.ratio);
+                element.draw(c, this.camera, this.displaySurface, this.ratio, this.lightSources, this.ambientLighting);
             }
             else {
                 element.draw(c);
@@ -362,7 +400,6 @@ export class SimulationElement3d {
     running;
     _3d = true;
     id;
-    lightSources = [];
     lighting;
     constructor(pos, color = new Color(0, 0, 0), lighting = false, type = null, id = '') {
         this.pos = pos;
@@ -373,8 +410,8 @@ export class SimulationElement3d {
         this.id = id;
         this.lighting = lighting;
     }
-    setLightSources(sources) {
-        this.lightSources = sources;
+    setLighting(val) {
+        this.lighting = val;
     }
     setId(id) {
         this.id = id;
@@ -382,7 +419,7 @@ export class SimulationElement3d {
     end() {
         this.running = false;
     }
-    draw(_ctx, _camera, _displaySurface, _ratio) { }
+    draw(_ctx, _camera, _displaySurface, _ratio, _lightSources, _ambientLighting) { }
     setSimulationElement(el) {
         this.sim = el;
     }
@@ -758,19 +795,17 @@ export class Plane extends SimulationElement3d {
             this.points.splice(points.length, this.points.length);
         }, t, f);
     }
-    draw(c, camera, displaySurface) {
-        const minDampen = 0.25;
-        let dampen = minDampen;
+    draw(c, camera, displaySurface, _ratio, lightSources, ambientLighting) {
+        let dampen = 0;
+        const maxDampen = 2;
         if (this.lighting) {
-            for (let i = 0; i < this.lightSources.length; i++) {
+            for (let i = 0; i < lightSources.length; i++) {
                 const center = this.getCenter();
-                const normals = this.getNormals();
-                const vec = new Vector3(center.x - this.lightSources[i].x, center.y - this.lightSources[i].y, center.z + this.lightSources[i].z);
-                const angle1 = angleBetweenVector3(normals[0], vec);
-                const angle2 = angleBetweenVector3(normals[1], vec);
-                const angle = Math.min(angle1, angle2);
-                dampen += Math.max(minDampen, Math.max(0, 90 - angle) / 90);
-                dampen = Math.min(dampen, 1);
+                const normal = center.clone().sub(this.pos).normalize();
+                const vec = new Vector3(center.x + lightSources[i].pos.x, center.y + lightSources[i].pos.y, center.z - lightSources[i].pos.z);
+                const angle = angleBetweenVector3(normal, vec);
+                dampen += Math.max(ambientLighting, (Math.max(0, 90 - Math.abs(angle)) / 90) * lightSources[i].intensity);
+                dampen = Math.min(dampen, maxDampen);
             }
         }
         c.beginPath();
@@ -780,6 +815,9 @@ export class Plane extends SimulationElement3d {
             tempColor.r *= dampen;
             tempColor.g *= dampen;
             tempColor.b *= dampen;
+            tempColor.r = clamp(tempColor.r, 0, 255);
+            tempColor.g = clamp(tempColor.g, 0, 255);
+            tempColor.b = clamp(tempColor.b, 0, 255);
         }
         c.fillStyle = tempColor.toHex();
         c.lineWidth = 2;
@@ -853,7 +891,6 @@ export class Cube extends SimulationElement3d {
             new Vector3(this.width / 2, this.height / 2, this.depth / 2),
             new Vector3(-this.width / 2, this.height / 2, this.depth / 2)
         ];
-        this.generatePlanes();
     }
     generatePlanes() {
         const points = this.points.map((p) => p.clone().rotate(this.rotation).add(this.pos));
@@ -864,9 +901,20 @@ export class Cube extends SimulationElement3d {
             new Plane(this.pos, [points[3], points[2], points[6], points[7]], this.color, this.fillCube, this.wireframe, this.lighting),
             new Plane(this.pos, [points[0], points[3], points[7], points[4]], this.color, this.fillCube, this.wireframe, this.lighting),
             new Plane(this.pos, [points[2], points[1], points[5], points[6]], this.color, this.fillCube, this.wireframe, this.lighting)
-        ].map((plane) => {
-            plane.setLightSources(this.lightSources);
-            return plane;
+        ];
+    }
+    updatePlanes() {
+        const points = this.points.map((p) => p.clone().rotate(this.rotation).add(this.pos));
+        const pointsArr = [
+            [points[0], points[1], points[2], points[3]],
+            [points[0], points[1], points[5], points[4]],
+            [points[4], points[5], points[6], points[7]],
+            [points[3], points[2], points[6], points[7]],
+            [points[0], points[3], points[7], points[4]],
+            [points[2], points[1], points[5], points[6]]
+        ];
+        this.planes.forEach((plane, index) => {
+            plane.setPoints(pointsArr[index]);
         });
     }
     rotate(amount, t = 0, f) {
@@ -905,11 +953,11 @@ export class Cube extends SimulationElement3d {
             this.rotation.z = amount.z;
         }, t, f);
     }
-    draw(c, camera, displaySurface) {
-        this.generatePoints();
+    draw(c, camera, displaySurface, _ratio, lightSources, ambientLighting) {
+        this.updatePlanes();
         this.planes = sortPlanes(this.planes, camera);
         for (let i = 0; i < this.planes.length; i++) {
-            this.planes[i].draw(c, camera, displaySurface);
+            this.planes[i].draw(c, camera, displaySurface, _ratio, lightSources, ambientLighting);
         }
     }
 }
@@ -1082,6 +1130,7 @@ export class Simulation {
     up = new Vector3(0, -1, 0);
     down = new Vector3(0, 1, 0);
     lightSources;
+    ambientLighting;
     constructor(id, cameraPos = new Vector3(0, 0, -200), cameraRot = new Vector3(0, 0, 0), displaySurfaceDepth, center = new Vector(0, 0), displaySurfaceSize) {
         this.scene = [];
         this.fitting = false;
@@ -1094,6 +1143,7 @@ export class Simulation {
         this.displaySurface = new Vector3(0, 0, 0);
         this.ratio = window.devicePixelRatio;
         this.lightSources = [];
+        this.ambientLighting = 0;
         this.setDirections();
         const defaultDepth = 2000;
         this.canvas = document.getElementById(id);
@@ -1115,11 +1165,37 @@ export class Simulation {
         this.ctx = ctx;
         this.render(ctx);
     }
+    updateSceneLightSources() {
+        this.scene.forEach((obj) => {
+            if (obj._isSceneCollection) {
+                obj.setLightSources(this.lightSources);
+            }
+        });
+    }
     setLightSources(sources) {
         this.lightSources = sources;
+        this.updateSceneLightSources();
+    }
+    addLightSource(source) {
+        this.lightSources.push(source);
+        this.updateSceneLightSources();
+    }
+    removeLightSourceWithId(id) {
+        this.lightSources = this.lightSources.filter((source) => source.id !== id);
+        this.updateSceneLightSources();
+    }
+    getLightSourceWithId(id) {
+        for (let i = 0; i < this.lightSources.length; i++) {
+            if (this.lightSources[i].id === id)
+                return this.lightSources[i];
+        }
+        return null;
+    }
+    setAmbientLighting(val) {
+        this.ambientLighting = val;
         this.scene.forEach((obj) => {
-            if (obj._isSceneCollection || obj._3d) {
-                obj.setLightSources(sources);
+            if (obj._isSceneCollection) {
+                obj.setAmbientLighting(this.ambientLighting);
             }
         });
     }
@@ -1140,7 +1216,7 @@ export class Simulation {
         c.closePath();
         for (const element of this.scene) {
             if (element._3d) {
-                element.draw(c, this.camera, this.displaySurface, this.ratio);
+                element.draw(c, this.camera, this.displaySurface, this.ratio, this.lightSources, this.ambientLighting);
             }
             else {
                 element.draw(c);
@@ -1167,6 +1243,7 @@ export class Simulation {
         }
         if (element._isSceneCollection) {
             element.set3dObjects(this.camera, this.displaySurface, this.ratio);
+            element.setAmbientLighting(this.ambientLighting);
         }
         this.scene.push(element);
     }
@@ -1525,6 +1602,9 @@ export function angleBetweenVector3(vec1, vec2) {
     let val = dot / (vec1.getMag() * vec2.getMag());
     val = Math.acos(val);
     return radToDeg(val);
+}
+export function clamp(value, min, max) {
+    return Math.max(Math.min(value, max), min);
 }
 export default {
     Vector,

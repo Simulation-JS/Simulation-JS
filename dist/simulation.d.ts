@@ -1,6 +1,12 @@
 declare type LerpFunc = (n: number) => number;
 declare type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
 declare type SimulationElement3dType = 'cube' | 'plane';
+export declare class LightSource {
+    pos: Vector3;
+    id: string;
+    intensity: number;
+    constructor(pos: Vector3, intensity?: number, id?: string);
+}
 export declare class Camera {
     pos: Vector3;
     rot: Vector3;
@@ -79,13 +85,19 @@ export declare class SceneCollection extends SimulationElement {
     camera: Camera;
     displaySurface: Vector3;
     ratio: number;
-    lightSources: Vector3[];
+    lightSources: LightSource[];
+    ambientLighting: number;
     constructor(name?: string);
     set3dObjects(cam: Camera, displaySurface: Vector3, ratio: number): void;
+    setAmbientLighting(val: number): void;
     end(): void;
     setPixelRatio(num: number): void;
     add(element: SimulationElement | SimulationElement3d, id?: string | null): void;
-    setLightSources(sources: Vector3[]): void;
+    private updateSceneLightSources;
+    setLightSources(sources: LightSource[]): void;
+    addLightSource(source: LightSource): void;
+    removeLightSourceWithId(id: string): void;
+    getLightSourceWithId(id: string): LightSource | null;
     removeWithId(id: string): void;
     removeWithObject(element: SimulationElement): void;
     setSimulationElement(sim: HTMLCanvasElement): void;
@@ -100,13 +112,12 @@ export declare class SimulationElement3d {
     running: boolean;
     _3d: boolean;
     id: string;
-    lightSources: Vector3[];
     lighting: boolean;
     constructor(pos: Vector3, color?: Color, lighting?: boolean, type?: SimulationElement3dType | null, id?: string);
-    setLightSources(sources: Vector3[]): void;
+    setLighting(val: boolean): void;
     setId(id: string): void;
     end(): void;
-    draw(_ctx: CanvasRenderingContext2D, _camera: Camera, _displaySurface: Vector3, _ratio: number): void;
+    draw(_ctx: CanvasRenderingContext2D, _camera: Camera, _displaySurface: Vector3, _ratio: number, _lightSources: LightSource[], _ambientLighting: number): void;
     setSimulationElement(el: HTMLCanvasElement): void;
     fill(color: Color, t?: number, f?: LerpFunc): Promise<void>;
     moveTo(p: Vector3, t?: number, f?: LerpFunc): Promise<void>;
@@ -164,7 +175,7 @@ export declare class Plane extends SimulationElement3d {
     constructor(pos: Vector3, points: Vector3[], color?: Color, fill?: boolean, wireframe?: boolean, lighting?: boolean);
     clone(): Plane;
     setPoints(points: Vector3[], t?: number, f?: LerpFunc): Promise<void>;
-    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3): void;
+    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, _ratio: number, lightSources: LightSource[], ambientLighting: number): void;
     getNormals(): Vector3[];
     getCenter(): Vector3;
 }
@@ -179,10 +190,11 @@ export declare class Cube extends SimulationElement3d {
     wireframe: boolean;
     constructor(pos: Vector3, width: number, height: number, depth: number, color?: Color, rotation?: Vector3, fill?: boolean, wireframe?: boolean, lighting?: boolean);
     generatePoints(): void;
-    generatePlanes(): void;
+    private generatePlanes;
+    private updatePlanes;
     rotate(amount: Vector3, t?: number, f?: LerpFunc): Promise<void>;
     rotateTo(amount: Vector3, t?: number, f?: LerpFunc): Promise<void>;
-    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3): void;
+    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, _ratio: number, lightSources: LightSource[], ambientLighting: number): void;
 }
 export declare class Square extends SimulationElement {
     width: number;
@@ -237,9 +249,15 @@ export declare class Simulation {
     right: Vector3;
     up: Vector3;
     down: Vector3;
-    lightSources: Vector3[];
+    lightSources: LightSource[];
+    ambientLighting: number;
     constructor(id: string, cameraPos?: Vector3, cameraRot?: Vector3, displaySurfaceDepth?: number, center?: Vector, displaySurfaceSize?: Vector);
-    setLightSources(sources: Vector3[]): void;
+    private updateSceneLightSources;
+    setLightSources(sources: LightSource[]): void;
+    addLightSource(source: LightSource): void;
+    removeLightSourceWithId(id: string): void;
+    getLightSourceWithId(id: string): LightSource | null;
+    setAmbientLighting(val: number): void;
     setDirections(): void;
     render(c: CanvasRenderingContext2D): void;
     end(): void;
@@ -286,6 +304,7 @@ export declare function randomColor(): Color;
 export declare function vector3DegToRad(vec: Vector3): Vector3;
 export declare function vector3RadToDeg(vec: Vector3): Vector3;
 export declare function angleBetweenVector3(vec1: Vector3, vec2: Vector3): number;
+export declare function clamp(value: number, min: number, max: number): number;
 declare const _default: {
     Vector: typeof Vector;
     SimulationElement: typeof SimulationElement;
