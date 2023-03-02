@@ -13,7 +13,7 @@ import {
 
 const canvas = new Simulation('canvas', new Vector3(0, 0, -250), new Vector3(0, 0, 0));
 canvas.fitElement();
-canvas.setAmbientLighting(0.4);
+// canvas.setAmbientLighting(0.4);
 
 const test = new SceneCollection('test');
 canvas.add(test);
@@ -32,7 +32,8 @@ const cube = new Cube(
 );
 test.add(cube);
 
-canvas.addLightSource(new LightSource(new Vector3(-100, -100, 0), 1, 's1'));
+canvas.addLightSource(new LightSource(new Vector3(-100, -100, -100), 1, 's1'));
+// canvas.addLightSource(new LightSource(new Vector3(0, -20, -100), 1, 's1'));
 
 function timeFunc(x: number): number {
   const c4 = (2 * Math.PI) / 3;
@@ -40,14 +41,14 @@ function timeFunc(x: number): number {
   return x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
 }
 
-// (async function main() {
-//   // await cube.rotate(new Vector3(360, 360, 0), 8);
-//   // await cube.rotate(new Vector3(90, 0, 0), 2, timeFunc);
-//   // main();
-//   await cube.rotate(new Vector3(360, 360, 0), 8);
-//   cube.setLighting(false);
-//   main();
-// })();
+(async function main() {
+  // await cube.rotate(new Vector3(360, 360, 0), 8);
+  await cube.rotate(new Vector3(90, 0, 0), 2, timeFunc);
+  main();
+  // await cube.rotate(new Vector3(360, 360, 0), 8);
+  // cube.setLighting(false);
+  // main();
+})();
 
 let pressingW = false;
 let pressingA = false;

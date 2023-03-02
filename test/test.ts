@@ -1,7 +1,17 @@
-import { Vector3, Plane, Vector, Simulation, frameLoop, radToDeg, randomColor } from '../src/simulation';
+import {
+  Vector3,
+  Plane,
+  Vector,
+  Simulation,
+  frameLoop,
+  radToDeg,
+  randomColor,
+  Color
+} from '../src/simulation';
 
 const canvas = new Simulation('canvas', new Vector3(0, 0, -250), new Vector3(0, 0, 0));
 canvas.fitElement();
+canvas.setBgColor(new Color(0, 0, 0));
 
 function timeFunc(x: number): number {
   const c4 = (2 * Math.PI) / 3;

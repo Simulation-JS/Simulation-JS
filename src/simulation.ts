@@ -1031,12 +1031,14 @@ export class Plane extends SimulationElement3d {
     if (this.lighting) {
       for (let i = 0; i < lightSources.length; i++) {
         const center = this.getCenter();
-        const normal = center.clone().sub(this.pos).normalize();
-        const vec = new Vector3(
-          center.x + lightSources[i].pos.x,
-          center.y + lightSources[i].pos.y,
-          center.z - lightSources[i].pos.z
-        );
+        const normals = this.getNormals();
+        let normal: Vector3;
+        if (angleBetweenVector3(camera.pos.clone().sub(center), normals[0]) > 90) {
+          normal = normals[1];
+        } else {
+          normal = normals[0];
+        }
+        const vec = new Vector3(lightSources[i].pos.x, lightSources[i].pos.y, lightSources[i].pos.z);
         const angle = angleBetweenVector3(normal, vec);
         dampen += Math.max(
           ambientLighting,
@@ -1516,7 +1518,7 @@ export class Simulation {
     this.displaySurface = new Vector3(0, 0, 0);
     this.ratio = window.devicePixelRatio;
     this.lightSources = [];
-    this.ambientLighting = 0;
+    this.ambientLighting = 0.25;
 
     this.setDirections();
 
