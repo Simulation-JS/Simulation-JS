@@ -6,7 +6,7 @@
   "main": "./dist/simulation.js",
   "scripts": {
     "dev": "vite",
-    "build": "./build.sh"
+    "build": "npx tsc"
   },
   "exports": {
     ".": "./dist/simulation.js"
@@ -36,6 +36,7 @@
     "js"
   ],
   "devDependencies": {
+    "typescript": "^4.9.5",
     "vite": "^3.2.4"
   }
 }

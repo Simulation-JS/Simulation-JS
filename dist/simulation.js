@@ -801,8 +801,15 @@ export class Plane extends SimulationElement3d {
         if (this.lighting) {
             for (let i = 0; i < lightSources.length; i++) {
                 const center = this.getCenter();
-                const normal = center.clone().sub(this.pos).normalize();
-                const vec = new Vector3(center.x + lightSources[i].pos.x, center.y + lightSources[i].pos.y, center.z - lightSources[i].pos.z);
+                const normals = this.getNormals();
+                let normal;
+                if (angleBetweenVector3(camera.pos.clone().sub(center), normals[0]) > 90) {
+                    normal = normals[1];
+                }
+                else {
+                    normal = normals[0];
+                }
+                const vec = new Vector3(lightSources[i].pos.x, lightSources[i].pos.y, lightSources[i].pos.z);
                 const angle = angleBetweenVector3(normal, vec);
                 dampen += Math.max(ambientLighting, (Math.max(0, 90 - Math.abs(angle)) / 90) * lightSources[i].intensity);
                 dampen = Math.min(dampen, maxDampen);
@@ -1143,7 +1150,7 @@ export class Simulation {
         this.displaySurface = new Vector3(0, 0, 0);
         this.ratio = window.devicePixelRatio;
         this.lightSources = [];
-        this.ambientLighting = 0;
+        this.ambientLighting = 0.25;
         this.setDirections();
         const defaultDepth = 2000;
         this.canvas = document.getElementById(id);
@@ -1200,7 +1207,7 @@ export class Simulation {
         });
     }
     setDirections() {
-        const degRotation = new Vector3(radToDeg(this.camera.rot.y), radToDeg(this.camera.rot.x), radToDeg(this.camera.rot.z));
+        const degRotation = new Vector3(radToDeg(this.camera.rot.x), radToDeg(this.camera.rot.y), radToDeg(this.camera.rot.z));
         this.forward = new Vector3(0, 0, 1).rotate(degRotation);
         this.backward = this.forward.clone().multiply(-1);
         this.left = new Vector3(-1, 0, 0).rotate(degRotation);
@@ -1411,16 +1418,16 @@ export function linearStep(n) {
  * @param t - animation time (seconds)
  * @returns {Promise<void>}
  */
-export function transitionValues(callback1, callback2, callback3, t, func) {
+export function transitionValues(callback1, callback2, callback3, transitionLength, func) {
     return new Promise((resolve) => {
-        if (t == 0) {
+        if (transitionLength == 0) {
             callback1();
             resolve();
         }
         else {
-            const inc = 1 / (60 * t);
             let prevPercent = 0;
             let prevFrame = 0;
+            let prevTime = Date.now();
             const step = (t, f) => {
                 const newT = f(t);
                 const canContinue = callback2(newT - prevPercent);
@@ -1429,6 +1436,12 @@ export function transitionValues(callback1, callback2, callback3, t, func) {
                     return;
                 }
                 prevPercent = newT;
+                const now = Date.now();
+                let diff = now - prevTime;
+                diff = diff === 0 ? 1 : diff;
+                const fpsScale = 1 / diff;
+                const inc = 1 / ((1000 * fpsScale) * transitionLength);
+                prevTime = now;
                 if (t < 1) {
                     prevFrame = window.requestAnimationFrame(() => step(t + inc, f));
                 }
@@ -1634,5 +1647,6 @@ export default {
     randomColor,
     vector3DegToRad,
     vector3RadToDeg,
-    angleBetweenVector3
+    angleBetweenVector3,
+    clamp
 };

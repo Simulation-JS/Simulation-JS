@@ -1839,17 +1839,17 @@ export function transitionValues(
   callback1: () => void,
   callback2: (percent: number) => boolean,
   callback3: () => void,
-  t: number,
+  transitionLength: number,
   func?: (n: number) => number
 ): Promise<void> {
   return new Promise((resolve) => {
-    if (t == 0) {
+    if (transitionLength == 0) {
       callback1();
       resolve();
     } else {
-      const inc = 1 / (60 * t);
       let prevPercent = 0;
       let prevFrame = 0;
+      let prevTime = Date.now();
       const step = (t: number, f: (n: number) => number) => {
         const newT = f(t);
         const canContinue = callback2(newT - prevPercent);
@@ -1858,6 +1858,12 @@ export function transitionValues(
           return;
         }
         prevPercent = newT;
+        const now = Date.now();
+        let diff = now - prevTime;
+        diff = diff === 0 ? 1 : diff;
+        const fpsScale = 1 / diff;
+        const inc = 1 / ((1000 * fpsScale) * transitionLength);
+        prevTime = now;
         if (t < 1) {
           prevFrame = window.requestAnimationFrame(() => step(t + inc, f));
         } else {

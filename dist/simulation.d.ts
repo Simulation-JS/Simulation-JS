@@ -1,6 +1,6 @@
-declare type LerpFunc = (n: number) => number;
-declare type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
-declare type SimulationElement3dType = 'cube' | 'plane';
+type LerpFunc = (n: number) => number;
+type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
+type SimulationElement3dType = 'cube' | 'plane';
 export declare class LightSource {
     pos: Vector3;
     id: string;
@@ -291,10 +291,10 @@ export declare function linearStep(n: number): number;
  * @param t - animation time (seconds)
  * @returns {Promise<void>}
  */
-export declare function transitionValues(callback1: () => void, callback2: (percent: number) => boolean, callback3: () => void, t: number, func?: (n: number) => number): Promise<void>;
+export declare function transitionValues(callback1: () => void, callback2: (percent: number) => boolean, callback3: () => void, transitionLength: number, func?: (n: number) => number): Promise<void>;
 export declare function compare(val1: any, val2: any): boolean;
 export declare function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Parameters<T>) => void;
-declare type ProjectedPoint = {
+type ProjectedPoint = {
     point: Vector;
     behindCamera: boolean;
 };
@@ -334,5 +334,6 @@ declare const _default: {
     vector3DegToRad: typeof vector3DegToRad;
     vector3RadToDeg: typeof vector3RadToDeg;
     angleBetweenVector3: typeof angleBetweenVector3;
+    clamp: typeof clamp;
 };
 export default _default;
