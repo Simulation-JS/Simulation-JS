@@ -1042,7 +1042,7 @@ export class Plane extends SimulationElement3d {
         const angle = angleBetweenVector3(normal, vec);
         dampen += Math.max(
           ambientLighting,
-          (Math.max(0, 90 - Math.abs(angle)) / 90) * lightSources[i].intensity
+          Math.sqrt(Math.max(0, 90 - Math.abs(angle)) / 90) * lightSources[i].intensity
         );
         dampen = Math.min(dampen, maxDampen);
       }
@@ -1862,7 +1862,7 @@ export function transitionValues(
         let diff = now - prevTime;
         diff = diff === 0 ? 1 : diff;
         const fpsScale = 1 / diff;
-        const inc = 1 / ((1000 * fpsScale) * transitionLength);
+        const inc = 1 / (1000 * fpsScale * transitionLength);
         prevTime = now;
         if (t < 1) {
           prevFrame = window.requestAnimationFrame(() => step(t + inc, f));
@@ -1924,17 +1924,22 @@ export function compare(val1: any, val2: any) {
 
 export function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Parameters<T>) => void {
   let prevFrame = 0;
-  function start(...args: Parameters<T>) {
-    let res = cb(...args);
+  let prevTime = 0;
+  function start(dt: number, ...args: Parameters<T>) {
+    let res = cb(dt, ...args);
     if (res === false) {
       window.cancelAnimationFrame(prevFrame);
       return;
     }
     if (!Array.isArray(res)) res = args;
-    prevFrame = window.requestAnimationFrame(() => start(...res));
+    const now = Date.now();
+    const diff = now - prevTime;
+    prevTime = now;
+    prevFrame = window.requestAnimationFrame(() => start(diff, ...res));
   }
   return (...p: Parameters<T>) => {
-    start(...p);
+    prevTime = Date.now();
+    start(0, ...p);
   };
 }
 
