@@ -43,7 +43,7 @@ function timeFunc(x: number): number {
 
 (async function main() {
   // await cube.rotate(new Vector3(360, 360, 0), 8);
-  await cube.rotate(new Vector3(90, 0, 0), 4, timeFunc);
+  await cube.rotate(new Vector3(90, 0, 0), 2, timeFunc);
   main();
   // await cube.rotate(new Vector3(360, 360, 0), 8);
   // cube.setLighting(false);

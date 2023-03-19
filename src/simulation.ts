@@ -1195,6 +1195,23 @@ export class Cube extends SimulationElement3d {
       )
     ];
   }
+  private updatePoints() {
+    const newPointValues = [
+      [-this.width / 2, -this.height / 2, -this.depth / 2],
+      [this.width / 2, -this.height / 2, -this.depth / 2],
+      [this.width / 2, this.height / 2, -this.depth / 2],
+      [-this.width / 2, this.height / 2, -this.depth / 2],
+      [-this.width / 2, -this.height / 2, this.depth / 2],
+      [this.width / 2, -this.height / 2, this.depth / 2],
+      [this.width / 2, this.height / 2, this.depth / 2],
+      [-this.width / 2, this.height / 2, this.depth / 2]
+    ];
+    newPointValues.forEach((val, i) => {
+      this.points[i].x = val[0];
+      this.points[i].y = val[1];
+      this.points[i].z = val[2];
+    });
+  }
   private updatePlanes() {
     const points = this.points.map((p) => p.clone().rotate(this.rotation).add(this.pos));
     const pointsArr = [
@@ -1257,6 +1274,81 @@ export class Cube extends SimulationElement3d {
       t,
       f
     );
+  }
+  setHeight(amount: number, t = 0, f?: LerpFunc) {
+    const heightChange = amount - this.height;
+
+    return transitionValues(
+      () => {
+        this.height = amount;
+        this.updatePoints();
+      },
+      (p) => {
+        this.height += heightChange * p;
+        this.updatePoints();
+        return this.running;
+      },
+      () => {
+        this.height = amount;
+        this.updatePoints();
+      },
+      t,
+      f
+    );
+  }
+  setDepth(amount: number, t = 0, f?: LerpFunc) {
+    const depthChange = amount - this.depth;
+
+    return transitionValues(
+      () => {
+        this.depth = amount;
+        this.updatePoints();
+      },
+      (p) => {
+        this.depth += depthChange * p;
+        this.updatePoints();
+        return this.running;
+      },
+      () => {
+        this.depth = amount;
+        this.updatePoints();
+      },
+      t,
+      f
+    );
+  }
+  setWidth(amount: number, t = 0, f?: LerpFunc) {
+    const widthChange = amount - this.width;
+
+    return transitionValues(
+      () => {
+        this.width = amount;
+        this.updatePoints();
+      },
+      (p) => {
+        this.width += widthChange * p;
+        this.updatePoints();
+        return this.running;
+      },
+      () => {
+        this.width = amount;
+        this.updatePoints();
+      },
+      t,
+      f
+    );
+  }
+  scaleHeight(amount: number, t = 0, f?: LerpFunc) {
+    const height = this.height * amount;
+    return this.setHeight(height, t, f);
+  }
+  scaleWidth(amount: number, t = 0, f?: LerpFunc) {
+    const width = this.width * amount;
+    return this.setWidth(width, t, f);
+  }
+  scaleDepth(amount: number, t = 0, f?: LerpFunc) {
+    const depth = this.depth * amount;
+    return this.setDepth(depth, t, f);
   }
   draw(
     c: CanvasRenderingContext2D,
