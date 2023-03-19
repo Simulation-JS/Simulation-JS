@@ -910,6 +910,23 @@ export class Cube extends SimulationElement3d {
             new Plane(this.pos, [points[2], points[1], points[5], points[6]], this.color, this.fillCube, this.wireframe, this.lighting)
         ];
     }
+    updatePoints() {
+        const newPointValues = [
+            [-this.width / 2, -this.height / 2, -this.depth / 2],
+            [this.width / 2, -this.height / 2, -this.depth / 2],
+            [this.width / 2, this.height / 2, -this.depth / 2],
+            [-this.width / 2, this.height / 2, -this.depth / 2],
+            [-this.width / 2, -this.height / 2, this.depth / 2],
+            [this.width / 2, -this.height / 2, this.depth / 2],
+            [this.width / 2, this.height / 2, this.depth / 2],
+            [-this.width / 2, this.height / 2, this.depth / 2]
+        ];
+        newPointValues.forEach((val, i) => {
+            this.points[i].x = val[0];
+            this.points[i].y = val[1];
+            this.points[i].z = val[2];
+        });
+    }
     updatePlanes() {
         const points = this.points.map((p) => p.clone().rotate(this.rotation).add(this.pos));
         const pointsArr = [
@@ -959,6 +976,60 @@ export class Cube extends SimulationElement3d {
             this.rotation.y = amount.y;
             this.rotation.z = amount.z;
         }, t, f);
+    }
+    setHeight(amount, t = 0, f) {
+        const heightChange = amount - this.height;
+        return transitionValues(() => {
+            this.height = amount;
+            this.updatePoints();
+        }, (p) => {
+            this.height += heightChange * p;
+            this.updatePoints();
+            return this.running;
+        }, () => {
+            this.height = amount;
+            this.updatePoints();
+        }, t, f);
+    }
+    setDepth(amount, t = 0, f) {
+        const depthChange = amount - this.depth;
+        return transitionValues(() => {
+            this.depth = amount;
+            this.updatePoints();
+        }, (p) => {
+            this.depth += depthChange * p;
+            this.updatePoints();
+            return this.running;
+        }, () => {
+            this.depth = amount;
+            this.updatePoints();
+        }, t, f);
+    }
+    setWidth(amount, t = 0, f) {
+        const widthChange = amount - this.width;
+        return transitionValues(() => {
+            this.width = amount;
+            this.updatePoints();
+        }, (p) => {
+            this.width += widthChange * p;
+            this.updatePoints();
+            return this.running;
+        }, () => {
+            this.width = amount;
+            this.updatePoints();
+        }, t, f);
+    }
+    scaleHeight(amount, t = 0, f) {
+        const height = this.height * amount;
+        return this.setHeight(height, t, f);
+    }
+    scaleWidth(amount, t = 0, f) {
+        const width = this.width * amount;
+        return this.setWidth(width, t, f);
+    }
+    scaleDepth(amount, t = 0, f) {
+        const depth = this.depth * amount;
+        return this.setDepth(depth, t, f);
     }
     draw(c, camera, displaySurface, _ratio, lightSources, ambientLighting) {
         this.updatePlanes();

@@ -191,9 +191,16 @@ export declare class Cube extends SimulationElement3d {
     constructor(pos: Vector3, width: number, height: number, depth: number, color?: Color, rotation?: Vector3, fill?: boolean, wireframe?: boolean, lighting?: boolean);
     generatePoints(): void;
     private generatePlanes;
+    private updatePoints;
     private updatePlanes;
     rotate(amount: Vector3, t?: number, f?: LerpFunc): Promise<void>;
     rotateTo(amount: Vector3, t?: number, f?: LerpFunc): Promise<void>;
+    setHeight(amount: number, t?: number, f?: LerpFunc): Promise<void>;
+    setDepth(amount: number, t?: number, f?: LerpFunc): Promise<void>;
+    setWidth(amount: number, t?: number, f?: LerpFunc): Promise<void>;
+    scaleHeight(amount: number, t?: number, f?: LerpFunc): Promise<void>;
+    scaleWidth(amount: number, t?: number, f?: LerpFunc): Promise<void>;
+    scaleDepth(amount: number, t?: number, f?: LerpFunc): Promise<void>;
     draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, _ratio: number, lightSources: LightSource[], ambientLighting: number): void;
 }
 export declare class Square extends SimulationElement {
