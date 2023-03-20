@@ -1358,6 +1358,9 @@ export class Cube extends SimulationElement3d {
     lightSources: LightSource[],
     ambientLighting: number
   ) {
+    this.planes.forEach((plane) => {
+      plane.color = this.color;
+    });
     this.updatePlanes();
     this.planes = sortPlanes(this.planes, camera);
     for (let i = 0; i < this.planes.length; i++) {
