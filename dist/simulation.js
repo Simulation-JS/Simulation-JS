@@ -1032,6 +1032,9 @@ export class Cube extends SimulationElement3d {
         return this.setDepth(depth, t, f);
     }
     draw(c, camera, displaySurface, _ratio, lightSources, ambientLighting) {
+        this.planes.forEach((plane) => {
+            plane.color = this.color;
+        });
         this.updatePlanes();
         this.planes = sortPlanes(this.planes, camera);
         for (let i = 0; i < this.planes.length; i++) {
