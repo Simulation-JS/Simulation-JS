@@ -1757,6 +1757,8 @@ export class Simulation {
   resizeCanvas(c: HTMLCanvasElement | null) {
     if (!c) return;
     if (!this.canvas) return;
+    this.width = this.canvas.width;
+    this.height = this.canvas.height;
     if (this.fitting) {
       if (c.parentElement) {
         const width = c.parentElement.clientWidth;
@@ -1767,8 +1769,6 @@ export class Simulation {
         this.canvas.style.height = height + 'px';
       }
     }
-    this.width = this.canvas.width;
-    this.height = this.canvas.height;
     this.displaySurface.x = this.width / 2;
     this.displaySurface.y = this.height / 2;
   }
