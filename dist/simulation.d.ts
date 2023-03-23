@@ -1,4 +1,4 @@
-type LerpFunc = (n: number) => number;
+export type LerpFunc = (n: number) => number;
 type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
 type SimulationElement3dType = 'cube' | 'plane';
 export declare class LightSource {
