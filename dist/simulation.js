@@ -1341,8 +1341,12 @@ export class Simulation {
     setSize(x, y) {
         if (!this.canvas)
             return;
-        this.canvas.width = x;
-        this.canvas.height = y;
+        this.canvas.width = x * this.ratio;
+        this.canvas.height = y * this.ratio;
+        this.canvas.style.width = x + 'px';
+        this.canvas.style.height = y + 'px';
+        this.width = x;
+        this.height = y;
         this.fitting = false;
     }
     setBgColor(color) {
@@ -1353,12 +1357,12 @@ export class Simulation {
             return;
         if (!this.canvas)
             return;
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
         if (this.fitting) {
             if (c.parentElement) {
                 const width = c.parentElement.clientWidth;
                 const height = c.parentElement.clientHeight;
+                this.width = width;
+                this.height = height;
                 this.canvas.width = width * this.ratio;
                 this.canvas.height = height * this.ratio;
                 this.canvas.style.width = width + 'px';

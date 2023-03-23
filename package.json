@@ -1,11 +1,12 @@
 {
   "name": "simulationjs",
-  "version": "3.4.2",
+  "version": "3.4.3",
   "type": "module",
   "description": "A simple graphics library for 2d and 3d graphics on html canvas",
   "main": "./dist/simulation.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "npx nodemon --watch src -e ts --exec 'npx tsc || exit 1'",
+    "test": "vite",
     "build": "npx tsc"
   },
   "exports": {
