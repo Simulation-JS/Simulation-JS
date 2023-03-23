@@ -195,7 +195,6 @@ export class Vector {
 export class SimulationElement {
   pos: Vector;
   color: Color;
-  sim: HTMLCanvasElement | null;
   type: SimulationElementType | null;
   running: boolean;
   _3d = false;
@@ -203,7 +202,6 @@ export class SimulationElement {
   constructor(pos: Vector, color = new Color(0, 0, 0), type: SimulationElementType | null = null, id = '') {
     this.pos = pos;
     this.color = color;
-    this.sim = null;
     this.type = type;
     this.running = true;
     this.id = id;
@@ -212,9 +210,6 @@ export class SimulationElement {
     this.running = false;
   }
   draw(_: CanvasRenderingContext2D) {}
-  setSimulationElement(el: HTMLCanvasElement) {
-    this.sim = el;
-  }
   setId(id: string) {
     this.id = id;
   }
@@ -325,7 +320,6 @@ export class Color {
 export class SceneCollection extends SimulationElement {
   name: string;
   scene: (SimulationElement | SimulationElement3d)[];
-  sim: HTMLCanvasElement | null = null;
   _isSceneCollection = true;
   camera: Camera;
   displaySurface: Vector3;
@@ -363,8 +357,6 @@ export class SceneCollection extends SimulationElement {
     this.ratio = num;
   }
   add(element: SimulationElement | SimulationElement3d, id: string | null = null) {
-    if (!this.sim) return;
-    element.setSimulationElement(this.sim);
     if (id !== null) {
       element.setId(id);
     }
@@ -404,12 +396,6 @@ export class SceneCollection extends SimulationElement {
   removeWithObject(element: SimulationElement) {
     this.scene = this.scene.filter((item) => item === element);
   }
-  setSimulationElement(sim: HTMLCanvasElement) {
-    this.sim = sim;
-    for (const element of this.scene) {
-      element.setSimulationElement(sim);
-    }
-  }
   draw(c: CanvasRenderingContext2D) {
     for (const element of this.scene) {
       if (element._3d) {
@@ -434,7 +420,6 @@ export class SceneCollection extends SimulationElement {
 export class SimulationElement3d {
   pos: Vector3;
   color: Color;
-  sim: HTMLCanvasElement | null;
   type: SimulationElement3dType | null;
   running: boolean;
   _3d = true;
@@ -449,7 +434,6 @@ export class SimulationElement3d {
   ) {
     this.pos = pos;
     this.color = color;
-    this.sim = null;
     this.type = type;
     this.running = true;
     this.id = id;
@@ -472,9 +456,6 @@ export class SimulationElement3d {
     _lightSources: LightSource[],
     _ambientLighting: number
   ) {}
-  setSimulationElement(el: HTMLCanvasElement) {
-    this.sim = el;
-  }
   fill(color: Color, t = 0, f?: LerpFunc) {
     const currentColor = new Color(this.color.r, this.color.g, this.color.b);
     const colorClone = color.clone();
@@ -1726,7 +1707,6 @@ export class Simulation {
   }
   add(element: SimulationElement | SimulationElement3d, id: string | null = null) {
     if (!this.canvas) return;
-    element.setSimulationElement(this.canvas);
     if (id !== null) {
       element.setId(id);
     }

@@ -53,7 +53,6 @@ export declare class Vector {
 export declare class SimulationElement {
     pos: Vector;
     color: Color;
-    sim: HTMLCanvasElement | null;
     type: SimulationElementType | null;
     running: boolean;
     _3d: boolean;
@@ -61,7 +60,6 @@ export declare class SimulationElement {
     constructor(pos: Vector, color?: Color, type?: SimulationElementType | null, id?: string);
     end(): void;
     draw(_: CanvasRenderingContext2D): void;
-    setSimulationElement(el: HTMLCanvasElement): void;
     setId(id: string): void;
     fill(color: Color, t?: number, f?: LerpFunc): Promise<void>;
     moveTo(p: Vector, t?: number, f?: LerpFunc): Promise<void>;
@@ -80,7 +78,6 @@ export declare class Color {
 export declare class SceneCollection extends SimulationElement {
     name: string;
     scene: (SimulationElement | SimulationElement3d)[];
-    sim: HTMLCanvasElement | null;
     _isSceneCollection: boolean;
     camera: Camera;
     displaySurface: Vector3;
@@ -100,14 +97,12 @@ export declare class SceneCollection extends SimulationElement {
     getLightSourceWithId(id: string): LightSource | null;
     removeWithId(id: string): void;
     removeWithObject(element: SimulationElement): void;
-    setSimulationElement(sim: HTMLCanvasElement): void;
     draw(c: CanvasRenderingContext2D): void;
     empty(): void;
 }
 export declare class SimulationElement3d {
     pos: Vector3;
     color: Color;
-    sim: HTMLCanvasElement | null;
     type: SimulationElement3dType | null;
     running: boolean;
     _3d: boolean;
@@ -118,7 +113,6 @@ export declare class SimulationElement3d {
     setId(id: string): void;
     end(): void;
     draw(_ctx: CanvasRenderingContext2D, _camera: Camera, _displaySurface: Vector3, _ratio: number, _lightSources: LightSource[], _ambientLighting: number): void;
-    setSimulationElement(el: HTMLCanvasElement): void;
     fill(color: Color, t?: number, f?: LerpFunc): Promise<void>;
     moveTo(p: Vector3, t?: number, f?: LerpFunc): Promise<void>;
     move(p: Vector3, t?: number, f?: LerpFunc): Promise<void>;

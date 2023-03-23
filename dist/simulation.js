@@ -187,7 +187,6 @@ export class Vector {
 export class SimulationElement {
     pos;
     color;
-    sim;
     type;
     running;
     _3d = false;
@@ -195,7 +194,6 @@ export class SimulationElement {
     constructor(pos, color = new Color(0, 0, 0), type = null, id = '') {
         this.pos = pos;
         this.color = color;
-        this.sim = null;
         this.type = type;
         this.running = true;
         this.id = id;
@@ -204,9 +202,6 @@ export class SimulationElement {
         this.running = false;
     }
     draw(_) { }
-    setSimulationElement(el) {
-        this.sim = el;
-    }
     setId(id) {
         this.id = id;
     }
@@ -291,7 +286,6 @@ export class Color {
 export class SceneCollection extends SimulationElement {
     name;
     scene;
-    sim = null;
     _isSceneCollection = true;
     camera;
     displaySurface;
@@ -329,9 +323,6 @@ export class SceneCollection extends SimulationElement {
         this.ratio = num;
     }
     add(element, id = null) {
-        if (!this.sim)
-            return;
-        element.setSimulationElement(this.sim);
         if (id !== null) {
             element.setId(id);
         }
@@ -372,12 +363,6 @@ export class SceneCollection extends SimulationElement {
     removeWithObject(element) {
         this.scene = this.scene.filter((item) => item === element);
     }
-    setSimulationElement(sim) {
-        this.sim = sim;
-        for (const element of this.scene) {
-            element.setSimulationElement(sim);
-        }
-    }
     draw(c) {
         for (const element of this.scene) {
             if (element._3d) {
@@ -395,7 +380,6 @@ export class SceneCollection extends SimulationElement {
 export class SimulationElement3d {
     pos;
     color;
-    sim;
     type;
     running;
     _3d = true;
@@ -404,7 +388,6 @@ export class SimulationElement3d {
     constructor(pos, color = new Color(0, 0, 0), lighting = false, type = null, id = '') {
         this.pos = pos;
         this.color = color;
-        this.sim = null;
         this.type = type;
         this.running = true;
         this.id = id;
@@ -420,9 +403,6 @@ export class SimulationElement3d {
         this.running = false;
     }
     draw(_ctx, _camera, _displaySurface, _ratio, _lightSources, _ambientLighting) { }
-    setSimulationElement(el) {
-        this.sim = el;
-    }
     fill(color, t = 0, f) {
         const currentColor = new Color(this.color.r, this.color.g, this.color.b);
         const colorClone = color.clone();
@@ -1318,7 +1298,6 @@ export class Simulation {
     add(element, id = null) {
         if (!this.canvas)
             return;
-        element.setSimulationElement(this.canvas);
         if (id !== null) {
             element.setId(id);
         }
