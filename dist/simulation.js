@@ -364,14 +364,24 @@ export class SceneCollection extends SimulationElement {
         this.scene = this.scene.filter((item) => item === element);
     }
     draw(c) {
+        let planes = [];
         for (const element of this.scene) {
             if (element._3d) {
-                element.draw(c, this.camera, this.displaySurface, this.ratio, this.lightSources, this.ambientLighting);
+                if (element.type === 'plane') {
+                    planes.push(element);
+                }
+                else {
+                    element.draw(c, this.camera, this.displaySurface, this.ratio, this.lightSources, this.ambientLighting);
+                }
             }
             else {
                 element.draw(c);
             }
         }
+        planes = sortPlanes(planes, this.camera);
+        planes.forEach((plane) => {
+            plane.draw(c, this.camera, this.displaySurface, this.ratio, this.lightSources, this.ambientLighting);
+        });
     }
     empty() {
         this.scene = [];
@@ -814,10 +824,14 @@ export class Plane extends SimulationElement3d {
             if (i === this.points.length - 1) {
                 p1 = projectPoint(this.points[i].clone().add(this.pos), camera, displaySurface);
                 p2 = projectPoint(this.points[0].clone().add(this.pos), camera, displaySurface);
+                // p1 = projectPoint(this.points[i], camera, displaySurface);
+                // p2 = projectPoint(this.points[0], camera, displaySurface);
             }
             else {
                 p1 = projectPoint(this.points[i].clone().add(this.pos), camera, displaySurface);
                 p2 = projectPoint(this.points[i + 1].clone().add(this.pos), camera, displaySurface);
+                // p1 = projectPoint(this.points[i], camera, displaySurface);
+                // p2 = projectPoint(this.points[i + 1], camera, displaySurface);
             }
             if (!p1.behindCamera && !p2.behindCamera) {
                 if (i === 0) {
@@ -1607,8 +1621,8 @@ function getAveragePointDist(points, camera) {
 }
 function sortPlanes(planes, camera) {
     const res = planes.sort((a, b) => {
-        const topPointA = getTopPoint(a.points, camera);
-        const topPointB = getTopPoint(b.points, camera);
+        const topPointA = getTopPoint(a.points.map((p) => p.clone().add(a.pos)), camera);
+        const topPointB = getTopPoint(b.points.map((p) => p.clone().add(b.pos)), camera);
         const distA = distance3d(topPointA, camera.pos);
         const distB = distance3d(topPointB, camera.pos);
         if (distA === distB) {
