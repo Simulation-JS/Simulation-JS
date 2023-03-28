@@ -326,6 +326,7 @@ export class SceneCollection extends SimulationElement {
   ratio;
   lightSources: LightSource[];
   ambientLighting: number;
+  planesSortFunc: (planes: Plane[], cam: Camera) => Plane[];
   constructor(name = '') {
     super(new Vector(0, 0));
     this.name = name;
@@ -335,6 +336,15 @@ export class SceneCollection extends SimulationElement {
     this.ratio = 1;
     this.lightSources = [];
     this.ambientLighting = 0;
+    this.planesSortFunc = sortPlanes;
+  }
+  setSortFunc(func: (planes: Plane[], cam: Camera) => Plane[]) {
+    this.planesSortFunc = func;
+    this.scene.forEach((element) => {
+      if ((element as SceneCollection)._isSceneCollection) {
+        (element as SceneCollection).setSortFunc(func);
+      }
+    });
   }
   set3dObjects(cam: Camera, displaySurface: Vector3, ratio: number) {
     this.camera = cam;
@@ -416,7 +426,7 @@ export class SceneCollection extends SimulationElement {
         (element as SimulationElement).draw(c);
       }
     }
-    planes = sortPlanes(planes, this.camera);
+    planes = this.planesSortFunc(planes, this.camera);
     planes.forEach((plane) => {
       plane.draw(c, this.camera, this.displaySurface, this.ratio, this.lightSources, this.ambientLighting);
     });
@@ -1620,6 +1630,7 @@ export class Simulation {
   down = new Vector3(0, 1, 0);
   lightSources: LightSource[];
   ambientLighting: number;
+  planesSortFunc: (planes: Plane[], cam: Camera) => Plane[];
   constructor(
     el: string | HTMLCanvasElement,
     cameraPos = new Vector3(0, 0, -200),
@@ -1640,6 +1651,7 @@ export class Simulation {
     this.ratio = window.devicePixelRatio;
     this.lightSources = [];
     this.ambientLighting = 0.25;
+    this.planesSortFunc = sortPlanes;
 
     this.setDirections();
 
@@ -1670,6 +1682,14 @@ export class Simulation {
     this.ctx = ctx;
 
     this.render(ctx);
+  }
+  setSortFunc(func: (planes: Plane[], cam: Camera) => Plane[]) {
+    this.planesSortFunc = func;
+    this.scene.forEach((element) => {
+      if ((element as SceneCollection)._isSceneCollection) {
+        (element as SceneCollection).setSortFunc(func);
+      }
+    });
   }
   private updateSceneLightSources() {
     this.scene.forEach((obj) => {
@@ -1724,20 +1744,29 @@ export class Simulation {
     c.fillRect(0, 0, this.canvas.width, this.canvas.height);
     c.closePath();
 
-    for (const element of this.scene) {
+    let planes: Plane[] = [];
+    this.scene.forEach((element) => {
       if (element._3d) {
-        (element as SimulationElement3d).draw(
-          c,
-          this.camera,
-          this.displaySurface,
-          this.ratio,
-          this.lightSources,
-          this.ambientLighting
-        );
+        if ((element as SimulationElement3d).type === 'plane') {
+          planes.push(element as Plane);
+        } else {
+          (element as SimulationElement3d).draw(
+            c,
+            this.camera,
+            this.displaySurface,
+            this.ratio,
+            this.lightSources,
+            this.ambientLighting
+          );
+        }
       } else {
         (element as SimulationElement).draw(c);
       }
-    }
+    });
+    planes = this.planesSortFunc(planes, this.camera);
+    planes.forEach((plane) => {
+      plane.draw(c, this.camera, this.displaySurface, this.ratio, this.lightSources, this.ambientLighting);
+    });
     if (this.running) {
       this._prevReq = window.requestAnimationFrame(() => this.render(c));
     }

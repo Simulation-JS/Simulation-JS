@@ -84,7 +84,9 @@ export declare class SceneCollection extends SimulationElement {
     ratio: number;
     lightSources: LightSource[];
     ambientLighting: number;
+    planesSortFunc: (planes: Plane[], cam: Camera) => Plane[];
     constructor(name?: string);
+    setSortFunc(func: (planes: Plane[], cam: Camera) => Plane[]): void;
     set3dObjects(cam: Camera, displaySurface: Vector3, ratio: number): void;
     setAmbientLighting(val: number): void;
     end(): void;
@@ -259,7 +261,9 @@ export declare class Simulation {
     down: Vector3;
     lightSources: LightSource[];
     ambientLighting: number;
+    planesSortFunc: (planes: Plane[], cam: Camera) => Plane[];
     constructor(el: string | HTMLCanvasElement, cameraPos?: Vector3, cameraRot?: Vector3, displaySurfaceDepth?: number, center?: Vector, displaySurfaceSize?: Vector);
+    setSortFunc(func: (planes: Plane[], cam: Camera) => Plane[]): void;
     private updateSceneLightSources;
     setLightSources(sources: LightSource[]): void;
     addLightSource(source: LightSource): void;
