@@ -1726,11 +1726,7 @@ export class Simulation {
     });
   }
   setDirections() {
-    const degRotation = new Vector3(
-      radToDeg(this.camera.rot.x),
-      radToDeg(this.camera.rot.y),
-      radToDeg(this.camera.rot.z)
-    );
+    const degRotation = vector3RadToDeg(new Vector3(this.camera.rot.x, this.camera.rot.y, this.camera.rot.z));
     this.forward = new Vector3(0, 0, 1).rotate(degRotation);
     this.backward = this.forward.clone().multiply(-1);
     this.left = new Vector3(-1, 0, 0).rotate(degRotation);
