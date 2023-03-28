@@ -1,6 +1,6 @@
 export type LerpFunc = (n: number) => number;
 type SimulationElementType = 'line' | 'circle' | 'polygon' | 'square' | 'arc' | 'collection';
-type SimulationElement3dType = 'cube' | 'plane';
+type SimulationElement3dType = 'cube' | 'plane' | 'line';
 export declare class LightSource {
     pos: Vector3;
     id: string;
@@ -169,7 +169,7 @@ export declare class Plane extends SimulationElement3d {
     constructor(pos: Vector3, points: Vector3[], color?: Color, fill?: boolean, wireframe?: boolean, lighting?: boolean);
     clone(): Plane;
     setPoints(points: Vector3[], t?: number, f?: LerpFunc): Promise<void>;
-    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, _ratio: number, lightSources: LightSource[], ambientLighting: number): void;
+    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, ratio: number, lightSources: LightSource[], ambientLighting: number): void;
     getNormals(): Vector3[];
     getCenter(): Vector3;
 }
@@ -229,6 +229,13 @@ declare class Event {
     callback: Function;
     constructor(event: string, callback: Function);
 }
+export declare class Line3d extends SimulationElement3d {
+    p1: Vector3;
+    p2: Vector3;
+    thickness: number;
+    constructor(p1: Vector3, p2: Vector3, color?: Color, thickness?: number, lighting?: boolean, id?: string);
+    draw(ctx: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, ratio: number): void;
+}
 export declare class Simulation {
     scene: (SimulationElement | SimulationElement3d)[];
     fitting: boolean;
@@ -252,7 +259,7 @@ export declare class Simulation {
     down: Vector3;
     lightSources: LightSource[];
     ambientLighting: number;
-    constructor(id: string, cameraPos?: Vector3, cameraRot?: Vector3, displaySurfaceDepth?: number, center?: Vector, displaySurfaceSize?: Vector);
+    constructor(el: string | HTMLCanvasElement, cameraPos?: Vector3, cameraRot?: Vector3, displaySurfaceDepth?: number, center?: Vector, displaySurfaceSize?: Vector);
     private updateSceneLightSources;
     setLightSources(sources: LightSource[]): void;
     addLightSource(source: LightSource): void;
@@ -336,5 +343,6 @@ declare const _default: {
     vector3RadToDeg: typeof vector3RadToDeg;
     angleBetweenVector3: typeof angleBetweenVector3;
     clamp: typeof clamp;
+    Line3d: typeof Line3d;
 };
 export default _default;

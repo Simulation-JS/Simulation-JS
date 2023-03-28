@@ -775,7 +775,7 @@ export class Plane extends SimulationElement3d {
             this.points.splice(points.length, this.points.length);
         }, t, f);
     }
-    draw(c, camera, displaySurface, _ratio, lightSources, ambientLighting) {
+    draw(c, camera, displaySurface, ratio, lightSources, ambientLighting) {
         let dampen = 0;
         const maxDampen = 2;
         if (this.lighting) {
@@ -821,9 +821,9 @@ export class Plane extends SimulationElement3d {
             }
             if (!p1.behindCamera && !p2.behindCamera) {
                 if (i === 0) {
-                    c.moveTo(p1.point.x, p1.point.y);
+                    c.moveTo(p1.point.x * ratio, p1.point.y * ratio);
                 }
-                c.lineTo(p2.point.x, p2.point.y);
+                c.lineTo(p2.point.x * ratio, p2.point.y * ratio);
             }
         }
         if (this.wireframe)
@@ -858,9 +858,9 @@ export class Cube extends SimulationElement3d {
     wireframe;
     constructor(pos, width, height, depth, color = new Color(0, 0, 0), rotation = new Vector3(0, 0, 0), fill = true, wireframe = false, lighting = false) {
         super(pos, color, lighting, 'cube');
-        this.width = width;
-        this.height = height;
-        this.depth = depth;
+        this.width = width / window.devicePixelRatio;
+        this.height = height / window.devicePixelRatio;
+        this.depth = depth / window.devicePixelRatio;
         this.wireframe = wireframe;
         this.fillCube = fill;
         this.rotation = rotation;
@@ -1169,6 +1169,30 @@ class Event {
         this.callback = callback;
     }
 }
+export class Line3d extends SimulationElement3d {
+    p1;
+    p2;
+    thickness;
+    constructor(p1, p2, color = new Color(0, 0, 0), thickness = 1, lighting = false, id = '') {
+        super(p1, color, lighting, 'line', id);
+        this.p1 = p1;
+        this.p2 = p2;
+        this.thickness = thickness;
+    }
+    draw(ctx, camera, displaySurface, ratio) {
+        const p1 = projectPoint(this.p1, camera, displaySurface);
+        const p2 = projectPoint(this.p2, camera, displaySurface);
+        if (!p1.behindCamera && !p2.behindCamera) {
+            ctx.beginPath();
+            ctx.lineWidth = this.thickness;
+            ctx.strokeStyle = this.color.toHex();
+            ctx.moveTo(p1.point.x * ratio, p1.point.y * ratio);
+            ctx.lineTo(p2.point.x * ratio, p2.point.y * ratio);
+            ctx.stroke();
+            ctx.closePath();
+        }
+    }
+}
 export class Simulation {
     scene;
     fitting;
@@ -1192,7 +1216,7 @@ export class Simulation {
     down = new Vector3(0, 1, 0);
     lightSources;
     ambientLighting;
-    constructor(id, cameraPos = new Vector3(0, 0, -200), cameraRot = new Vector3(0, 0, 0), displaySurfaceDepth, center = new Vector(0, 0), displaySurfaceSize) {
+    constructor(el, cameraPos = new Vector3(0, 0, -200), cameraRot = new Vector3(0, 0, 0), displaySurfaceDepth, center = new Vector(0, 0), displaySurfaceSize) {
         this.scene = [];
         this.fitting = false;
         this.bgColor = new Color(255, 255, 255);
@@ -1207,9 +1231,9 @@ export class Simulation {
         this.ambientLighting = 0.25;
         this.setDirections();
         const defaultDepth = 2000;
-        this.canvas = document.getElementById(id);
+        this.canvas = typeof el === 'string' ? document.getElementById(el) : el;
         if (!this.canvas) {
-            console.error(`Canvas with id "${id}" not found`);
+            console.error(`Canvas with id "${el}" not found`);
             return;
         }
         window.addEventListener('resize', () => this.resizeCanvas(this.canvas));
@@ -1710,5 +1734,6 @@ export default {
     vector3DegToRad,
     vector3RadToDeg,
     angleBetweenVector3,
-    clamp
+    clamp,
+    Line3d
 };
