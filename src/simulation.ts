@@ -372,6 +372,7 @@ export class SceneCollection extends SimulationElement {
     }
     if ((element as SceneCollection)._isSceneCollection) {
       (element as SceneCollection).set3dObjects(this.camera, this.displaySurface, this.ratio);
+      (element as SceneCollection).setSortFunc(this.planesSortFunc);
     }
     this.scene.push(element);
   }
@@ -1787,6 +1788,7 @@ export class Simulation {
     if ((element as SceneCollection)._isSceneCollection) {
       (element as SceneCollection).set3dObjects(this.camera, this.displaySurface, this.ratio);
       (element as SceneCollection).setAmbientLighting(this.ambientLighting);
+      (element as SceneCollection).setSortFunc(this.planesSortFunc);
     }
     this.scene.push(element);
   }
