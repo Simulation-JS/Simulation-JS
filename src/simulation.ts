@@ -1048,11 +1048,11 @@ export class Plane extends SimulationElement3d {
       let p1: ProjectedPoint;
       let p2: ProjectedPoint;
       if (i === this.points.length - 1) {
-        p1 = projectPoint(this.points[i], camera, displaySurface);
-        p2 = projectPoint(this.points[0], camera, displaySurface);
+        p1 = projectPoint(this.points[i].clone().add(this.pos), camera, displaySurface);
+        p2 = projectPoint(this.points[0].clone().add(this.pos), camera, displaySurface);
       } else {
-        p1 = projectPoint(this.points[i], camera, displaySurface);
-        p2 = projectPoint(this.points[i + 1], camera, displaySurface);
+        p1 = projectPoint(this.points[i].clone().add(this.pos), camera, displaySurface);
+        p2 = projectPoint(this.points[i + 1].clone().add(this.pos), camera, displaySurface);
       }
       if (!p1.behindCamera && !p2.behindCamera) {
         if (i === 0) {
@@ -1194,7 +1194,7 @@ export class Cube extends SimulationElement3d {
     });
   }
   private updatePlanes() {
-    const points = this.points.map((p) => p.clone().rotate(this.rotation).add(this.pos));
+    const points = this.points.map((p) => p.clone().rotate(this.rotation));
     const pointsArr = [
       [points[0], points[1], points[2], points[3]],
       [points[0], points[1], points[5], points[4]],
