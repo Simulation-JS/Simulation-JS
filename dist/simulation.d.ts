@@ -310,6 +310,7 @@ type ProjectedPoint = {
     point: Vector;
     behindCamera: boolean;
 };
+export declare function sortPlanes(planes: Plane[], camera: Camera): Plane[];
 export declare function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): ProjectedPoint;
 export declare function randInt(range: number, min?: number): number;
 export declare function randomColor(): Color;
@@ -348,5 +349,6 @@ declare const _default: {
     angleBetweenVector3: typeof angleBetweenVector3;
     clamp: typeof clamp;
     Line3d: typeof Line3d;
+    sortPlanes: typeof sortPlanes;
 };
 export default _default;

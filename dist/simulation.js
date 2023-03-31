@@ -1651,7 +1651,7 @@ function getTopPoint(points, camera) {
 function getAveragePointDist(points, camera) {
     return points.reduce((prev, curr) => prev + distance3d(curr, camera.pos), 0);
 }
-function sortPlanes(planes, camera) {
+export function sortPlanes(planes, camera) {
     const res = planes.sort((a, b) => {
         const topPointA = getTopPoint(a.points.map((p) => p.clone().add(a.pos)), camera);
         const topPointB = getTopPoint(b.points.map((p) => p.clone().add(b.pos)), camera);
@@ -1781,5 +1781,6 @@ export default {
     vector3RadToDeg,
     angleBetweenVector3,
     clamp,
-    Line3d
+    Line3d,
+    sortPlanes
 };
