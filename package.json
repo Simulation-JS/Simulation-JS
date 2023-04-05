@@ -6,7 +6,7 @@
   "main": "./dist/simulation.js",
   "scripts": {
     "dev": "npx nodemon --watch src -e ts --exec 'npx tsc || exit 1'",
-    "test": "vite",
+    "test": "vite --port 8080",
     "build": "npx tsc"
   },
   "exports": {
