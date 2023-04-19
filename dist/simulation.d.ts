@@ -47,6 +47,7 @@ export declare class Vector {
     add(v: Vector): this;
     divide(n: number): this;
     appendMag(value: number): this;
+    dot(vec: Vector): number;
     clone(): Vector;
     format(): string;
 }

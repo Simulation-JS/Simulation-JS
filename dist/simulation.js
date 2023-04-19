@@ -177,6 +177,9 @@ export class Vector {
         }
         return this;
     }
+    dot(vec) {
+        return this.x * vec.x + this.y * vec.y;
+    }
     clone() {
         return new Vector(this.x, this.y);
     }
