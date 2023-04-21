@@ -304,7 +304,7 @@ export declare function linearStep(n: number): number;
  * @param t - animation time (seconds)
  * @returns {Promise<void>}
  */
-export declare function transitionValues(callback1: () => void, callback2: (percent: number) => boolean, callback3: () => void, transitionLength: number, func?: (n: number) => number): Promise<void>;
+export declare function transitionValues(callback1: () => void, callback2: (deltaT: number, t: number) => boolean, callback3: () => void, transitionLength: number, func?: (n: number) => number): Promise<void>;
 export declare function compare(val1: any, val2: any): boolean;
 export declare function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Parameters<T>) => void;
 type ProjectedPoint = {

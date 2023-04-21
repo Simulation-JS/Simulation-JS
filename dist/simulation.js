@@ -1560,7 +1560,7 @@ export function transitionValues(callback1, callback2, callback3, transitionLeng
             let prevTime = Date.now();
             const step = (t, f) => {
                 const newT = f(t);
-                const canContinue = callback2(newT - prevPercent);
+                const canContinue = callback2(newT - prevPercent, t);
                 if (!canContinue) {
                     window.cancelAnimationFrame(prevFrame);
                     return;

@@ -1991,7 +1991,7 @@ export function linearStep(n: number) {
  */
 export function transitionValues(
   callback1: () => void,
-  callback2: (percent: number) => boolean,
+  callback2: (deltaT: number, t: number) => boolean,
   callback3: () => void,
   transitionLength: number,
   func?: (n: number) => number
@@ -2006,7 +2006,7 @@ export function transitionValues(
       let prevTime = Date.now();
       const step = (t: number, f: (n: number) => number) => {
         const newT = f(t);
-        const canContinue = callback2(newT - prevPercent);
+        const canContinue = callback2(newT - prevPercent, t);
         if (!canContinue) {
           window.cancelAnimationFrame(prevFrame);
           return;
