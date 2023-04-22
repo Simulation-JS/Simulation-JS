@@ -306,7 +306,8 @@ export declare function linearStep(n: number): number;
  */
 export declare function transitionValues(callback1: () => void, callback2: (deltaT: number, t: number) => boolean, callback3: () => void, transitionLength: number, func?: (n: number) => number): Promise<void>;
 export declare function compare(val1: any, val2: any): boolean;
-export declare function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Parameters<T>) => void;
+type Shift<T extends any[]> = ((...args: T) => any) extends (arg1: any, ...rest: infer R) => any ? R : never;
+export declare function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Shift<Parameters<T>>) => void;
 type ProjectedPoint = {
     point: Vector;
     behindCamera: boolean;

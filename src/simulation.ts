@@ -2076,10 +2076,14 @@ export function compare(val1: any, val2: any) {
   return val1 === val2;
 }
 
-export function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params: Parameters<T>) => void {
+type Shift<T extends any[]> = ((...args: T) => any) extends (arg1: any, ...rest: infer R) => any ? R : never;
+
+export function frameLoop<T extends (...args: any[]) => any>(
+  cb: T
+): (...params: Shift<Parameters<T>>) => void {
   let prevFrame = 0;
   let prevTime = 0;
-  function start(dt: number, ...args: Parameters<T>) {
+  function start(dt: number, ...args: Shift<Parameters<T>>) {
     let res = cb(dt, ...args);
     if (res === false) {
       window.cancelAnimationFrame(prevFrame);
@@ -2091,7 +2095,7 @@ export function frameLoop<T extends (...args: any[]) => any>(cb: T): (...params:
     prevTime = now;
     prevFrame = window.requestAnimationFrame(() => start(diff, ...res));
   }
-  return (...p: Parameters<T>) => {
+  return (...p: Shift<Parameters<T>>) => {
     prevTime = Date.now();
     start(0, ...p);
   };
