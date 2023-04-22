@@ -15,3 +15,5 @@ Simulation.js is an easy to use JavaScript library for making graphics in html c
 [Spring simulation](https://springs.vercel.app/)
 <br />
 [Cross section](https://cross-section.vercel.app/)
+<br />
+[Delaunay triangulation](https://triangulation.vercel.app/)
