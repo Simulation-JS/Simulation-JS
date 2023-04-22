@@ -13,3 +13,5 @@ Simulation.js is an easy to use JavaScript library for making graphics in html c
 [2d ray marching algo demo](https://2d-ray-marching-visualization.vercel.app/)
 <br />
 [Spring simulation](https://springs.vercel.app/)
+<br />
+[Cross section](https://cross-section.vercel.app/)
