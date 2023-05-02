@@ -706,6 +706,7 @@ export class Circle extends SimulationElement {
       },
       (p) => {
         this.radius += scaleChange * p;
+        this.radius = Math.max(0, this.radius);
         return this.running;
       },
       () => {
@@ -724,6 +725,7 @@ export class Circle extends SimulationElement {
       },
       (p) => {
         this.radius += radChange * p;
+        this.radius = Math.max(0, this.radius);
         return this.running;
       },
       () => {
@@ -1383,7 +1385,6 @@ export class Square extends SimulationElement {
   rotation: number;
   private showNodeVectors: boolean;
   hovering: boolean;
-  events: Event[];
   offsetPoint: Vector;
   topLeft: Vector;
   topRight: Vector;
@@ -1403,7 +1404,6 @@ export class Square extends SimulationElement {
     this.rotation = rotation;
     this.showNodeVectors = false;
     this.hovering = false;
-    this.events = [];
     this.topLeft = new Vector(0, 0);
     this.topRight = new Vector(0, 0);
     this.bottomLeft = new Vector(0, 0);

@@ -206,7 +206,6 @@ export declare class Square extends SimulationElement {
     rotation: number;
     private showNodeVectors;
     hovering: boolean;
-    events: Event[];
     offsetPoint: Vector;
     topLeft: Vector;
     topRight: Vector;
