@@ -209,6 +209,7 @@ export class SimulationElement {
     this.running = true;
     this.id = id;
   }
+  onFrame() {}
   end() {
     this.running = false;
   }
@@ -341,6 +342,9 @@ export class SceneCollection extends SimulationElement {
     this.ambientLighting = 0;
     this.planesSortFunc = sortPlanes;
   }
+  onFrame() {
+    this.scene.forEach((item) => item.onFrame());
+  }
   setSortFunc(func: (planes: Plane[], cam: Camera) => Plane[]) {
     this.planesSortFunc = func;
     this.scene.forEach((element) => {
@@ -462,6 +466,7 @@ export class SimulationElement3d {
     this.id = id;
     this.lighting = lighting;
   }
+  onFrame() {}
   setLighting(val: boolean) {
     this.lighting = val;
   }
@@ -1762,6 +1767,7 @@ export class Simulation {
       } else {
         (element as SimulationElement).draw(c);
       }
+      element.onFrame();
     });
     planes = this.planesSortFunc(planes, this.camera);
     planes.forEach((plane) => {

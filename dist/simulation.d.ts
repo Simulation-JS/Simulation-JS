@@ -59,6 +59,7 @@ export declare class SimulationElement {
     _3d: boolean;
     id: string;
     constructor(pos: Vector, color?: Color, type?: SimulationElementType | null, id?: string);
+    onFrame(): void;
     end(): void;
     draw(_: CanvasRenderingContext2D): void;
     setId(id: string): void;
@@ -87,6 +88,7 @@ export declare class SceneCollection extends SimulationElement {
     ambientLighting: number;
     planesSortFunc: (planes: Plane[], cam: Camera) => Plane[];
     constructor(name?: string);
+    onFrame(): void;
     setSortFunc(func: (planes: Plane[], cam: Camera) => Plane[]): void;
     set3dObjects(cam: Camera, displaySurface: Vector3, ratio: number): void;
     setAmbientLighting(val: number): void;
@@ -112,6 +114,7 @@ export declare class SimulationElement3d {
     id: string;
     lighting: boolean;
     constructor(pos: Vector3, color?: Color, lighting?: boolean, type?: SimulationElement3dType | null, id?: string);
+    onFrame(): void;
     setLighting(val: boolean): void;
     setId(id: string): void;
     end(): void;
