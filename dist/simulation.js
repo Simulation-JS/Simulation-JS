@@ -293,7 +293,6 @@ export class SceneCollection extends SimulationElement {
     _isSceneCollection = true;
     camera;
     displaySurface;
-    ratio;
     lightSources;
     ambientLighting;
     planesSortFunc;
@@ -303,7 +302,6 @@ export class SceneCollection extends SimulationElement {
         this.scene = [];
         this.camera = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 0));
         this.displaySurface = new Vector3(0, 0, 0);
-        this.ratio = 1;
         this.lightSources = [];
         this.ambientLighting = 0;
         this.planesSortFunc = sortPlanes;
@@ -319,10 +317,9 @@ export class SceneCollection extends SimulationElement {
             }
         });
     }
-    set3dObjects(cam, displaySurface, ratio) {
+    set3dObjects(cam, displaySurface) {
         this.camera = cam;
         this.displaySurface = displaySurface;
-        this.ratio = ratio;
     }
     setAmbientLighting(val) {
         this.ambientLighting = val;
@@ -336,15 +333,12 @@ export class SceneCollection extends SimulationElement {
         super.end();
         this.scene.forEach((item) => item.end());
     }
-    setPixelRatio(num) {
-        this.ratio = num;
-    }
     add(element, id = null) {
         if (id !== null) {
             element.setId(id);
         }
         if (element._isSceneCollection) {
-            element.set3dObjects(this.camera, this.displaySurface, this.ratio);
+            element.set3dObjects(this.camera, this.displaySurface);
             element.setSortFunc(this.planesSortFunc);
         }
         this.scene.push(element);
@@ -389,7 +383,7 @@ export class SceneCollection extends SimulationElement {
                     planes.push(element);
                 }
                 else {
-                    element.draw(c, this.camera, this.displaySurface, this.ratio, this.lightSources, this.ambientLighting);
+                    element.draw(c, this.camera, this.displaySurface, this.lightSources, this.ambientLighting);
                 }
             }
             else {
@@ -398,7 +392,7 @@ export class SceneCollection extends SimulationElement {
         }
         planes = this.planesSortFunc(planes, this.camera);
         planes.forEach((plane) => {
-            plane.draw(c, this.camera, this.displaySurface, this.ratio, this.lightSources, this.ambientLighting);
+            plane.draw(c, this.camera, this.displaySurface, this.lightSources, this.ambientLighting);
         });
     }
     empty() {
@@ -431,7 +425,7 @@ export class SimulationElement3d {
     end() {
         this.running = false;
     }
-    draw(_ctx, _camera, _displaySurface, _ratio, _lightSources, _ambientLighting) { }
+    draw(_ctx, _camera, _displaySurface, _lightSources, _ambientLighting) { }
     fill(color, t = 0, f) {
         const currentColor = new Color(this.color.r, this.color.g, this.color.b);
         const colorClone = color.clone();
@@ -806,7 +800,7 @@ export class Plane extends SimulationElement3d {
             this.points.splice(points.length, this.points.length);
         }, t, f);
     }
-    draw(c, camera, displaySurface, ratio, lightSources, ambientLighting) {
+    draw(c, camera, displaySurface, lightSources, ambientLighting) {
         let dampen = 0;
         const maxDampen = 2;
         if (this.lighting) {
@@ -845,20 +839,16 @@ export class Plane extends SimulationElement3d {
             if (i === this.points.length - 1) {
                 p1 = projectPoint(this.points[i].clone().add(this.pos), camera, displaySurface);
                 p2 = projectPoint(this.points[0].clone().add(this.pos), camera, displaySurface);
-                // p1 = projectPoint(this.points[i], camera, displaySurface);
-                // p2 = projectPoint(this.points[0], camera, displaySurface);
             }
             else {
                 p1 = projectPoint(this.points[i].clone().add(this.pos), camera, displaySurface);
                 p2 = projectPoint(this.points[i + 1].clone().add(this.pos), camera, displaySurface);
-                // p1 = projectPoint(this.points[i], camera, displaySurface);
-                // p2 = projectPoint(this.points[i + 1], camera, displaySurface);
             }
             if (!p1.behindCamera && !p2.behindCamera) {
                 if (i === 0) {
-                    c.moveTo(p1.point.x * ratio, p1.point.y * ratio);
+                    c.moveTo(p1.point.x, p1.point.y);
                 }
-                c.lineTo(p2.point.x * ratio, p2.point.y * ratio);
+                c.lineTo(p2.point.x, p2.point.y);
             }
         }
         if (this.wireframe)
@@ -1046,14 +1036,14 @@ export class Cube extends SimulationElement3d {
         const depth = this.depth * amount;
         return this.setDepth(depth, t, f);
     }
-    draw(c, camera, displaySurface, _ratio, lightSources, ambientLighting) {
+    draw(c, camera, displaySurface, lightSources, ambientLighting) {
         this.planes.forEach((plane) => {
             plane.color = this.color;
         });
         this.updatePlanes();
         this.planes = sortPlanes(this.planes, camera);
         for (let i = 0; i < this.planes.length; i++) {
-            this.planes[i].draw(c, camera, displaySurface, _ratio, lightSources, ambientLighting);
+            this.planes[i].draw(c, camera, displaySurface, lightSources, ambientLighting);
         }
     }
 }
@@ -1212,15 +1202,15 @@ export class Line3d extends SimulationElement3d {
         this.p2 = p2;
         this.thickness = thickness;
     }
-    draw(ctx, camera, displaySurface, ratio) {
+    draw(ctx, camera, displaySurface) {
         const p1 = projectPoint(this.p1, camera, displaySurface);
         const p2 = projectPoint(this.p2, camera, displaySurface);
         if (!p1.behindCamera && !p2.behindCamera) {
             ctx.beginPath();
             ctx.lineWidth = this.thickness;
             ctx.strokeStyle = this.color.toHex();
-            ctx.moveTo(p1.point.x * ratio, p1.point.y * ratio);
-            ctx.lineTo(p2.point.x * ratio, p2.point.y * ratio);
+            ctx.moveTo(p1.point.x, p1.point.y);
+            ctx.lineTo(p2.point.x, p2.point.y);
             ctx.stroke();
             ctx.closePath();
         }
@@ -1233,7 +1223,6 @@ export class Simulation {
     canvas = null;
     width = 0;
     height = 0;
-    ratio;
     running;
     _prevReq;
     events;
@@ -1260,7 +1249,6 @@ export class Simulation {
         this.camera = new Camera(cameraPos, cameraRot);
         this.center = center;
         this.displaySurface = new Vector3(0, 0, 0);
-        this.ratio = window.devicePixelRatio;
         this.lightSources = [];
         this.ambientLighting = 0.25;
         this.planesSortFunc = sortPlanes;
@@ -1279,9 +1267,14 @@ export class Simulation {
         else {
             this.displaySurface = new Vector3(this.width / 2, this.height / 2, displaySurfaceDepth || defaultDepth);
         }
+    }
+    start() {
+        if (!this.canvas)
+            return;
         const ctx = this.canvas.getContext('2d');
         if (!ctx)
             return;
+        ctx.scale(devicePixelRatio, devicePixelRatio);
         this.ctx = ctx;
         this.render(ctx);
     }
@@ -1349,7 +1342,7 @@ export class Simulation {
                     planes.push(element);
                 }
                 else {
-                    element.draw(c, this.camera, this.displaySurface, this.ratio, this.lightSources, this.ambientLighting);
+                    element.draw(c, this.camera, this.displaySurface, this.lightSources, this.ambientLighting);
                 }
             }
             else {
@@ -1359,7 +1352,7 @@ export class Simulation {
         });
         planes = this.planesSortFunc(planes, this.camera);
         planes.forEach((plane) => {
-            plane.draw(c, this.camera, this.displaySurface, this.ratio, this.lightSources, this.ambientLighting);
+            plane.draw(c, this.camera, this.displaySurface, this.lightSources, this.ambientLighting);
         });
         if (this.running) {
             this._prevReq = window.requestAnimationFrame(() => this.render(c));
@@ -1380,7 +1373,7 @@ export class Simulation {
             element.setId(id);
         }
         if (element._isSceneCollection) {
-            element.set3dObjects(this.camera, this.displaySurface, this.ratio);
+            element.set3dObjects(this.camera, this.displaySurface);
             element.setAmbientLighting(this.ambientLighting);
             element.setSortFunc(this.planesSortFunc);
         }
@@ -1420,8 +1413,8 @@ export class Simulation {
     setSize(x, y) {
         if (!this.canvas)
             return;
-        this.canvas.width = x * this.ratio;
-        this.canvas.height = y * this.ratio;
+        this.canvas.width = x * devicePixelRatio;
+        this.canvas.height = y * devicePixelRatio;
         this.canvas.style.width = x + 'px';
         this.canvas.style.height = y + 'px';
         this.width = x;
@@ -1436,20 +1429,29 @@ export class Simulation {
             return;
         if (!this.canvas)
             return;
+        let width = this.canvas.width;
+        let height = this.canvas.height;
         if (this.fitting) {
             if (c.parentElement) {
-                const width = c.parentElement.clientWidth;
-                const height = c.parentElement.clientHeight;
-                this.width = width;
-                this.height = height;
-                this.canvas.width = width * this.ratio;
-                this.canvas.height = height * this.ratio;
-                this.canvas.style.width = width + 'px';
-                this.canvas.style.height = height + 'px';
+                this.width = c.parentElement.clientWidth;
+                this.height = c.parentElement.clientHeight;
+                width = this.width;
+                height = this.height;
             }
         }
+        else {
+            this.width = width;
+            this.height = height;
+        }
+        this.canvas.width = width * devicePixelRatio;
+        this.canvas.height = height * devicePixelRatio;
+        this.canvas.style.width = width + 'px';
+        this.canvas.style.height = height + 'px';
         this.displaySurface.x = this.width / 2;
         this.displaySurface.y = this.height / 2;
+        if (this.ctx) {
+            this.ctx.scale(devicePixelRatio, devicePixelRatio);
+        }
     }
     empty() {
         this.scene = [];

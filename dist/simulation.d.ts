@@ -83,17 +83,15 @@ export declare class SceneCollection extends SimulationElement {
     _isSceneCollection: boolean;
     camera: Camera;
     displaySurface: Vector3;
-    ratio: number;
     lightSources: LightSource[];
     ambientLighting: number;
     planesSortFunc: (planes: Plane[], cam: Camera) => Plane[];
     constructor(name?: string);
     onFrame(): void;
     setSortFunc(func: (planes: Plane[], cam: Camera) => Plane[]): void;
-    set3dObjects(cam: Camera, displaySurface: Vector3, ratio: number): void;
+    set3dObjects(cam: Camera, displaySurface: Vector3): void;
     setAmbientLighting(val: number): void;
     end(): void;
-    setPixelRatio(num: number): void;
     add(element: SimulationElement | SimulationElement3d, id?: string | null): void;
     private updateSceneLightSources;
     setLightSources(sources: LightSource[]): void;
@@ -118,7 +116,7 @@ export declare class SimulationElement3d {
     setLighting(val: boolean): void;
     setId(id: string): void;
     end(): void;
-    draw(_ctx: CanvasRenderingContext2D, _camera: Camera, _displaySurface: Vector3, _ratio: number, _lightSources: LightSource[], _ambientLighting: number): void;
+    draw(_ctx: CanvasRenderingContext2D, _camera: Camera, _displaySurface: Vector3, _lightSources: LightSource[], _ambientLighting: number): void;
     fill(color: Color, t?: number, f?: LerpFunc): Promise<void>;
     moveTo(p: Vector3, t?: number, f?: LerpFunc): Promise<void>;
     move(p: Vector3, t?: number, f?: LerpFunc): Promise<void>;
@@ -175,7 +173,7 @@ export declare class Plane extends SimulationElement3d {
     constructor(pos: Vector3, points: Vector3[], color?: Color, fill?: boolean, wireframe?: boolean, lighting?: boolean);
     clone(): Plane;
     setPoints(points: Vector3[], t?: number, f?: LerpFunc): Promise<void>;
-    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, ratio: number, lightSources: LightSource[], ambientLighting: number): void;
+    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, lightSources: LightSource[], ambientLighting: number): void;
     getNormals(): Vector3[];
     getCenter(): Vector3;
 }
@@ -201,7 +199,7 @@ export declare class Cube extends SimulationElement3d {
     scaleHeight(amount: number, t?: number, f?: LerpFunc): Promise<void>;
     scaleWidth(amount: number, t?: number, f?: LerpFunc): Promise<void>;
     scaleDepth(amount: number, t?: number, f?: LerpFunc): Promise<void>;
-    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, _ratio: number, lightSources: LightSource[], ambientLighting: number): void;
+    draw(c: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, lightSources: LightSource[], ambientLighting: number): void;
 }
 export declare class Square extends SimulationElement {
     width: number;
@@ -239,7 +237,7 @@ export declare class Line3d extends SimulationElement3d {
     p2: Vector3;
     thickness: number;
     constructor(p1: Vector3, p2: Vector3, color?: Color, thickness?: number, lighting?: boolean, id?: string);
-    draw(ctx: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3, ratio: number): void;
+    draw(ctx: CanvasRenderingContext2D, camera: Camera, displaySurface: Vector3): void;
 }
 export declare class Simulation {
     scene: (SimulationElement | SimulationElement3d)[];
@@ -248,7 +246,6 @@ export declare class Simulation {
     canvas: HTMLCanvasElement | null;
     width: number;
     height: number;
-    ratio: number;
     running: boolean;
     _prevReq: number;
     events: Event[];
@@ -266,6 +263,7 @@ export declare class Simulation {
     ambientLighting: number;
     planesSortFunc: (planes: Plane[], cam: Camera) => Plane[];
     constructor(el: string | HTMLCanvasElement, cameraPos?: Vector3, cameraRot?: Vector3, displaySurfaceDepth?: number, center?: Vector, displaySurfaceSize?: Vector);
+    start(): void;
     setSortFunc(func: (planes: Plane[], cam: Camera) => Plane[]): void;
     private updateSceneLightSources;
     setLightSources(sources: LightSource[]): void;
