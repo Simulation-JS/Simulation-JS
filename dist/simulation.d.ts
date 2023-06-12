@@ -314,7 +314,7 @@ type ProjectedPoint = {
 };
 export declare function sortPlanes(planes: Plane[], camera: Camera): Plane[];
 export declare function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): ProjectedPoint;
-export declare function randInt(range: number, min?: number): number;
+export declare function randInt(range: number, offset?: number): number;
 export declare function randomColor(): Color;
 export declare function vector3DegToRad(vec: Vector3): Vector3;
 export declare function vector3RadToDeg(vec: Vector3): Vector3;

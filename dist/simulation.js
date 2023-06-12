@@ -1741,8 +1741,8 @@ export function projectPoint(p, cam, displaySurface) {
         behindCamera: d.z <= 0
     };
 }
-export function randInt(range, min = 0) {
-    return Math.floor(Math.random() * (range - min)) + min;
+export function randInt(range, offset = 0) {
+    return Math.floor(Math.random() * (range - offset)) + offset;
 }
 export function randomColor() {
     return new Color(randInt(255), randInt(255), randInt(255));

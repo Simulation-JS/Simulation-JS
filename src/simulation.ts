@@ -2213,8 +2213,8 @@ export function projectPoint(p: Vector3, cam: Camera, displaySurface: Vector3): 
   };
 }
 
-export function randInt(range: number, min = 0) {
-  return Math.floor(Math.random() * (range - min)) + min;
+export function randInt(range: number, offset = 0) {
+  return Math.floor(Math.random() * (range - offset)) + offset;
 }
 
 export function randomColor() {
