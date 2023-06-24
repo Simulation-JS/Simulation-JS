@@ -1431,26 +1431,20 @@ export class Simulation {
             return;
         let width = this.canvas.width;
         let height = this.canvas.height;
-        if (this.fitting) {
-            if (c.parentElement) {
-                this.width = c.parentElement.clientWidth;
-                this.height = c.parentElement.clientHeight;
-                width = this.width;
-                height = this.height;
+        if (this.fitting && c.parentElement) {
+            this.width = c.parentElement.clientWidth;
+            this.height = c.parentElement.clientHeight;
+            width = this.width;
+            height = this.height;
+            this.canvas.width = width * devicePixelRatio;
+            this.canvas.height = height * devicePixelRatio;
+            this.canvas.style.width = width + 'px';
+            this.canvas.style.height = height + 'px';
+            this.displaySurface.x = this.width / 2;
+            this.displaySurface.y = this.height / 2;
+            if (this.ctx) {
+                this.ctx.scale(devicePixelRatio, devicePixelRatio);
             }
-        }
-        else {
-            this.width = width;
-            this.height = height;
-        }
-        this.canvas.width = width * devicePixelRatio;
-        this.canvas.height = height * devicePixelRatio;
-        this.canvas.style.width = width + 'px';
-        this.canvas.style.height = height + 'px';
-        this.displaySurface.x = this.width / 2;
-        this.displaySurface.y = this.height / 2;
-        if (this.ctx) {
-            this.ctx.scale(devicePixelRatio, devicePixelRatio);
         }
     }
     empty() {
