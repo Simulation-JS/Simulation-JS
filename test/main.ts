@@ -13,6 +13,7 @@ import {
 
 const canvas = new Simulation('canvas', new Vector3(0, 0, -250), new Vector3(0, 0, 0));
 canvas.fitElement();
+canvas.start();
 // canvas.setAmbientLighting(0.4);
 
 const test = new SceneCollection('test');
@@ -43,7 +44,7 @@ function timeFunc(x: number): number {
 
 (async function main() {
   // await cube.rotate(new Vector3(360, 360, 0), 8);
-  await cube.rotate(new Vector3(90, 0, 0), 2, timeFunc);
+  await cube.rotate(new Vector3(90, 90, 0), 2, timeFunc);
   cube.fill(randomColor());
   main();
   // await cube.rotate(new Vector3(360, 360, 0), 8);
