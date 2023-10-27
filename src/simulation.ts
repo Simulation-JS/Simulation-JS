@@ -1656,8 +1656,8 @@ export class Simulation {
       return;
     }
 
-    window.addEventListener('resize', () => this.resizeCanvas(this.canvas));
-    this.resizeCanvas(this.canvas);
+    window.addEventListener('resize', () => this.resizeCanvas());
+    this.resizeCanvas();
 
     if (displaySurfaceSize) {
       this.displaySurface = new Vector3(
@@ -1770,7 +1770,7 @@ export class Simulation {
     for (let i = 0; i < this.scene.length; i++) {
       this.scene[i].end();
     }
-    window.removeEventListener('resize', () => this.resizeCanvas(this.canvas));
+    window.removeEventListener('resize', () => this.resizeCanvas());
     window.cancelAnimationFrame(this._prevReq);
   }
   add(element: SimulationElement | SimulationElement3d, id: string | null = null) {
@@ -1812,7 +1812,7 @@ export class Simulation {
   fitElement() {
     if (!this.canvas) return;
     this.fitting = true;
-    this.resizeCanvas(this.canvas);
+    this.resizeCanvas();
   }
   setSize(x: number, y: number) {
     if (!this.canvas) return;
@@ -1827,16 +1827,16 @@ export class Simulation {
   setBgColor(color: Color) {
     this.bgColor = color.clone();
   }
-  resizeCanvas(c: HTMLCanvasElement | null) {
-    if (!c) return;
+  resizeCanvas() {
     if (!this.canvas) return;
 
     let width = this.canvas.width;
     let height = this.canvas.height;
 
-    if (this.fitting && c.parentElement) {
-      this.width = c.parentElement.clientWidth;
-      this.height = c.parentElement.clientHeight;
+    console.log(this.fitting, this.canvas.parentElement);
+    if (this.fitting && this.canvas.parentElement) {
+      this.width = this.canvas.parentElement.clientWidth;
+      this.height = this.canvas.parentElement.clientHeight;
 
       width = this.width;
       height = this.height;

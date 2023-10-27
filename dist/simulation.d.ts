@@ -282,7 +282,7 @@ export declare class Simulation {
     fitElement(): void;
     setSize(x: number, y: number): void;
     setBgColor(color: Color): void;
-    resizeCanvas(c: HTMLCanvasElement | null): void;
+    resizeCanvas(): void;
     empty(): void;
     moveCamera(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
     moveCameraTo(v: Vector3, t?: number, f?: LerpFunc): Promise<void>;
