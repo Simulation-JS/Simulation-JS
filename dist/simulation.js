@@ -1429,7 +1429,6 @@ export class Simulation {
             return;
         let width = this.canvas.width;
         let height = this.canvas.height;
-        console.log(this.fitting, this.canvas.parentElement);
         if (this.fitting && this.canvas.parentElement) {
             this.width = this.canvas.parentElement.clientWidth;
             this.height = this.canvas.parentElement.clientHeight;
