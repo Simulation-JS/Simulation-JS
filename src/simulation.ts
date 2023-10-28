@@ -218,7 +218,7 @@ export class SimulationElement {
     this.id = id;
   }
   fill(color: Color, t = 0, f?: LerpFunc) {
-    const currentColor = new Color(this.color.r, this.color.g, this.color.b);
+    const currentColor = new Color(this.color.r, this.color.g, this.color.b, this.color.a);
     const colorClone = color.clone();
     const changeR = colorClone.r - this.color.r;
     const changeG = colorClone.g - this.color.g;
@@ -240,6 +240,7 @@ export class SimulationElement {
         this.color.g = currentColor.g;
         this.color.b = currentColor.b;
         this.color.a = currentColor.a;
+
         return this.running;
       },
       func,
@@ -480,11 +481,12 @@ export class SimulationElement3d {
     _ambientLighting: number
   ) {}
   fill(color: Color, t = 0, f?: LerpFunc) {
-    const currentColor = new Color(this.color.r, this.color.g, this.color.b);
+    const currentColor = new Color(this.color.r, this.color.g, this.color.b, this.color.a);
     const colorClone = color.clone();
     const changeR = colorClone.r - this.color.r;
     const changeG = colorClone.g - this.color.g;
     const changeB = colorClone.b - this.color.b;
+    const changeA = colorClone.a - this.color.a;
 
     const func = () => {
       this.color = colorClone;
@@ -496,9 +498,11 @@ export class SimulationElement3d {
         currentColor.r += changeR * p;
         currentColor.g += changeG * p;
         currentColor.b += changeB * p;
+        currentColor.a += changeA * p;
         this.color.r = currentColor.r;
         this.color.g = currentColor.g;
         this.color.b = currentColor.b;
+        this.color.a = currentColor.a;
         return this.running;
       },
       func,
