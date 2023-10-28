@@ -215,6 +215,7 @@ export class SimulationElement {
         const changeR = colorClone.r - this.color.r;
         const changeG = colorClone.g - this.color.g;
         const changeB = colorClone.b - this.color.b;
+        const changeA = colorClone.a - this.color.a;
         const func = () => {
             this.color = colorClone;
         };
@@ -222,9 +223,11 @@ export class SimulationElement {
             currentColor.r += changeR * p;
             currentColor.g += changeG * p;
             currentColor.b += changeB * p;
+            currentColor.a += changeA * p;
             this.color.r = currentColor.r;
             this.color.g = currentColor.g;
             this.color.b = currentColor.b;
+            this.color.a = currentColor.a;
             return this.running;
         }, func, t, f);
     }
